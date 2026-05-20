@@ -1,0 +1,97 @@
+---
+// Terminal.astro - Terminal de comandos simulada premium y analítica
+---
+
+<div class="glass-surface w-full overflow-hidden rounded-xl border border-white/5 shadow-2xl font-mono text-xs md:text-sm leading-relaxed max-w-full">
+  
+  <!-- Barra de control superior de la terminal -->
+  <div class="flex items-center justify-between px-4 py-3 bg-obsidian-card/80 border-b border-white/5 select-none">
+    
+    <!-- Botones de ventana estándar (Rojo, Amarillo, Verde) con baja opacidad -->
+    <div class="flex items-center gap-1.5">
+      <div class="w-3 h-3 rounded-full bg-[#EF4444]/25 border border-[#EF4444]/45"></div>
+      <div class="w-3 h-3 rounded-full bg-[#F59E0B]/25 border border-[#F59E0B]/45"></div>
+      <div class="w-3 h-3 rounded-full bg-highlight-emerald/25 border border-highlight-emerald/45"></div>
+    </div>
+    
+    <!-- Identificador de archivo técnico -->
+    <span class="text-muted text-[11px] font-mono tracking-wide opacity-80">
+      decision-intelligence.ts
+    </span>
+    
+    <!-- Flag de estado "LIVE" activo -->
+    <span class="flex items-center gap-1.5 text-[9px] font-semibold text-highlight-mint/80 bg-highlight-mint/5 px-2 py-0.5 rounded border border-highlight-mint/10">
+      <span class="w-1.5 h-1.5 rounded-full bg-highlight-mint animate-pulse"></span>
+      LIVE
+    </span>
+  </div>
+
+  <!-- Consola de comandos e outputs -->
+  <div class="p-5 md:p-6 flex flex-col gap-4 text-slate-300">
+    
+    <!-- Comando 1: Business Intelligence & Data Pipelines -->
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2">
+        <span class="text-accent select-none">&rsaquo;</span>
+        <span class="text-slate-400">tomasrau.ar/bi</span>
+        <span class="text-slate-100 font-semibold font-sans">pipenv run orchestrate --stack=financial_dw</span>
+      </div>
+      <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
+        <p>Iniciando ingestión desde APIs de mercados financieros internacionales...</p>
+        <p class="text-highlight-mint/90 flex items-center gap-2">
+          <span class="text-xs">✔</span> [PIPELINE VALIDADO] - 12 endpoints activos e integrados.
+        </p>
+        <p>Orquestando dbt model: models/fct_economic_metrics.sql (18.4s)</p>
+      </div>
+    </div>
+
+    <!-- Comando 2: Applied Econometrics & Forecasts -->
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2">
+        <span class="text-accent select-none">&rsaquo;</span>
+        <span class="text-slate-400">tomasrau.ar/economics</span>
+        <span class="text-slate-100 font-semibold font-sans">python model_fit.py --var=inflation_forecast</span>
+      </div>
+      <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
+        <p>Ajustando modelo VAR (Vectores Autorregresivos) multidimensional...</p>
+        <p>Criterio de Akaike (AIC): -12.45 | R-cuadrado ajustado: 0.942</p>
+        <p class="text-highlight-mint/90 flex items-center gap-2">
+          <span class="text-xs">✔</span> [MODELO CARGADO] - Parámetros convergentes (p-value &lt; 0.01).
+        </p>
+      </div>
+    </div>
+
+    <!-- Comando 3: Decision Science & Strategy -->
+    <div class="flex flex-col gap-1">
+      <div class="flex items-center gap-2">
+        <span class="text-accent select-none">&rsaquo;</span>
+        <span class="text-slate-400">tomasrau.ar/strategy</span>
+        <span class="text-slate-100 font-semibold font-sans">npm run compute-risk-indices</span>
+      </div>
+      <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
+        <p>Ejecutando Simulación de Monte Carlo (escenarios estratégicos)...</p>
+        <p>TIR óptima proyectada: +24.8% | Nivel de Riesgo (VaR): 4.2%</p>
+        <p class="text-accent flex items-center gap-2">
+          <span class="text-xs">✦</span> [INSIGHT GENERADO] - Recomendar asignación de capital estratégica.
+        </p>
+      </div>
+    </div>
+
+    <!-- Prompt activo parpadeante -->
+    <div class="flex items-center gap-2 mt-1">
+      <span class="text-accent select-none">&rsaquo;</span>
+      <span class="text-slate-400">tomasrau.ar/home</span>
+      <span class="w-2 h-4 bg-accent-bronze animate-pulse inline-block align-middle"></span>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+  /* Optimización de suavizado tipográfico para códigos monospaciados */
+  div {
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+  }
+</style>
