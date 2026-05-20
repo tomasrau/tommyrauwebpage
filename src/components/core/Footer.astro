@@ -1,0 +1,103 @@
+---
+// Footer.astro - Pie de página profesional, premium y minimalista
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="w-full mt-auto border-t border-white/5 bg-obsidian-card/45 backdrop-blur-md relative overflow-hidden">
+  <!-- Línea divisoria premium con degradado de cobre metálico -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/25 to-transparent"></div>
+
+  <div class="section-container !py-12 flex flex-col gap-10">
+    
+    <!-- Fila superior: Marca, descriptor estratégico y bloques de enlaces -->
+    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+      
+      <!-- Bloque de Identidad Profesional -->
+      <div class="flex flex-col gap-3 max-w-md">
+        <a href="#inicio" class="group flex flex-col gap-0.5 focus:outline-none" aria-label="Volver al inicio">
+          <span class="font-display font-extrabold text-slate-100 text-xl tracking-tight transition-colors duration-200 group-hover:text-accent-bronze">
+            Tomás Rau
+          </span>
+          <span class="text-[9px] font-mono tracking-widest text-muted uppercase">
+            Economía &middot; BI &middot; Finanzas &middot; Tecnología Estratégica
+          </span>
+        </a>
+        <p class="text-muted text-sm leading-relaxed mt-1">
+          Integrando rigurosidad cuantitativa, analítica avanzada de datos y visión financiera corporativa para liderar decisiones estratégicas de alto impacto.
+        </p>
+      </div>
+
+      <!-- Bloques de enlaces rápidos y redes -->
+      <div class="flex flex-wrap gap-x-16 gap-y-6">
+        
+        <!-- Panel: Navegación Interna -->
+        <div class="flex flex-col gap-3">
+          <span class="text-xs font-mono font-semibold tracking-wider text-slate-400 uppercase">
+            Navegación
+          </span>
+          <nav class="flex flex-col gap-2" aria-label="Navegación del pie de página">
+            <a href="#inicio" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
+              Inicio
+            </a>
+            <a href="#expertise" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
+              Expertise
+            </a>
+            <a href="#proyectos" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
+              Proyectos
+            </a>
+            <a href="#contacto" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
+              Contacto
+            </a>
+          </nav>
+        </div>
+
+        <!-- Panel: Enlaces Profesionales -->
+        <div class="flex flex-col gap-3">
+          <span class="text-xs font-mono font-semibold tracking-wider text-slate-400 uppercase">
+            Conectar
+          </span>
+          <div class="flex flex-col gap-2">
+            <a 
+              href="#" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none flex items-center gap-1.5"
+            >
+              LinkedIn
+            </a>
+            <a 
+              href="#" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none flex items-center gap-1.5"
+            >
+              GitHub
+            </a>
+            <a 
+              href="mailto:" 
+              class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none flex items-center gap-1.5"
+            >
+              Email
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Línea divisoria interna -->
+    <div class="w-full h-[1px] bg-white/5"></div>
+
+    <!-- Fila inferior: Copyright y firma técnica -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <span class="text-xs text-muted">
+        &copy; {currentYear} Tomás Rau. Todos los derechos reservados.
+      </span>
+      <span class="text-[10px] font-mono text-muted/50 tracking-wider">
+        tomasrau.ar &middot; Quantitative Architecture
+      </span>
+    </div>
+
+  </div>
+</footer>
