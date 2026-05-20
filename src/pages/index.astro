@@ -1,11 +1,47 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-	<Welcome />
+  <!-- Hero Section / Shell de Validación Visual -->
+  <section class="section-container min-h-[85vh] flex items-center justify-center">
+    <div class="glass-surface p-8 md:p-12 max-w-3xl w-full relative overflow-hidden rounded-xl border border-white/5 shadow-2xl">
+      <!-- Muted copper background flare for micro-aesthetic glow -->
+      <div class="absolute -top-24 -right-24 w-52 h-52 bg-accent-bronze/10 rounded-full blur-[80px] pointer-events-none"></div>
+      
+      <div class="relative z-10 flex flex-col gap-6">
+        <!-- Eyebrow Tagline -->
+        <span class="text-accent text-xs font-mono tracking-widest uppercase">
+          Economía · Business Intelligence · Finanzas
+        </span>
+        
+        <!-- Main Heading -->
+        <h1 class="text-3xl md:text-5xl font-display font-bold text-slate-50 tracking-tight leading-[1.15]">
+          Economía, datos y estrategia para decisiones más inteligentes.
+        </h1>
+        
+        <!-- Core Narrative Description -->
+        <p class="text-muted text-base md:text-lg leading-relaxed max-w-2xl">
+          Soy <strong class="text-slate-100 font-semibold font-display">Tomás Rau</strong>, economista especializado en Business Intelligence, analítica financiera y tecnología estratégica. Diseño e implemento arquitecturas de datos, reportería avanzada y modelos cuantitativos enfocados en maximizar el valor corporativo y refinar la toma de decisiones empresariales.
+        </p>
+        
+        <!-- Navigation/CTA triggers -->
+        <div class="flex flex-wrap items-center gap-4 mt-4">
+          <a
+            href="#proyectos"
+            class="px-6 py-3 rounded-lg bg-accent-bronze text-obsidian-bg font-display font-semibold text-sm hover:bg-accent-bronze-hover transition-colors duration-200 shadow-lg shadow-accent-bronze/10 focus:outline-none"
+          >
+            Ver proyectos
+          </a>
+          <a
+            href="#contacto"
+            class="px-6 py-3 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-semibold text-sm transition-colors duration-200 glass-surface focus:outline-none"
+          >
+            Contactar
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 </Layout>
+
