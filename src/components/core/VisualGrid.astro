@@ -1,0 +1,58 @@
+---
+// VisualGrid.astro - Componente decorativo de fondo premium y analítico
+---
+
+<div 
+  class="fixed inset-0 z-[-10] pointer-events-none overflow-hidden select-none bg-obsidian-bg" 
+  aria-hidden="true"
+>
+  <!-- 1. Grid de micro-puntos técnico (Dot-matrix network) -->
+  <div class="absolute inset-0 dot-pattern opacity-40"></div>
+
+  <!-- 2. Resplandor de bronce/cobre en la parte superior derecha (Warm Bronze glow) -->
+  <div class="absolute inset-0 bronze-glow"></div>
+
+  <!-- 3. Resplandor de esmeralda/menta en la parte inferior izquierda (Emerald growth signal glow) -->
+  <div class="absolute inset-0 emerald-glow"></div>
+
+  <!-- 4. Viñeteado oscuro periférico para garantizar legibilidad de la tipografía (Dark vignette) -->
+  <div class="absolute inset-0 vignette-overlay"></div>
+</div>
+
+<style>
+  /* Matriz de micro-puntos finos con separación de 24px */
+  .dot-pattern {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+    background-position: center;
+  }
+
+  /* Aura superior derecha - Bronce metálico */
+  .bronze-glow {
+    background: radial-gradient(
+      circle at 85% 15%, 
+      rgba(212, 140, 70, 0.06) 0%, 
+      rgba(212, 140, 70, 0.02) 30%, 
+      transparent 65%
+    );
+  }
+
+  /* Aura inferior izquierda - Esmeralda analítica */
+  .emerald-glow {
+    background: radial-gradient(
+      circle at 15% 80%, 
+      rgba(16, 185, 129, 0.04) 0%, 
+      rgba(16, 185, 129, 0.01) 35%, 
+      transparent 65%
+    );
+  }
+
+  /* Contraste oscuro periférico */
+  .vignette-overlay {
+    background: radial-gradient(
+      circle at center,
+      transparent 30%,
+      rgba(7, 10, 19, 0.8) 100%
+    );
+  }
+</style>
