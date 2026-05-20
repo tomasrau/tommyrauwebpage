@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Terminal from "../components/ui/Terminal.astro";
+import Metric from "../components/ui/Metric.astro";
 ---
 
 <Layout>
@@ -52,6 +53,60 @@ import Terminal from "../components/ui/Terminal.astro";
 
     </div>
   </section>
+
+  <!-- Sección de Capacidades / Expertise (ID: expertise para concordar con Header.astro) -->
+  <section id="expertise" class="section-container border-t border-white/5 pt-20 pb-24 md:pt-28 md:pb-32">
+    <div class="flex flex-col gap-12 w-full">
+      
+      <!-- Cabecera de la Sección -->
+      <div class="flex flex-col gap-4 max-w-3xl">
+        <!-- Eyebrow Tagline -->
+        <span class="text-accent text-xs font-mono tracking-widest uppercase">
+          Capacidades estratégicas
+        </span>
+        
+        <!-- H2 Heading -->
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
+          Un perfil híbrido entre economía, datos y tecnología.
+        </h2>
+        
+        <!-- Contextual Description -->
+        <p class="text-muted text-base md:text-lg leading-relaxed">
+          La integración entre el razonamiento económico, una sólida arquitectura de BI, la analítica financiera avanzada y la toma de decisiones estratégicas estructuradas permite formular soluciones analíticas de alto impacto, traduciendo grandes volúmenes de datos en ventajas competitivas reales.
+        </p>
+      </div>
+
+      <!-- Grid de Componentes Metric -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+        <Metric 
+          value="+8 años" 
+          label="BI & Analytics" 
+          description="Experiencia en reporting ejecutivo, automatización, modelos de datos y visualización avanzada." 
+          trend="Arquitectura analítica" 
+        />
+        <Metric 
+          value="Finanzas" 
+          label="Financial Analytics" 
+          description="Análisis de indicadores, mercados, escenarios y criterios de evaluación para decisiones financieras." 
+          trend="Lectura estratégica" 
+        />
+        <Metric 
+          value="Estrategia" 
+          label="Tech & Business" 
+          description="Diseño de soluciones digitales, procesos de transformación y sistemas de decisión basados en datos." 
+          trend="Visión ejecutiva" 
+        />
+        <Metric 
+          value="Data-driven" 
+          label="Decision Intelligence" 
+          description="Traducción de datos complejos en narrativas, modelos y recomendaciones accionables." 
+          trend="Insight aplicado" 
+        />
+      </div>
+
+    </div>
+  </section>
 </Layout>
+
 
 
