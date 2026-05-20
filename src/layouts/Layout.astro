@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import VisualGrid from "../components/core/VisualGrid.astro";
 
 interface Props {
   title?: string;
@@ -46,9 +47,13 @@ const canonicalURL = new URL(Astro.url.pathname, "https://tomasrau.ar").toString
     />
   </head>
   <body>
+    <!-- Premium Data-driven Backdrop -->
+    <VisualGrid />
+
     <main id="main-content" class="w-full min-h-screen flex flex-col justify-between">
       <slot />
     </main>
   </body>
 </html>
+
 
