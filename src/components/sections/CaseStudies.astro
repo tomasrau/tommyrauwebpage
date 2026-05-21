@@ -2,7 +2,7 @@
 // CaseStudies.astro - Sección "Proyectos estratégicos"
 ---
 
-<section id="proyectos" class="section-container border-t border-white/5">
+<section id="proyectos" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
   <div class="flex flex-col gap-12 w-full">
     
     <!-- Cabecera de la Sección -->
@@ -24,20 +24,20 @@
     </div>
 
     <!-- Grid de Casos de Estudio (2x2 en pantallas grandes, 1 columna en móvil) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 w-full">
       
       <!-- Tarjeta 1: RIO Servicios Financieros -->
-      <div class="glass-surface p-6 sm:p-8 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
+      <div class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
         <!-- Borde superior de luz activa -->
         <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
         
         <div class="flex flex-col gap-4">
           <!-- Encabezado de Tarjeta con Señal Métrica -->
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">
               INFRAESTRUCTURA DE DATOS
             </span>
-            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded">
+            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded whitespace-nowrap">
               <span class="w-1 h-1 bg-highlight-mint rounded-full animate-ping"></span>
               Asegurado
             </span>
@@ -74,17 +74,17 @@
       </div>
 
       <!-- Tarjeta 2: Lorenz / Trading Algorítmico -->
-      <div class="glass-surface p-6 sm:p-8 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
+      <div class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
         <!-- Borde superior de luz activa -->
         <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
         
         <div class="flex flex-col gap-4">
           <!-- Encabezado de Tarjeta con Señal Métrica -->
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">
               MODELOS CUANTITATIVOS
             </span>
-            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded">
+            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded whitespace-nowrap">
               <span class="w-1 h-1 bg-highlight-mint rounded-full animate-ping"></span>
               Backtested
             </span>
@@ -121,17 +121,17 @@
       </div>
 
       <!-- Tarjeta 3: Mubiz Pro Studio -->
-      <div class="glass-surface p-6 sm:p-8 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
+      <div class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
         <!-- Borde superior de luz activa -->
         <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
         
         <div class="flex flex-col gap-4">
           <!-- Encabezado de Tarjeta con Señal Métrica -->
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">
               INTELIGENCIA FINANCIERA
             </span>
-            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded">
+            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded whitespace-nowrap">
               <span class="w-1 h-1 bg-highlight-mint rounded-full animate-ping"></span>
               Optimizado
             </span>
@@ -167,17 +167,17 @@
       </div>
 
       <!-- Tarjeta 4: BI Systems for SMEs -->
-      <div class="glass-surface p-6 sm:p-8 rounded-2xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
+      <div class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
         <!-- Borde superior de luz activa -->
         <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
         
         <div class="flex flex-col gap-4">
           <!-- Encabezado de Tarjeta con Señal Métrica -->
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <span class="text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">
               DEMOCRATIZACIÓN DE DATOS
             </span>
-            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded">
+            <span class="text-[9px] font-mono text-highlight-mint flex items-center gap-1.5 bg-highlight-mint/5 border border-highlight-mint/10 px-2 py-0.5 rounded whitespace-nowrap">
               <span class="w-1 h-1 bg-highlight-mint rounded-full animate-ping"></span>
               Producción
             </span>

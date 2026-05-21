@@ -2,10 +2,10 @@
 // Terminal.astro - Terminal de comandos simulada premium y analítica
 ---
 
-<div class="glass-surface w-full overflow-hidden rounded-xl border border-white/5 shadow-2xl font-mono text-xs md:text-sm leading-relaxed max-w-full">
+<div class="glass-surface w-full overflow-hidden rounded-xl border border-white/5 shadow-2xl font-mono text-[11px] sm:text-xs md:text-sm leading-relaxed max-w-full">
   
   <!-- Barra de control superior de la terminal -->
-  <div class="flex items-center justify-between px-4 py-3 bg-obsidian-card/80 border-b border-white/5 select-none">
+  <div class="flex items-center justify-between gap-3 px-4 py-3 bg-obsidian-card/80 border-b border-white/5 select-none">
     
     <!-- Botones de ventana estándar (Rojo, Amarillo, Verde) con baja opacidad -->
     <div class="flex items-center gap-1.5">
@@ -15,7 +15,7 @@
     </div>
     
     <!-- Identificador de archivo técnico -->
-    <span class="text-muted text-[11px] font-mono tracking-wide opacity-80">
+    <span class="hidden sm:inline text-muted text-[11px] font-mono tracking-wide opacity-80 truncate">
       decision-intelligence.ts
     </span>
     
@@ -27,14 +27,14 @@
   </div>
 
   <!-- Consola de comandos e outputs -->
-  <div class="p-5 md:p-6 flex flex-col gap-4 text-slate-300">
+  <div class="p-4 sm:p-5 md:p-6 flex flex-col gap-4 text-slate-300">
     
     <!-- Comando 1: Business Intelligence & Data Pipelines -->
     <div class="flex flex-col gap-1">
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
         <span class="text-accent select-none">&rsaquo;</span>
         <span class="text-slate-400">tomasrau.ar/bi</span>
-        <span class="text-slate-100 font-semibold font-sans">pipenv run orchestrate --stack=financial_dw</span>
+        <span class="text-slate-100 font-semibold font-sans break-words">pipenv run orchestrate --stack=financial_dw</span>
       </div>
       <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
         <p>Iniciando ingestión desde APIs de mercados financieros internacionales...</p>
@@ -47,10 +47,10 @@
 
     <!-- Comando 2: Applied Econometrics & Forecasts -->
     <div class="flex flex-col gap-1">
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
         <span class="text-accent select-none">&rsaquo;</span>
         <span class="text-slate-400">tomasrau.ar/economics</span>
-        <span class="text-slate-100 font-semibold font-sans">python model_fit.py --var=inflation_forecast</span>
+        <span class="text-slate-100 font-semibold font-sans break-words">python model_fit.py --var=inflation_forecast</span>
       </div>
       <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
         <p>Ajustando modelo VAR (Vectores Autorregresivos) multidimensional...</p>
@@ -63,10 +63,10 @@
 
     <!-- Comando 3: Decision Science & Strategy -->
     <div class="flex flex-col gap-1">
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
         <span class="text-accent select-none">&rsaquo;</span>
         <span class="text-slate-400">tomasrau.ar/strategy</span>
-        <span class="text-slate-100 font-semibold font-sans">npm run compute-risk-indices</span>
+        <span class="text-slate-100 font-semibold font-sans break-words">npm run compute-risk-indices</span>
       </div>
       <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
         <p>Ejecutando Simulación de Monte Carlo (escenarios estratégicos)...</p>
@@ -78,7 +78,7 @@
     </div>
 
     <!-- Prompt activo parpadeante -->
-    <div class="flex items-center gap-2 mt-1">
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
       <span class="text-accent select-none">&rsaquo;</span>
       <span class="text-slate-400">tomasrau.ar/home</span>
       <span class="w-2 h-4 bg-accent-bronze animate-pulse inline-block align-middle"></span>

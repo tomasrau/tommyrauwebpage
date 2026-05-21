@@ -10,17 +10,17 @@ interface Props {
 const { value, label, description, trend } = Astro.props;
 ---
 
-<div class="glass-surface p-5 rounded-xl border border-white/5 shadow-lg flex flex-col gap-2 relative overflow-hidden select-none hover:border-accent-bronze/20 transition-all duration-300 group">
+<div class="glass-surface h-full p-5 rounded-xl border border-white/5 shadow-lg flex flex-col gap-2 relative overflow-hidden select-none hover:border-accent-bronze/20 transition-all duration-300 group">
   <!-- Línea de resplandor premium en el borde superior activada al hacer hover -->
   <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
 
   <!-- Fila 1: Label del indicador y Tendencia Opcional -->
-  <div class="flex items-center justify-between gap-4">
+  <div class="flex flex-wrap items-center justify-between gap-2">
     <span class="text-accent text-[10px] font-mono tracking-widest uppercase font-semibold leading-none">
       {label}
     </span>
     {trend && (
-      <span class="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-highlight-mint/5 border border-highlight-mint/10 text-highlight-mint flex items-center gap-1.5">
+      <span class="text-[9px] font-mono font-bold px-2 py-0.5 rounded bg-highlight-mint/5 border border-highlight-mint/10 text-highlight-mint flex items-center gap-1.5 whitespace-nowrap">
         <span class="inline-block w-1.5 h-1.5 rounded-full bg-highlight-mint animate-pulse"></span>
         {trend}
       </span>

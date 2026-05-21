@@ -10,7 +10,7 @@ import Contact from "../components/sections/Contact.astro";
 
 <Layout>
   <!-- Hero Section / Shell de Validación Visual -->
-  <section id="inicio" class="section-container min-h-screen flex items-center justify-center pt-24 md:pt-32">
+  <section id="inicio" class="section-container scroll-mt-28 min-h-screen flex items-center justify-center !pt-24 !pb-16 md:!pt-32 md:!pb-24">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center w-full">
       
       <!-- Columna Izquierda: Copias, Título y Llamados a la Acción -->
@@ -21,7 +21,7 @@ import Contact from "../components/sections/Contact.astro";
         </span>
         
         <!-- Main Heading -->
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-50 tracking-tight leading-[1.15]">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-50 tracking-tight leading-[1.15] max-w-3xl">
           Economía, datos y estrategia para decisiones más inteligentes.
         </h1>
         
@@ -31,16 +31,16 @@ import Contact from "../components/sections/Contact.astro";
         </p>
         
         <!-- Navigation/CTA triggers -->
-        <div class="flex flex-wrap items-center gap-4 mt-2">
+        <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mt-2">
           <a
             href="#proyectos"
-            class="px-6 py-3.5 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-sm tracking-wide transition-all duration-200 shadow-lg shadow-accent-bronze/10 focus:outline-none active:scale-[0.98]"
+            class="px-6 py-3.5 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-sm text-center tracking-wide transition-all duration-200 shadow-lg shadow-accent-bronze/10 focus:outline-none active:scale-[0.98]"
           >
             Ver proyectos
           </a>
           <a
             href="#contacto"
-            class="px-6 py-3.5 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-bold text-sm tracking-wide transition-all duration-200 glass-surface focus:outline-none active:scale-[0.98]"
+            class="px-6 py-3.5 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-bold text-sm text-center tracking-wide transition-all duration-200 glass-surface focus:outline-none active:scale-[0.98]"
           >
             Contactar
           </a>
@@ -59,7 +59,7 @@ import Contact from "../components/sections/Contact.astro";
   </section>
 
   <!-- Sección de Capacidades / Expertise (ID: expertise para concordar con Header.astro) -->
-  <section id="expertise" class="section-container border-t border-white/5 pt-20 pb-24 md:pt-28 md:pb-32">
+  <section id="expertise" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
     <div class="flex flex-col gap-12 w-full">
       
       <!-- Cabecera de la Sección -->
@@ -81,7 +81,7 @@ import Contact from "../components/sections/Contact.astro";
       </div>
 
       <!-- Grid de Componentes Metric -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 w-full">
         <Metric 
           value="+8 años" 
           label="BI & Analytics" 
@@ -117,6 +117,4 @@ import Contact from "../components/sections/Contact.astro";
   <Experience />
   <Contact />
 </Layout>
-
-
 
