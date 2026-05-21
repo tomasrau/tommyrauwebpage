@@ -7,23 +7,39 @@ import Footer from "../components/core/Footer.astro";
 interface Props {
   title?: string;
   description?: string;
+  lang?: "es" | "en";
+  alternateUrl?: string;
 }
 
 const {
   title = "Tomás Rau | Economía, Business Intelligence y Analítica Financiera",
-  description = "Economista especializado en Business Intelligence, analítica financiera, estrategia tecnológica y toma de decisiones basada en datos."
+  description = "Economista especializado en Business Intelligence, analítica financiera, estrategia tecnológica y toma de decisiones basada en datos.",
+  lang = "es",
+  alternateUrl
 } = Astro.props;
 
 const siteURL = "https://tomasrau.ar";
 const canonicalURL = new URL(Astro.url.pathname, siteURL).toString();
 const ogImageURL = new URL("/og-image.svg", siteURL).toString();
+const ogLocale = lang === "en" ? "en_US" : "es_AR";
 ---
 
 <!doctype html>
-<html lang="es">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script is:inline>
+      (() => {
+        try {
+          const storedTheme = localStorage.getItem("theme");
+          const theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+          document.documentElement.dataset.theme = theme;
+        } catch {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
 
@@ -34,8 +50,9 @@ const ogImageURL = new URL("/og-image.svg", siteURL).toString();
     <meta name="author" content="Tomás Rau" />
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#070a13" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <link rel="canonical" href={canonicalURL} />
+    {alternateUrl && <link rel="alternate" href={new URL(alternateUrl, siteURL).toString()} hreflang={lang === "es" ? "en" : "es"} />}
 
     <!-- OpenGraph Metadata -->
     <meta property="og:type" content="website" />
@@ -48,7 +65,7 @@ const ogImageURL = new URL("/og-image.svg", siteURL).toString();
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Tomás Rau - Economía, BI, Finanzas y Tecnología" />
     <meta property="og:site_name" content="Tomás Rau" />
-    <meta property="og:locale" content="es_AR" />
+    <meta property="og:locale" content={ogLocale} />
 
     <!-- Twitter Metadata -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -71,7 +88,7 @@ const ogImageURL = new URL("/og-image.svg", siteURL).toString();
     <VisualGrid />
 
     <!-- Sticky Floating Navigation Header -->
-    <Header />
+    <Header lang={lang} alternateUrl={alternateUrl} />
 
     <main id="main-content" class="w-full min-h-screen flex flex-col justify-between">
       <slot />
@@ -81,4 +98,3 @@ const ogImageURL = new URL("/og-image.svg", siteURL).toString();
     <Footer />
   </body>
 </html>
-

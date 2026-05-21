@@ -3,7 +3,7 @@
 ---
 
 <div 
-  class="fixed inset-0 z-[-10] pointer-events-none overflow-hidden select-none bg-obsidian-bg" 
+  class="visual-grid fixed inset-0 z-[-10] pointer-events-none overflow-hidden select-none"
   aria-hidden="true"
 >
   <!-- 1. Grid de micro-puntos técnico (Dot-matrix network) -->
@@ -22,7 +22,7 @@
 <style>
   /* Matriz de micro-puntos finos con separación de 24px */
   .dot-pattern {
-    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
     background-size: 24px 24px;
     background-position: center;
   }
@@ -52,7 +52,33 @@
     background: radial-gradient(
       circle at center,
       transparent 30%,
-      rgba(7, 10, 19, 0.8) 100%
+      var(--grid-vignette) 100%
+    );
+  }
+
+  .visual-grid {
+    background-color: var(--color-bg);
+  }
+
+  :global(html[data-theme="light"]) .dot-pattern {
+    opacity: 0.55;
+  }
+
+  :global(html[data-theme="light"]) .bronze-glow {
+    background: radial-gradient(
+      circle at 84% 14%,
+      rgba(168, 100, 42, 0.1) 0%,
+      rgba(168, 100, 42, 0.035) 34%,
+      transparent 68%
+    );
+  }
+
+  :global(html[data-theme="light"]) .emerald-glow {
+    background: radial-gradient(
+      circle at 15% 80%,
+      rgba(5, 150, 105, 0.055) 0%,
+      rgba(5, 150, 105, 0.018) 34%,
+      transparent 68%
     );
   }
 </style>

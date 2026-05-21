@@ -1,29 +1,66 @@
 ---
 // Header.astro - Sticky header floating navigation bar
+interface Props {
+  lang?: "es" | "en";
+  alternateUrl?: string;
+}
+
+const { lang = "es", alternateUrl = lang === "es" ? "/en/" : "/" } = Astro.props;
+
+const labels = lang === "en"
+  ? {
+      home: "Home",
+      expertise: "Expertise",
+      projects: "Projects",
+      contact: "Contact",
+      cta: "Let's talk",
+      brand: "Economist · BI · Finance",
+      ariaHome: "Back to home",
+      ariaNav: "Main navigation",
+      switcher: "Language selector",
+      menu: "Open navigation menu",
+      theme: "Toggle light and dark theme",
+    }
+  : {
+      home: "Inicio",
+      expertise: "Expertise",
+      projects: "Proyectos",
+      contact: "Contacto",
+      cta: "Hablemos",
+      brand: "Economista · BI · Finanzas",
+      ariaHome: "Volver al inicio",
+      ariaNav: "Navegación principal",
+      switcher: "Selector de idioma",
+      menu: "Abrir menú de navegación",
+      theme: "Cambiar tema claro u oscuro",
+    };
+
+const esActive = lang === "es";
+const enActive = lang === "en";
 ---
 
 <header class="fixed top-0 left-0 right-0 w-full z-50 p-3 sm:p-4 md:p-6 pointer-events-none">
   <!-- Capsule layout wrapper with pointer-events restoration -->
   <div class="w-full max-w-7xl mx-auto pointer-events-auto">
-    <div class="glass-surface px-3 py-3 sm:px-5 md:px-8 md:py-4 flex items-center justify-between gap-3 border border-white/5 rounded-xl shadow-xl shadow-obsidian-bg/40 backdrop-blur-md transition-all duration-300">
+    <div class="glass-surface relative px-3 py-3 sm:px-5 md:px-8 md:py-4 flex items-center justify-between gap-3 border border-white/5 rounded-xl shadow-xl shadow-obsidian-bg/40 backdrop-blur-md transition-all duration-300">
       
       <!-- Brand Logo Indicator -->
-      <a href="#inicio" class="min-w-0 flex flex-col gap-0.5 group focus:outline-none" aria-label="Volver al inicio">
+      <a href="#inicio" class="min-w-0 flex flex-col gap-0.5 group focus:outline-none" aria-label={labels.ariaHome}>
         <span class="font-display font-extrabold text-slate-100 text-base sm:text-lg md:text-xl tracking-tight leading-none transition-colors duration-200 group-hover:text-accent-bronze">
           Tomás Rau
         </span>
         <span class="hidden sm:inline text-[9px] font-mono tracking-widest text-muted uppercase truncate">
-          Economista · BI · Finanzas
+          {labels.brand}
         </span>
       </a>
 
       <!-- Desktop Navigation Links (hidden on mobile) -->
-      <nav class="hidden md:flex items-center gap-8" aria-label="Navegación principal">
+      <nav class="hidden lg:flex items-center gap-8" aria-label={labels.ariaNav}>
         <a 
           href="#inicio" 
           class="text-sm font-display font-medium text-slate-300 hover:text-accent-bronze transition-colors duration-200 focus:outline-none"
         >
-          Inicio
+          {labels.home}
         </a>
         <a 
           href="#expertise" 
@@ -35,26 +72,115 @@
           href="#proyectos" 
           class="text-sm font-display font-medium text-slate-300 hover:text-accent-bronze transition-colors duration-200 focus:outline-none"
         >
-          Proyectos
+          {labels.projects}
         </a>
         <a 
           href="#contacto" 
           class="text-sm font-display font-medium text-slate-300 hover:text-accent-bronze transition-colors duration-200 focus:outline-none"
         >
-          Contacto
+          {labels.contact}
         </a>
       </nav>
 
-      <!-- Right Side CTA Link -->
-      <div class="flex items-center">
+      <!-- Right Side Controls -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <nav class="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1 text-[10px] font-mono font-bold tracking-wider uppercase shadow-inner shadow-obsidian-bg/30" aria-label={labels.switcher}>
+          {esActive ? (
+            <span class="rounded-full bg-accent-bronze px-2 py-1 text-obsidian-bg shadow-sm shadow-accent-bronze/20" aria-current="true">ES</span>
+          ) : (
+            <a href={alternateUrl} class="rounded-full px-2 py-1 text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none" aria-label="Ver sitio en español">ES</a>
+          )}
+          {enActive ? (
+            <span class="rounded-full bg-accent-bronze px-2 py-1 text-obsidian-bg shadow-sm shadow-accent-bronze/20" aria-current="true">EN</span>
+          ) : (
+            <a href={alternateUrl} class="rounded-full px-2 py-1 text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none" aria-label="View site in English">EN</a>
+          )}
+        </nav>
+        <button
+          type="button"
+          class="theme-toggle flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] focus:outline-none"
+          aria-label={labels.theme}
+          aria-pressed="false"
+          data-theme-toggle
+        >
+          <span class="theme-toggle-indicator flex h-5 w-5 items-center justify-center rounded-md border" aria-hidden="true">
+            <svg class="theme-toggle-icon-dark h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3a6 6 0 0 0 9 7.5A9 9 0 1 1 12 3Z"></path>
+            </svg>
+            <svg class="theme-toggle-icon-light h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"></circle>
+              <path d="M12 2v2"></path>
+              <path d="M12 20v2"></path>
+              <path d="m4.93 4.93 1.41 1.41"></path>
+              <path d="m17.66 17.66 1.41 1.41"></path>
+              <path d="M2 12h2"></path>
+              <path d="M20 12h2"></path>
+              <path d="m6.34 17.66-1.41 1.41"></path>
+              <path d="m19.07 4.93-1.41 1.41"></path>
+            </svg>
+          </span>
+        </button>
         <a 
           href="#contacto" 
-          class="whitespace-nowrap px-3 py-2 sm:px-4 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-[11px] sm:text-xs tracking-wide uppercase transition-all duration-200 focus:outline-none shadow-md shadow-accent-bronze/10 hover:shadow-lg hover:shadow-accent-bronze/20 active:scale-[0.98]"
+          class="hidden lg:inline-flex whitespace-nowrap px-3 py-2 sm:px-4 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-[11px] sm:text-xs tracking-wide uppercase transition-all duration-200 focus:outline-none shadow-md shadow-accent-bronze/10 hover:shadow-lg hover:shadow-accent-bronze/20 active:scale-[0.98]"
         >
-          Hablemos
+          {labels.cta}
         </a>
+
+        <details class="group lg:hidden">
+          <summary
+            class="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-slate-200 transition-colors duration-200 hover:border-accent-bronze/50 hover:text-accent-bronze focus:outline-none [&::-webkit-details-marker]:hidden"
+            aria-label={labels.menu}
+          >
+            <span class="flex flex-col gap-1.5" aria-hidden="true">
+              <span class="block h-0.5 w-4 rounded-full bg-current transition-transform duration-200 group-open:translate-y-1 group-open:rotate-45"></span>
+              <span class="block h-0.5 w-4 rounded-full bg-current transition-opacity duration-200 group-open:opacity-0"></span>
+              <span class="block h-0.5 w-4 rounded-full bg-current transition-transform duration-200 group-open:-translate-y-1 group-open:-rotate-45"></span>
+            </span>
+          </summary>
+
+          <nav class="mobile-menu-panel absolute right-3 top-[calc(100%+0.75rem)] flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-xl border p-2 backdrop-blur-xl" aria-label={labels.ariaNav}>
+            <a href="#inicio" class="rounded-lg px-4 py-3 text-sm font-display font-semibold text-slate-300 transition-colors duration-200 hover:bg-accent-bronze/10 hover:text-accent-bronze focus:outline-none">
+              {labels.home}
+            </a>
+            <a href="#expertise" class="rounded-lg px-4 py-3 text-sm font-display font-semibold text-slate-300 transition-colors duration-200 hover:bg-accent-bronze/10 hover:text-accent-bronze focus:outline-none">
+              Expertise
+            </a>
+            <a href="#proyectos" class="rounded-lg px-4 py-3 text-sm font-display font-semibold text-slate-300 transition-colors duration-200 hover:bg-accent-bronze/10 hover:text-accent-bronze focus:outline-none">
+              {labels.projects}
+            </a>
+            <a href="#contacto" class="rounded-lg px-4 py-3 text-sm font-display font-semibold text-slate-300 transition-colors duration-200 hover:bg-accent-bronze/10 hover:text-accent-bronze focus:outline-none">
+              {labels.contact}
+            </a>
+            <a href="#contacto" class="mt-1 rounded-lg bg-accent-bronze px-4 py-3 text-center text-xs font-display font-bold uppercase tracking-wide text-obsidian-bg transition-colors duration-200 hover:bg-accent-bronze-hover focus:outline-none">
+              {labels.cta}
+            </a>
+          </nav>
+        </details>
       </div>
 
     </div>
   </div>
 </header>
+
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    const button = document.querySelector("[data-theme-toggle]");
+    if (!button) return;
+
+    const applyTheme = (theme) => {
+      root.dataset.theme = theme;
+      try {
+        localStorage.setItem("theme", theme);
+      } catch {}
+      button.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
+    };
+
+    const currentTheme = root.dataset.theme === "light" ? "light" : "dark";
+    button.setAttribute("aria-pressed", currentTheme === "light" ? "true" : "false");
+    button.addEventListener("click", () => {
+      applyTheme(root.dataset.theme === "light" ? "dark" : "light");
+    });
+  })();
+</script>

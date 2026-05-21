@@ -9,6 +9,8 @@ import Contact from "../components/sections/Contact.astro";
 ---
 
 <Layout
+  lang="es"
+  alternateUrl="/en/"
   title="Tomás Rau | Economía, Business Intelligence y Analítica Financiera"
   description="Economista especializado en Business Intelligence, analítica financiera, estrategia tecnológica y toma de decisiones basada en datos."
 >
@@ -48,10 +50,42 @@ import Contact from "../components/sections/Contact.astro";
             Contactar
           </a>
         </div>
+
+        <!-- Panel móvil compacto: reemplaza la terminal en pantallas pequeñas -->
+        <div class="glass-surface fine-border mt-2 flex flex-col gap-4 rounded-xl p-5 shadow-xl shadow-obsidian-bg/30 lg:hidden">
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="font-display text-sm font-extrabold tracking-wide text-slate-100">
+              Decision Intelligence Stack
+            </h2>
+            <span class="flex items-center gap-1.5 rounded-full border border-highlight-mint/10 bg-highlight-mint/5 px-2 py-1 text-[9px] font-mono font-bold uppercase text-highlight-mint">
+              <span class="h-1.5 w-1.5 rounded-full bg-highlight-mint"></span>
+              Live
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Economía aplicada</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Arquitectura BI</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Analítica financiera</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Estrategia tecnológica</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Columna Derecha: Componente de Terminal Analítica -->
-      <div class="lg:col-span-5 w-full flex items-center justify-center relative">
+      <div class="hidden lg:col-span-5 lg:flex w-full items-center justify-center relative">
         <!-- Aura resplandeciente de fondo para dar profundidad a la terminal -->
         <div class="absolute -inset-4 bg-accent-bronze/5 rounded-full blur-[80px] pointer-events-none"></div>
         
