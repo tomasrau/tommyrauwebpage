@@ -38,9 +38,41 @@ import Metric from "../../components/ui/Metric.astro";
             Contact
           </a>
         </div>
+
+        <!-- Compact mobile panel: replaces the terminal on small screens -->
+        <div class="glass-surface fine-border mt-2 flex flex-col gap-4 rounded-xl p-5 shadow-xl shadow-obsidian-bg/30 lg:hidden">
+          <div class="flex items-center justify-between gap-4">
+            <h2 class="font-display text-sm font-extrabold tracking-wide text-slate-100">
+              Decision Intelligence Stack
+            </h2>
+            <span class="flex items-center gap-1.5 rounded-full border border-highlight-mint/10 bg-highlight-mint/5 px-2 py-1 text-[9px] font-mono font-bold uppercase text-highlight-mint">
+              <span class="h-1.5 w-1.5 rounded-full bg-highlight-mint"></span>
+              Live
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Applied economics</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">BI architecture</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Financial analytics</span>
+            </div>
+            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
+              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
+              <span class="text-muted text-xs">Strategic technology</span>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="lg:col-span-5 w-full flex items-center justify-center relative">
+      <div class="hidden lg:col-span-5 lg:flex w-full items-center justify-center relative">
         <div class="absolute -inset-4 bg-accent-bronze/5 rounded-full blur-[80px] pointer-events-none"></div>
 
         <div class="glass-surface w-full overflow-hidden rounded-xl border border-white/5 shadow-2xl font-mono text-[11px] sm:text-xs md:text-sm leading-relaxed max-w-full">
