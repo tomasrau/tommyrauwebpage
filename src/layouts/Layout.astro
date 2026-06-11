@@ -20,7 +20,7 @@ const {
 
 const siteURL = "https://tomasrau.ar";
 const canonicalURL = new URL(Astro.url.pathname, siteURL).toString();
-const ogImageURL = new URL("/og-image.svg", siteURL).toString();
+const ogImageURL = new URL("/tomasrau_og_image.png", siteURL).toString();
 const ogLocale = lang === "en" ? "en_US" : "es_AR";
 ---
 
@@ -40,7 +40,10 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
         }
       })();
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="500x500" href="/tomasrau_favicon_black_no_bkg.png" />
+    <link rel="icon" type="image/png" sizes="500x500" href="/tomasrau_favicon_black_no_bkg.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" sizes="500x500" href="/tomasrau_favicon_white_no_bkg.png" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="/tomasrau_favicon_black_no_bkg.png" />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Primary SEO Metadata -->
@@ -60,7 +63,7 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImageURL} />
-    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Tomás Rau - Economía, BI, Finanzas y Tecnología" />

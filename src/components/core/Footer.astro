@@ -1,5 +1,8 @@
 ---
 // Footer.astro - Pie de página profesional, premium y minimalista
+import logoBlack from "../../assets/media/logos/logo_black_no_bkg.png";
+import logoWhite from "../../assets/media/logos/logo_white_no_bkg.png";
+
 const currentYear = new Date().getFullYear();
 ---
 
@@ -14,12 +17,18 @@ const currentYear = new Date().getFullYear();
       
       <!-- Bloque de Identidad Profesional -->
       <div class="flex flex-col gap-3 max-w-md">
-        <a href="#inicio" class="group flex flex-col gap-0.5 focus:outline-none" aria-label="Volver al inicio">
-          <span class="font-display font-extrabold text-slate-100 text-xl tracking-tight transition-colors duration-200 group-hover:text-accent-bronze">
-            Tomás Rau
+        <a href="#inicio" class="group flex items-center gap-3 focus:outline-none" aria-label="Volver al inicio">
+          <span class="brand-mark relative flex h-10 w-10 shrink-0 items-center justify-center" aria-hidden="true">
+            <img class="brand-logo brand-logo-dark absolute inset-0 h-full w-full object-contain" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="lazy" decoding="async" />
+            <img class="brand-logo brand-logo-light absolute inset-0 h-full w-full object-contain" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="lazy" decoding="async" />
           </span>
-          <span class="text-[9px] font-mono tracking-widest text-muted uppercase">
-            Economía &middot; BI &middot; Finanzas &middot; Tecnología Estratégica
+          <span class="flex min-w-0 flex-col gap-0.5">
+            <span class="font-display font-extrabold text-slate-100 text-xl tracking-tight leading-none transition-colors duration-200 group-hover:text-accent-bronze">
+              Tomás Rau
+            </span>
+            <span class="text-[9px] font-mono tracking-widest text-muted uppercase">
+              Economía &middot; BI &middot; Finanzas &middot; Tecnología Estratégica
+            </span>
           </span>
         </a>
         <p class="text-muted text-sm leading-relaxed mt-1">

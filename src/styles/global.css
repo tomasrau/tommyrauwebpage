@@ -219,6 +219,15 @@ html[data-theme="dark"] .theme-toggle-icon-light {
   display: none;
 }
 
+.brand-logo {
+  opacity: 1;
+}
+
+html[data-theme="light"] .brand-logo-dark,
+html[data-theme="dark"] .brand-logo-light {
+  opacity: 0;
+}
+
 html[data-theme="light"] .mobile-menu-panel {
   background: rgba(255, 252, 246, 0.98);
 }
