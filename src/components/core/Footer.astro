@@ -1,7 +1,9 @@
 ---
 // Footer.astro - Pie de página profesional, premium y minimalista
-import logoBlack from "../../assets/media/logos/logo_black_no_bkg.png";
-import logoWhite from "../../assets/media/logos/logo_white_no_bkg.png";
+import logoBlack from "../../assets/media/logos/logo_black_cropped.png";
+import logoWhite from "../../assets/media/logos/logo_white_cropped.png";
+import isotypeBlack from "../../assets/media/logos/isotype_black_cropped.png";
+import isotypeWhite from "../../assets/media/logos/isotype_white_cropped.png";
 
 const currentYear = new Date().getFullYear();
 ---
@@ -17,15 +19,12 @@ const currentYear = new Date().getFullYear();
       
       <!-- Bloque de Identidad Profesional -->
       <div class="flex flex-col gap-3 max-w-md">
-        <a href="#inicio" class="group flex items-center gap-3 focus:outline-none" aria-label="Volver al inicio">
-          <span class="brand-mark relative flex h-10 w-10 shrink-0 items-center justify-center" aria-hidden="true">
-            <img class="brand-logo brand-logo-dark absolute inset-0 h-full w-full object-contain" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="lazy" decoding="async" />
-            <img class="brand-logo brand-logo-light absolute inset-0 h-full w-full object-contain" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="lazy" decoding="async" />
+        <a href="#inicio" class="group flex w-fit max-w-full flex-col gap-2 focus:outline-none" aria-label="Volver al inicio">
+          <span class="brand-lockup relative block h-[34px] w-[178px] max-w-full sm:h-[38px] sm:w-[200px]" aria-hidden="true">
+            <img class="brand-logo brand-logo-dark absolute inset-0 h-full w-full object-contain object-left" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="lazy" decoding="async" />
+            <img class="brand-logo brand-logo-light absolute inset-0 h-full w-full object-contain object-left" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="lazy" decoding="async" />
           </span>
           <span class="flex min-w-0 flex-col gap-0.5">
-            <span class="font-display font-extrabold text-slate-100 text-xl tracking-tight leading-none transition-colors duration-200 group-hover:text-accent-bronze">
-              Tomás Rau
-            </span>
             <span class="text-[9px] font-mono tracking-widest text-muted uppercase">
               Economía &middot; BI &middot; Finanzas &middot; Tecnología Estratégica
             </span>
@@ -103,8 +102,12 @@ const currentYear = new Date().getFullYear();
       <span class="text-xs text-muted">
         &copy; {currentYear} Tomás Rau. Todos los derechos reservados.
       </span>
-      <span class="text-[10px] font-mono text-muted/50 tracking-wider">
-        tomasrau.ar &middot; Quantitative Architecture
+      <span class="flex items-center gap-2 text-[10px] font-mono text-muted/50 tracking-wider">
+        <span class="brand-symbol relative block h-4 w-4 shrink-0" aria-hidden="true">
+          <img class="brand-logo brand-logo-dark absolute inset-0 h-full w-full object-contain" src={isotypeWhite.src} alt="" width={isotypeWhite.width} height={isotypeWhite.height} loading="lazy" decoding="async" />
+          <img class="brand-logo brand-logo-light absolute inset-0 h-full w-full object-contain" src={isotypeBlack.src} alt="" width={isotypeBlack.width} height={isotypeBlack.height} loading="lazy" decoding="async" />
+        </span>
+        <span>tomasrau.ar &middot; Quantitative Architecture</span>
       </span>
     </div>
 
