@@ -1,11 +1,19 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Terminal from "../components/ui/Terminal.astro";
+import VisualGrid from "../components/core/VisualGrid.astro";
+import FocusPanel from "../components/ui/FocusPanel.astro";
 import Metric from "../components/ui/Metric.astro";
 import About from "../components/sections/About.astro";
 import CaseStudies from "../components/sections/CaseStudies.astro";
 import Experience from "../components/sections/Experience.astro";
 import Contact from "../components/sections/Contact.astro";
+
+const focusItems = [
+  { label: "Economía aplicada" },
+  { label: "Arquitectura BI" },
+  { label: "Analítica financiera" },
+  { label: "Estrategia tecnológica" },
+];
 ---
 
 <Layout
@@ -14,143 +22,172 @@ import Contact from "../components/sections/Contact.astro";
   title="Tomás Rau | Economía, Business Intelligence y Analítica Financiera"
   description="Economista especializado en Business Intelligence, analítica financiera, estrategia tecnológica y toma de decisiones basada en datos."
 >
-  <!-- Hero Section / Shell de Validación Visual -->
-  <section id="inicio" class="section-container scroll-mt-28 min-h-screen flex items-center justify-center !pt-24 !pb-16 md:!pt-32 md:!pb-24">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center w-full">
-      
-      <!-- Columna Izquierda: Copias, Título y Llamados a la Acción -->
-      <div class="lg:col-span-7 flex flex-col gap-6">
-        <!-- Eyebrow Tagline -->
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">
-          Economía · Business Intelligence · Finanzas
-        </span>
-        
-        <!-- Main Heading -->
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-50 tracking-tight leading-[1.15] max-w-3xl">
-          Economía, datos y estrategia para decisiones más inteligentes.
-        </h1>
-        
-        <!-- Core Narrative Description -->
-        <p class="text-muted text-base md:text-lg leading-relaxed max-w-2xl">
-          Soy <strong class="text-slate-100 font-semibold font-display">Tomás Rau</strong>, economista especializado en Business Intelligence, analítica financiera y tecnología estratégica. Diseño e implemento arquitecturas de datos, reportería avanzada y modelos cuantitativos enfocados en maximizar el valor corporativo y refinar la toma de decisiones empresariales.
+  <section id="inicio" class="hero">
+    <VisualGrid />
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <span class="eyebrow">Economía · Business Intelligence · Finanzas</span>
+
+        <h1 class="hero-heading">Economía, datos y estrategia para decisiones más inteligentes.</h1>
+
+        <p class="hero-desc">
+          Soy <strong>Tomás Rau</strong>, economista especializado en <em>Business Intelligence</em>, analítica financiera y tecnología estratégica. Diseño arquitecturas de datos, reportería avanzada y modelos cuantitativos para maximizar el valor corporativo y refinar la toma de decisiones.
         </p>
-        
-        <!-- Navigation/CTA triggers -->
-        <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mt-2">
-          <a
-            href="#proyectos"
-            class="px-6 py-3.5 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-sm text-center tracking-wide transition-all duration-200 shadow-lg shadow-accent-bronze/10 focus:outline-none active:scale-[0.98]"
-          >
-            Ver proyectos
-          </a>
-          <a
-            href="#contacto"
-            class="px-6 py-3.5 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-bold text-sm text-center tracking-wide transition-all duration-200 glass-surface focus:outline-none active:scale-[0.98]"
-          >
-            Contactar
-          </a>
-        </div>
 
-        <!-- Panel móvil compacto: reemplaza la terminal en pantallas pequeñas -->
-        <div class="glass-surface fine-border mt-2 flex flex-col gap-4 rounded-xl p-5 shadow-xl shadow-obsidian-bg/30 lg:hidden">
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="font-display text-sm font-extrabold tracking-wide text-slate-100">
-              Decision Intelligence Stack
-            </h2>
-            <span class="flex items-center gap-1.5 rounded-full border border-highlight-mint/10 bg-highlight-mint/5 px-2 py-1 text-[9px] font-mono font-bold uppercase text-highlight-mint">
-              <span class="h-1.5 w-1.5 rounded-full bg-highlight-mint"></span>
-              Live
-            </span>
-          </div>
-
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Economía aplicada</span>
-            </div>
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Arquitectura BI</span>
-            </div>
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Analítica financiera</span>
-            </div>
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Estrategia tecnológica</span>
-            </div>
-          </div>
+        <div class="hero-actions">
+          <a href="#proyectos" class="btn btn-primary">Ver proyectos</a>
+          <a href="#contacto" class="btn btn-secondary">Contactar</a>
         </div>
       </div>
 
-      <!-- Columna Derecha: Componente de Terminal Analítica -->
-      <div class="hidden lg:col-span-5 lg:flex w-full items-center justify-center relative">
-        <!-- Aura resplandeciente de fondo para dar profundidad a la terminal -->
-        <div class="absolute -inset-4 bg-accent-bronze/5 rounded-full blur-[80px] pointer-events-none"></div>
-        
-        <Terminal />
+      <div class="hero-panel">
+        <FocusPanel
+          heading="Foco profesional"
+          value="+8 años"
+          valueLabel="BI & analítica financiera"
+          items={focusItems}
+        />
       </div>
-
     </div>
   </section>
 
-  <!-- Sección de Capacidades / Expertise (ID: expertise para concordar con Header.astro) -->
-  <section id="expertise" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
-    <div class="flex flex-col gap-12 w-full">
-      
-      <!-- Cabecera de la Sección -->
-      <div class="flex flex-col gap-4 max-w-3xl">
-        <!-- Eyebrow Tagline -->
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">
-          Capacidades estratégicas
-        </span>
-        
-        <!-- H2 Heading -->
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-          Un perfil híbrido entre economía, datos y tecnología.
-        </h2>
-        
-        <!-- Contextual Description -->
-        <p class="text-muted text-base md:text-lg leading-relaxed">
-          La integración entre el razonamiento económico, una sólida arquitectura de BI, la analítica financiera avanzada y la toma de decisiones estratégicas estructuradas permite formular soluciones analíticas de alto impacto, traduciendo grandes volúmenes de datos en ventajas competitivas reales.
+  <section id="expertise" class="section">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="eyebrow">Capacidades estratégicas</span>
+        <h2 class="section-heading">Un perfil híbrido entre economía, datos y tecnología.</h2>
+        <p class="section-lead">
+          La integración entre razonamiento económico, arquitectura de BI, analítica financiera avanzada y decisión estratégica estructurada permite traducir grandes volúmenes de datos en ventajas competitivas reales.
         </p>
       </div>
 
-      <!-- Grid de Componentes Metric -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 w-full">
-        <Metric 
-          value="+8 años" 
-          label="BI & Analytics" 
-          description="Experiencia en reporting ejecutivo, automatización, modelos de datos y visualización avanzada." 
-          trend="Arquitectura analítica" 
+      <div class="metrics-grid">
+        <Metric
+          value="+8 años"
+          label="BI & Analytics"
+          tag="Arquitectura analítica"
+          description="Experiencia en reporting ejecutivo, automatización, modelos de datos y visualización avanzada."
         />
-        <Metric 
-          value="Finanzas" 
-          label="Financial Analytics" 
-          description="Análisis de indicadores, mercados, escenarios y criterios de evaluación para decisiones financieras." 
-          trend="Lectura estratégica" 
+        <Metric
+          value="Finanzas"
+          label="Financial Analytics"
+          tag="Lectura estratégica"
+          description="Análisis de indicadores, mercados, escenarios y criterios de evaluación para decisiones financieras."
         />
-        <Metric 
-          value="Estrategia" 
-          label="Tech & Business" 
-          description="Diseño de soluciones digitales, procesos de transformación y sistemas de decisión basados en datos." 
-          trend="Visión ejecutiva" 
+        <Metric
+          value="Estrategia"
+          label="Tech & Business"
+          tag="Visión ejecutiva"
+          description="Diseño de soluciones digitales, procesos de transformación y sistemas de decisión basados en datos."
         />
-        <Metric 
-          value="Data-driven" 
-          label="Decision Intelligence" 
-          description="Traducción de datos complejos en narrativas, modelos y recomendaciones accionables." 
-          trend="Insight aplicado" 
+        <Metric
+          value="Data-driven"
+          label="Decision Intelligence"
+          tag="Insight aplicado"
+          description="Traducción de datos complejos en narrativas, modelos y recomendaciones accionables."
         />
       </div>
-
     </div>
   </section>
 
-  <!-- Nuevas Secciones del Sitio -->
   <About />
   <CaseStudies />
   <Experience />
   <Contact />
 </Layout>
+
+<style>
+  .hero {
+    position: relative;
+    width: 100%;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-9) var(--page-margin);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    align-items: center;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-inner { grid-template-columns: 7fr 5fr; }
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .hero-heading {
+    font: var(--title-xl);
+    letter-spacing: var(--ls-title-xl);
+    color: var(--text-primary);
+    margin: 0;
+    max-width: 18ch;
+  }
+
+  .hero-desc {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .hero-desc strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .hero-desc em {
+    font-style: italic;
+    color: var(--text-primary);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .hero-panel {
+    display: none;
+    justify-content: center;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-panel { display: flex; }
+  }
+
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 66ch;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--gutter);
+  }
+
+  @media (min-width: 640px) {
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (min-width: 1024px) {
+    .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>

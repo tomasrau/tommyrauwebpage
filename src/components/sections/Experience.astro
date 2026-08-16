@@ -1,152 +1,128 @@
 ---
-// Experience.astro - Sección "Trayectoria" (Línea de tiempo profesional)
+// Experience.astro - Sección "Trayectoria" (timeline con nodo cuadrado, §3.11)
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const copy = {
+  es: {
+    eyebrow: "Trayectoria",
+    heading: "Una progresión profesional entre análisis, negocio y tecnología.",
+    lead: "Evolución que combina el rigor metodológico de la economía clásica con las herramientas y plataformas de Business Intelligence del stack tecnológico moderno.",
+    milestones: [
+      { tag: "Fundamentos cuantitativos", stage: "Etapa inicial", title: "Economía y formación estratégica", desc: "Formación rigurosa en teoría macroeconómica, econometría y modelos predictivos cuantitativos — base metodológica para el análisis de dinámicas corporativas complejas, elasticidades de mercado e interpretación de conjuntos de datos empresariales." },
+      { tag: "Consolidación de datos", stage: "Etapa analítica", title: "Business Intelligence & Analytics", desc: "Especialización en el stack moderno de datos: diseño e integración de almacenes de datos analíticos, automatización de canalizaciones ETL, esquemas estrella y reportería directiva de alto nivel para autogestión de datos corporativos." },
+      { tag: "Inteligencia de mercados", stage: "Especialización", title: "Financial analytics & capital markets focus", desc: "Aplicación de econometría avanzada y análisis financiero a carteras de inversión y valuación corporativa: modelado de sensibilidad a tasas, evaluación cuantitativa de activos y optimización del flujo de caja operativo." },
+      { tag: "Productos y plataformas", stage: "Etapa directiva", title: "Data-driven products and strategic platforms", desc: "Diseño e impulso de plataformas digitales que centralizan información clave de negocio: análisis predictivo, IA aplicada y dashboards interactivos como tableros de control directivo." },
+    ],
+  },
+  en: {
+    eyebrow: "Experience",
+    heading: "A professional progression across analysis, business and technology.",
+    lead: "A structured path combining the methodological rigor of classical economics with the tools and platforms of the modern Business Intelligence stack.",
+    milestones: [
+      { tag: "Quantitative foundations", stage: "Initial stage", title: "Economics and strategic training", desc: "A rigorous foundation in macroeconomic theory, econometrics and quantitative predictive models — the methodological base for analyzing complex corporate dynamics, market elasticities and business data sets." },
+      { tag: "Data consolidation", stage: "Analytical stage", title: "Business Intelligence & Analytics", desc: "Practical specialization in the modern data stack: design and integration of analytical data warehouses, ETL pipeline automation, star schemas and high-level executive reporting for data self-service." },
+      { tag: "Market intelligence", stage: "Specialization", title: "Financial analytics & capital markets focus", desc: "Application of advanced econometrics and financial analysis to investment portfolios and corporate valuation: rate-sensitivity modeling, quantitative asset evaluation and operating cash flow optimization." },
+      { tag: "Products and platforms", stage: "Strategic stage", title: "Data-driven products and strategic platforms", desc: "Design and delivery of digital platforms that centralize key business information: predictive analytics, applied AI and interactive dashboards as executive control panels." },
+    ],
+  },
+} as const;
+
+const t = copy[lang];
 ---
 
-<section id="experiencia" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
-  <div class="flex flex-col gap-12 w-full">
-    
-    <!-- Cabecera de la Sección -->
-    <div class="flex flex-col gap-4 max-w-3xl">
-      <!-- Eyebrow Tagline -->
-      <span class="text-accent text-xs font-mono tracking-widest uppercase">
-        Trayectoria
-      </span>
-      
-      <!-- H2 Heading -->
-      <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-        Una progresión profesional entre análisis, negocio y tecnología.
-      </h2>
-      
-      <!-- Short Description -->
-      <p class="text-muted text-base md:text-lg leading-relaxed">
-        Evolución estructurada que combina el rigor metodológico de la economía clásica con las herramientas y plataformas de Business Intelligence del stack tecnológico moderno.
-      </p>
+<section id="experiencia" class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <span class="eyebrow">{t.eyebrow}</span>
+      <h2 class="section-heading">{t.heading}</h2>
+      <p class="section-lead">{t.lead}</p>
     </div>
 
-    <!-- Timeline Wrapper (Con línea vertical decorativa en el lateral izquierdo) -->
-    <div class="relative pl-5 sm:pl-8 border-l border-white/5 flex flex-col gap-8 md:gap-10 max-w-4xl mx-auto w-full mt-2">
-      
-      <!-- Milestone 1 -->
-      <div class="relative group">
-        <!-- Nodo / Punto de la Línea de Tiempo -->
-        <div class="absolute -left-[29px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-obsidian-bg border-2 border-slate-700 group-hover:border-accent-bronze transition-colors duration-300 flex items-center justify-center">
-          <div class="w-1.5 h-1.5 rounded-full bg-slate-800 group-hover:bg-accent-bronze transition-colors duration-300"></div>
-        </div>
-
-        <!-- Tarjeta de Contenido de Hito -->
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 hover:border-accent-bronze/10 shadow-lg transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-accent-bronze/0 via-accent-bronze/0 group-hover:via-accent-bronze/20 group-hover:to-accent-bronze/30 transition-all duration-500"></div>
-          
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">
-              Fundamentos Cuantitativos
-            </span>
-            <span class="font-mono text-[9px] text-slate-500 px-2 py-0.5 rounded bg-white/5 border border-white/5">
-              Etapa Inicial
-            </span>
+    <ol class="timeline">
+      {t.milestones.map((m) => (
+        <li class="milestone">
+          <span class="milestone-node" aria-hidden="true"></span>
+          <div class="milestone-card card">
+            <div class="milestone-meta">
+              <span class="milestone-tag">{m.tag}</span>
+              <span class="tag tag-info">{m.stage}</span>
+            </div>
+            <h3 class="milestone-title">{m.title}</h3>
+            <p class="milestone-desc">{m.desc}</p>
           </div>
-
-          <h3 class="font-display font-extrabold text-slate-100 text-base sm:text-lg">
-            Economía y formación estratégica
-          </h3>
-
-          <p class="text-muted text-xs sm:text-sm leading-relaxed mt-1">
-            Formación inicial rigurosa centrada en teoría macroeconómica, econometría y modelos predictivos cuantitativos. Esta etapa sentó las bases metodológicas para el análisis riguroso de dinámicas corporativas complejas, elasticidades de mercado e interpretación lógica de conjuntos de datos empresariales.
-          </p>
-        </div>
-      </div>
-
-      <!-- Milestone 2 -->
-      <div class="relative group">
-        <!-- Nodo / Punto de la Línea de Tiempo -->
-        <div class="absolute -left-[29px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-obsidian-bg border-2 border-slate-700 group-hover:border-accent-bronze transition-colors duration-300 flex items-center justify-center">
-          <div class="w-1.5 h-1.5 rounded-full bg-slate-800 group-hover:bg-accent-bronze transition-colors duration-300"></div>
-        </div>
-
-        <!-- Tarjeta de Contenido de Hito -->
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 hover:border-accent-bronze/10 shadow-lg transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-accent-bronze/0 via-accent-bronze/0 group-hover:via-accent-bronze/20 group-hover:to-accent-bronze/30 transition-all duration-500"></div>
-          
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">
-              Consolidación de Datos
-            </span>
-            <span class="font-mono text-[9px] text-slate-500 px-2 py-0.5 rounded bg-white/5 border border-white/5">
-              Etapa Analítica
-            </span>
-          </div>
-
-          <h3 class="font-display font-extrabold text-slate-100 text-base sm:text-lg">
-            Business Intelligence & Analytics
-          </h3>
-
-          <p class="text-muted text-xs sm:text-sm leading-relaxed mt-1">
-            Especialización práctica en el stack moderno de datos. Diseño e integración de almacenes de datos analíticos, automatización de canalizaciones ETL, estructuración de esquemas estrella y desarrollo de reportería directiva de alto nivel para facilitar la autogestión de datos corporativos.
-          </p>
-        </div>
-      </div>
-
-      <!-- Milestone 3 -->
-      <div class="relative group">
-        <!-- Nodo / Punto de la Línea de Tiempo -->
-        <div class="absolute -left-[29px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-obsidian-bg border-2 border-slate-700 group-hover:border-accent-bronze transition-colors duration-300 flex items-center justify-center">
-          <div class="w-1.5 h-1.5 rounded-full bg-slate-800 group-hover:bg-accent-bronze transition-colors duration-300"></div>
-        </div>
-
-        <!-- Tarjeta de Contenido de Hito -->
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 hover:border-accent-bronze/10 shadow-lg transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-accent-bronze/0 via-accent-bronze/0 group-hover:via-accent-bronze/20 group-hover:to-accent-bronze/30 transition-all duration-500"></div>
-          
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">
-              Inteligencia de Mercados
-            </span>
-            <span class="font-mono text-[9px] text-slate-500 px-2 py-0.5 rounded bg-white/5 border border-white/5">
-              Especialización
-            </span>
-          </div>
-
-          <h3 class="font-display font-extrabold text-slate-100 text-base sm:text-lg">
-            Financial analytics & capital markets focus
-          </h3>
-
-          <p class="text-muted text-xs sm:text-sm leading-relaxed mt-1">
-            Aplicación de teoría econométrica avanzada y análisis financiero a carteras de inversión y valuación corporativa. Modelado de escenarios de sensibilidad a tasas, evaluación cuantitativa de activos y optimización del flujo de caja operativo basado en previsiones estadísticas.
-          </p>
-        </div>
-      </div>
-
-      <!-- Milestone 4 -->
-      <div class="relative group">
-        <!-- Nodo / Punto de la Línea de Tiempo -->
-        <div class="absolute -left-[29px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-obsidian-bg border-2 border-slate-700 group-hover:border-accent-bronze transition-colors duration-300 flex items-center justify-center">
-          <div class="w-1.5 h-1.5 rounded-full bg-slate-800 group-hover:bg-accent-bronze transition-colors duration-300"></div>
-        </div>
-
-        <!-- Tarjeta de Contenido de Hito -->
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 hover:border-accent-bronze/10 shadow-lg transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-accent-bronze/0 via-accent-bronze/0 group-hover:via-accent-bronze/20 group-hover:to-accent-bronze/30 transition-all duration-500"></div>
-          
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <span class="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">
-              Productos y Plataformas
-            </span>
-            <span class="font-mono text-[9px] text-slate-500 px-2 py-0.5 rounded bg-white/5 border border-white/5">
-              Etapa Directiva
-            </span>
-          </div>
-
-          <h3 class="font-display font-extrabold text-slate-100 text-base sm:text-lg">
-            Data-driven products and strategic platforms
-          </h3>
-
-          <p class="text-muted text-xs sm:text-sm leading-relaxed mt-1">
-            Diseño e impulso de plataformas digitales que centralizan información clave de negocio. Integración holística de análisis predictivo, inteligencia artificial práctica, y dashboards interactivos que actúan como tableros de control para la dirección y optimizan los procesos corporativos.
-          </p>
-        </div>
-      </div>
-
-    </div>
-
+        </li>
+      ))}
+    </ol>
   </div>
 </section>
+
+<style>
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 66ch;
+  }
+
+  .timeline {
+    list-style: none;
+    margin: var(--space-2) 0 0;
+    padding: 0 0 0 var(--space-6);
+    border-left: var(--hairline) solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 56rem;
+  }
+
+  .milestone {
+    position: relative;
+  }
+
+  .milestone-node {
+    position: absolute;
+    left: calc(var(--space-6) * -1 - 5px);
+    top: 6px;
+    width: var(--node-point);
+    height: var(--node-point);
+    background: var(--text-secondary);
+    border-radius: var(--radius-1);
+  }
+
+  .milestone-card {
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .milestone-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .milestone-tag {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .milestone-title {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .milestone-desc {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+</style>

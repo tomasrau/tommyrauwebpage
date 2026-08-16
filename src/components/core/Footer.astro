@@ -1,115 +1,261 @@
 ---
-// Footer.astro - Pie de página profesional, premium y minimalista
+// Footer.astro - Pie de página plano, sin blur/gradiente, con divisor de nodo (§3.11).
 import logoBlack from "../../assets/media/logos/logo_black_cropped.png";
 import logoWhite from "../../assets/media/logos/logo_white_cropped.png";
 import isotypeBlack from "../../assets/media/logos/isotype_black_cropped.png";
 import isotypeWhite from "../../assets/media/logos/isotype_white_cropped.png";
 
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const copy = {
+  es: {
+    ariaHome: "Volver al inicio",
+    tag: "Economía · BI · Finanzas · Tecnología estratégica",
+    desc: "Rigurosidad cuantitativa, analítica de datos y visión financiera corporativa aplicadas a decisiones estratégicas de alto impacto.",
+    navHeading: "Navegación",
+    ariaNav: "Navegación del pie de página",
+    home: "Inicio",
+    projects: "Proyectos",
+    contact: "Contacto",
+    connectHeading: "Conectar",
+    copyright: "Todos los derechos reservados.",
+  },
+  en: {
+    ariaHome: "Back to home",
+    tag: "Economics · BI · Finance · Strategic technology",
+    desc: "Quantitative rigor, data analytics and corporate financial vision applied to high-impact strategic decisions.",
+    navHeading: "Navigation",
+    ariaNav: "Footer navigation",
+    home: "Home",
+    projects: "Projects",
+    contact: "Contact",
+    connectHeading: "Connect",
+    copyright: "All rights reserved.",
+  },
+} as const;
+
+const t = copy[lang];
 const currentYear = new Date().getFullYear();
 ---
 
-<footer class="w-full mt-auto border-t border-white/5 bg-obsidian-card/45 backdrop-blur-md relative overflow-hidden">
-  <!-- Línea divisoria premium con degradado de cobre metálico -->
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/25 to-transparent"></div>
+<footer class="site-footer">
+  <div class="node-divider" aria-hidden="true">
+    <span class="node-dot"></span>
+    <span class="node-line"></span>
+  </div>
 
-  <div class="section-container !py-12 flex flex-col gap-10">
-    
-    <!-- Fila superior: Marca, descriptor estratégico y bloques de enlaces -->
-    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
-      
-      <!-- Bloque de Identidad Profesional -->
-      <div class="flex flex-col gap-3 max-w-md">
-        <a href="#inicio" class="group flex w-fit max-w-full flex-col gap-2 focus:outline-none" aria-label="Volver al inicio">
-          <span class="brand-lockup relative block h-[34px] w-[178px] max-w-full sm:h-[38px] sm:w-[200px]" aria-hidden="true">
-            <img class="brand-logo brand-logo-dark absolute inset-0 h-full w-full object-contain object-left" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="lazy" decoding="async" />
-            <img class="brand-logo brand-logo-light absolute inset-0 h-full w-full object-contain object-left" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="lazy" decoding="async" />
-          </span>
-          <span class="flex min-w-0 flex-col gap-0.5">
-            <span class="text-[9px] font-mono tracking-widest text-muted uppercase">
-              Economía &middot; BI &middot; Finanzas &middot; Tecnología Estratégica
-            </span>
+  <div class="footer-inner">
+
+    <div class="footer-top">
+      <div class="footer-identity">
+        <a href="#inicio" class="brand" aria-label={t.ariaHome}>
+          <span class="brand-lockup" aria-hidden="true">
+            <img class="brand-logo brand-logo-dark" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="lazy" decoding="async" />
+            <img class="brand-logo brand-logo-light" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="lazy" decoding="async" />
           </span>
         </a>
-        <p class="text-muted text-sm leading-relaxed mt-1">
-          Integrando rigurosidad cuantitativa, analítica avanzada de datos y visión financiera corporativa para liderar decisiones estratégicas de alto impacto.
-        </p>
+        <span class="brand-tag">{t.tag}</span>
+        <p class="footer-desc">{t.desc}</p>
       </div>
 
-      <!-- Bloques de enlaces rápidos y redes -->
-      <div class="flex flex-wrap gap-x-16 gap-y-6">
-        
-        <!-- Panel: Navegación Interna -->
-        <div class="flex flex-col gap-3">
-          <span class="text-xs font-mono font-semibold tracking-wider text-slate-400 uppercase">
-            Navegación
-          </span>
-          <nav class="flex flex-col gap-2" aria-label="Navegación del pie de página">
-            <a href="#inicio" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
-              Inicio
-            </a>
-            <a href="#expertise" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
-              Expertise
-            </a>
-            <a href="#proyectos" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
-              Proyectos
-            </a>
-            <a href="#contacto" class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none">
-              Contacto
-            </a>
+      <div class="footer-links">
+        <div class="link-group">
+          <span class="link-heading">{t.navHeading}</span>
+          <nav class="link-list" aria-label={t.ariaNav}>
+            <a href="#inicio" class="footer-link">{t.home}</a>
+            <a href="#expertise" class="footer-link">Expertise</a>
+            <a href="#proyectos" class="footer-link">{t.projects}</a>
+            <a href="#contacto" class="footer-link">{t.contact}</a>
           </nav>
         </div>
 
-        <!-- Panel: Enlaces Profesionales -->
-        <div class="flex flex-col gap-3">
-          <span class="text-xs font-mono font-semibold tracking-wider text-slate-400 uppercase">
-            Conectar
-          </span>
-          <div class="flex flex-col gap-2">
-            <a 
-              href="#" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none flex items-center gap-1.5"
-            >
-              LinkedIn
-            </a>
-            <a 
-              href="#" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none flex items-center gap-1.5"
-            >
-              GitHub
-            </a>
-            <a 
-              href="mailto:" 
-              class="text-sm text-slate-400 hover:text-accent-bronze transition-colors duration-200 focus:outline-none flex items-center gap-1.5"
-            >
-              Email
-            </a>
+        <div class="link-group">
+          <span class="link-heading">{t.connectHeading}</span>
+          <div class="link-list">
+            <a href="https://www.linkedin.com/in/tomasezequielrau" target="_blank" rel="noopener noreferrer" class="footer-link">LinkedIn</a>
+            <a href="https://github.com/tomasrau" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+            <a href="mailto:tomasrau@lorenz.ar" class="footer-link">Email</a>
           </div>
         </div>
-
       </div>
-
     </div>
 
-    <!-- Línea divisoria interna -->
-    <div class="w-full h-[1px] bg-white/5"></div>
+    <div class="footer-rule"></div>
 
-    <!-- Fila inferior: Copyright y firma técnica -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-      <span class="text-xs text-muted">
-        &copy; {currentYear} Tomás Rau. Todos los derechos reservados.
-      </span>
-      <span class="flex items-center gap-2 text-[10px] font-mono text-muted/50 tracking-wider">
-        <span class="brand-symbol relative block h-4 w-4 shrink-0" aria-hidden="true">
-          <img class="brand-logo brand-logo-dark absolute inset-0 h-full w-full object-contain" src={isotypeWhite.src} alt="" width={isotypeWhite.width} height={isotypeWhite.height} loading="lazy" decoding="async" />
-          <img class="brand-logo brand-logo-light absolute inset-0 h-full w-full object-contain" src={isotypeBlack.src} alt="" width={isotypeBlack.width} height={isotypeBlack.height} loading="lazy" decoding="async" />
+    <div class="footer-bottom">
+      <span class="copyright">&copy; {currentYear} Tomás Rau. {t.copyright}</span>
+      <span class="signature">
+        <span class="signature-mark" aria-hidden="true">
+          <img class="brand-logo brand-logo-dark" src={isotypeWhite.src} alt="" width={isotypeWhite.width} height={isotypeWhite.height} loading="lazy" decoding="async" />
+          <img class="brand-logo brand-logo-light" src={isotypeBlack.src} alt="" width={isotypeBlack.width} height={isotypeBlack.height} loading="lazy" decoding="async" />
         </span>
-        <span>tomasrau.ar &middot; Quantitative Architecture</span>
+        tomasrau.ar · Quantitative Architecture
       </span>
     </div>
 
   </div>
 </footer>
+
+<style>
+  .site-footer {
+    width: 100%;
+    margin-top: auto;
+    background: var(--bg);
+    position: relative;
+  }
+
+  .node-divider {
+    display: flex;
+    align-items: center;
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: 0 var(--page-margin);
+  }
+
+  .node-dot {
+    width: var(--node-dot);
+    height: var(--node-dot);
+    background: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .node-line {
+    height: var(--hairline);
+    width: 100%;
+    background: var(--border);
+  }
+
+  .footer-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-6) var(--page-margin) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .footer-top {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 1024px) {
+    .footer-top { flex-direction: row; align-items: flex-start; }
+  }
+
+  .footer-identity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: 28rem;
+  }
+
+  .brand-lockup {
+    position: relative;
+    display: block;
+    height: 34px;
+    width: 178px;
+  }
+
+  .brand-logo {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+    object-position: left;
+  }
+
+  :root:not([data-theme="dark"]) .brand-logo-dark { opacity: 0; }
+  [data-theme="dark"] .brand-logo-light { opacity: 0; }
+
+  .brand-tag {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .footer-desc {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: var(--space-1) 0 0;
+    max-width: 40ch;
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-6) var(--space-9);
+  }
+
+  .link-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .link-heading {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .link-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .footer-link {
+    font: var(--ui-s);
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+
+  .footer-link:hover { color: var(--accent); }
+
+  .footer-rule {
+    height: var(--hairline);
+    background: var(--border);
+    width: 100%;
+  }
+
+  .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 768px) {
+    .footer-bottom { flex-direction: row; align-items: center; justify-content: space-between; }
+  }
+
+  .copyright {
+    font: var(--ui-s);
+    color: var(--text-tertiary);
+  }
+
+  .signature {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font: var(--source);
+    letter-spacing: var(--ls-source);
+    color: var(--text-tertiary);
+  }
+
+  .signature-mark {
+    position: relative;
+    display: block;
+    height: 16px;
+    width: 16px;
+    flex-shrink: 0;
+  }
+</style>

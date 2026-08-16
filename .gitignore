@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# brand catalog & design system source (internal, not needed at runtime)
+src/assets/media/design_system/

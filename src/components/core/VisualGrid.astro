@@ -1,84 +1,42 @@
 ---
-// VisualGrid.astro - Componente decorativo de fondo premium y analítico
+// VisualGrid.astro - Trama de fondo derivada del isotipo (§3.11 del design system).
+// Sólo se monta dentro del hero/portada — nunca detrás de texto de lectura ni de tarjetas.
 ---
 
-<div 
-  class="visual-grid fixed inset-0 z-[-10] pointer-events-none overflow-hidden select-none"
-  aria-hidden="true"
->
-  <!-- 1. Grid de micro-puntos técnico (Dot-matrix network) -->
-  <div class="absolute inset-0 dot-pattern opacity-40"></div>
-
-  <!-- 2. Resplandor de bronce/cobre en la parte superior derecha (Warm Bronze glow) -->
-  <div class="absolute inset-0 bronze-glow"></div>
-
-  <!-- 3. Resplandor de esmeralda/menta en la parte inferior izquierda (Emerald growth signal glow) -->
-  <div class="absolute inset-0 emerald-glow"></div>
-
-  <!-- 4. Viñeteado oscuro periférico para garantizar legibilidad de la tipografía (Dark vignette) -->
-  <div class="absolute inset-0 vignette-overlay"></div>
+<div class="node-trama" aria-hidden="true">
+  <svg class="node-trama-svg" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <pattern id="node-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+        <path d="M 32 0 L 0 0 0 32" fill="none" stroke="var(--border)" stroke-width="1" />
+      </pattern>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#node-grid)" />
+    <!-- Camino escaso de nodos, sólo ortogonal y 45° -->
+    <g stroke="var(--border-strong)" stroke-width="1" fill="none">
+      <path d="M 64 96 H 224 L 288 160 V 320" />
+      <path d="M 64 96 H 224 L 288 160 V 320" transform="translate(0, 0)" />
+    </g>
+    <g fill="var(--text-tertiary)">
+      <rect x="60" y="92" width="8" height="8" />
+      <rect x="220" y="92" width="8" height="8" />
+      <rect x="284" y="156" width="8" height="8" />
+      <rect x="284" y="316" width="8" height="8" />
+    </g>
+  </svg>
 </div>
 
 <style>
-  /* Matriz de micro-puntos finos con separación de 24px */
-  .dot-pattern {
-    background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-position: center;
+  .node-trama {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
   }
 
-  /* Aura superior derecha - Bronce metálico */
-  .bronze-glow {
-    background: radial-gradient(
-      circle at 85% 15%, 
-      rgba(212, 140, 70, 0.06) 0%, 
-      rgba(212, 140, 70, 0.02) 30%, 
-      transparent 65%
-    );
-  }
-
-  /* Aura inferior izquierda - Esmeralda analítica */
-  .emerald-glow {
-    background: radial-gradient(
-      circle at 15% 80%, 
-      rgba(16, 185, 129, 0.04) 0%, 
-      rgba(16, 185, 129, 0.01) 35%, 
-      transparent 65%
-    );
-  }
-
-  /* Contraste oscuro periférico */
-  .vignette-overlay {
-    background: radial-gradient(
-      circle at center,
-      transparent 30%,
-      var(--grid-vignette) 100%
-    );
-  }
-
-  .visual-grid {
-    background-color: var(--color-bg);
-  }
-
-  :global(html[data-theme="light"]) .dot-pattern {
+  .node-trama-svg {
+    width: 100%;
+    height: 100%;
     opacity: 0.55;
-  }
-
-  :global(html[data-theme="light"]) .bronze-glow {
-    background: radial-gradient(
-      circle at 84% 14%,
-      rgba(168, 100, 42, 0.1) 0%,
-      rgba(168, 100, 42, 0.035) 34%,
-      transparent 68%
-    );
-  }
-
-  :global(html[data-theme="light"]) .emerald-glow {
-    background: radial-gradient(
-      circle at 15% 80%,
-      rgba(5, 150, 105, 0.055) 0%,
-      rgba(5, 150, 105, 0.018) 34%,
-      transparent 68%
-    );
   }
 </style>

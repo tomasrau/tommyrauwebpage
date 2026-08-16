@@ -1,6 +1,19 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import VisualGrid from "../../components/core/VisualGrid.astro";
+import FocusPanel from "../../components/ui/FocusPanel.astro";
 import Metric from "../../components/ui/Metric.astro";
+import About from "../../components/sections/About.astro";
+import CaseStudies from "../../components/sections/CaseStudies.astro";
+import Experience from "../../components/sections/Experience.astro";
+import Contact from "../../components/sections/Contact.astro";
+
+const focusItems = [
+  { label: "Applied economics" },
+  { label: "BI architecture" },
+  { label: "Financial analytics" },
+  { label: "Strategic technology" },
+];
 ---
 
 <Layout
@@ -9,407 +22,172 @@ import Metric from "../../components/ui/Metric.astro";
   title="Tomás Rau | Economics, Business Intelligence and Financial Analytics"
   description="Economist specialized in Business Intelligence, financial analytics, strategic technology and data-driven decision-making."
 >
-  <section id="inicio" class="section-container scroll-mt-28 min-h-screen flex items-center justify-center !pt-24 !pb-16 md:!pt-32 md:!pb-24">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center w-full">
-      <div class="lg:col-span-7 flex flex-col gap-6">
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">
-          Economics · Business Intelligence · Finance
-        </span>
+  <section id="inicio" class="hero">
+    <VisualGrid />
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <span class="eyebrow">Economics · Business Intelligence · Finance</span>
 
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-slate-50 tracking-tight leading-[1.15] max-w-3xl">
-          Economics, data and strategy for smarter decisions.
-        </h1>
+        <h1 class="hero-heading">Economics, data and strategy for smarter decisions.</h1>
 
-        <p class="text-muted text-base md:text-lg leading-relaxed max-w-2xl">
-          I am <strong class="text-slate-100 font-semibold font-display">Tomás Rau</strong>, an economist specialized in Business Intelligence, financial analytics and strategic technology. I design analytical architectures, executive reporting systems and quantitative models that help organizations turn complex information into better business decisions.
+        <p class="hero-desc">
+          I'm <strong>Tomás Rau</strong>, an economist specialized in <em>Business Intelligence</em>, financial analytics and strategic technology. I design data architectures, executive reporting and quantitative models that help organizations maximize corporate value and sharpen decision-making.
         </p>
 
-        <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 mt-2">
-          <a
-            href="#proyectos"
-            class="px-6 py-3.5 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-sm text-center tracking-wide transition-all duration-200 shadow-lg shadow-accent-bronze/10 focus:outline-none active:scale-[0.98]"
-          >
-            View projects
-          </a>
-          <a
-            href="#contacto"
-            class="px-6 py-3.5 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-bold text-sm text-center tracking-wide transition-all duration-200 glass-surface focus:outline-none active:scale-[0.98]"
-          >
-            Contact
-          </a>
-        </div>
-
-        <!-- Compact mobile panel: replaces the terminal on small screens -->
-        <div class="glass-surface fine-border mt-2 flex flex-col gap-4 rounded-xl p-5 shadow-xl shadow-obsidian-bg/30 lg:hidden">
-          <div class="flex items-center justify-between gap-4">
-            <h2 class="font-display text-sm font-extrabold tracking-wide text-slate-100">
-              Decision Intelligence Stack
-            </h2>
-            <span class="flex items-center gap-1.5 rounded-full border border-highlight-mint/10 bg-highlight-mint/5 px-2 py-1 text-[9px] font-mono font-bold uppercase text-highlight-mint">
-              <span class="h-1.5 w-1.5 rounded-full bg-highlight-mint"></span>
-              Live
-            </span>
-          </div>
-
-          <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Applied economics</span>
-            </div>
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">BI architecture</span>
-            </div>
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Financial analytics</span>
-            </div>
-            <div class="flex items-center gap-2 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-              <span class="h-1.5 w-1.5 rounded-full bg-accent-bronze"></span>
-              <span class="text-muted text-xs">Strategic technology</span>
-            </div>
-          </div>
+        <div class="hero-actions">
+          <a href="#proyectos" class="btn btn-primary">View projects</a>
+          <a href="#contacto" class="btn btn-secondary">Contact</a>
         </div>
       </div>
 
-      <div class="hidden lg:col-span-5 lg:flex w-full items-center justify-center relative">
-        <div class="absolute -inset-4 bg-accent-bronze/5 rounded-full blur-[80px] pointer-events-none"></div>
-
-        <div class="glass-surface w-full overflow-hidden rounded-xl border border-white/5 shadow-2xl font-mono text-[11px] sm:text-xs md:text-sm leading-relaxed max-w-full">
-          <div class="flex items-center justify-between gap-3 px-4 py-3 bg-obsidian-card/80 border-b border-white/5 select-none">
-            <div class="flex items-center gap-1.5">
-              <div class="w-3 h-3 rounded-full bg-[#EF4444]/25 border border-[#EF4444]/45"></div>
-              <div class="w-3 h-3 rounded-full bg-[#F59E0B]/25 border border-[#F59E0B]/45"></div>
-              <div class="w-3 h-3 rounded-full bg-highlight-emerald/25 border border-highlight-emerald/45"></div>
-            </div>
-            <span class="hidden sm:inline text-muted text-[11px] font-mono tracking-wide opacity-80 truncate">
-              decision-intelligence.ts
-            </span>
-            <span class="flex items-center gap-1.5 text-[9px] font-semibold text-highlight-mint/80 bg-highlight-mint/5 px-2 py-0.5 rounded border border-highlight-mint/10">
-              <span class="w-1.5 h-1.5 rounded-full bg-highlight-mint animate-pulse"></span>
-              LIVE
-            </span>
-          </div>
-
-          <div class="p-4 sm:p-5 md:p-6 flex flex-col gap-4 text-slate-300">
-            <div class="flex flex-col gap-1">
-              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                <span class="text-accent select-none">&rsaquo;</span>
-                <span class="text-slate-400">tomasrau.ar/bi</span>
-                <span class="text-slate-100 font-semibold font-sans break-words">orchestrate --stack=financial_dw</span>
-              </div>
-              <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
-                <p>Ingesting financial and operational sources into a unified warehouse...</p>
-                <p class="text-highlight-mint/90 flex items-center gap-2">
-                  <span class="text-xs">✔</span> [PIPELINE VALIDATED] - Executive reporting layer ready.
-                </p>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                <span class="text-accent select-none">&rsaquo;</span>
-                <span class="text-slate-400">tomasrau.ar/finance</span>
-                <span class="text-slate-100 font-semibold font-sans break-words">model scenarios --risk-adjusted</span>
-              </div>
-              <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
-                <p>Testing assumptions across rates, margins, cash flow and market signals...</p>
-                <p class="text-highlight-mint/90 flex items-center gap-2">
-                  <span class="text-xs">✔</span> [MODEL LOADED] - Sensitivity analysis complete.
-                </p>
-              </div>
-            </div>
-
-            <div class="flex flex-col gap-1">
-              <div class="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-                <span class="text-accent select-none">&rsaquo;</span>
-                <span class="text-slate-400">tomasrau.ar/strategy</span>
-                <span class="text-slate-100 font-semibold font-sans break-words">generate decision brief</span>
-              </div>
-              <div class="pl-4 flex flex-col gap-0.5 text-muted text-[11px] md:text-xs">
-                <p>Converting quantitative signals into executive recommendations...</p>
-                <p class="text-accent flex items-center gap-2">
-                  <span class="text-xs">✦</span> [INSIGHT GENERATED] - Strategic allocation path identified.
-                </p>
-              </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-              <span class="text-accent select-none">&rsaquo;</span>
-              <span class="text-slate-400">tomasrau.ar/en</span>
-              <span class="w-2 h-4 bg-accent-bronze animate-pulse inline-block align-middle"></span>
-            </div>
-          </div>
-        </div>
+      <div class="hero-panel">
+        <FocusPanel
+          heading="Professional focus"
+          value="+8 years"
+          valueLabel="BI & financial analytics"
+          items={focusItems}
+        />
       </div>
     </div>
   </section>
 
-  <section id="expertise" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
-    <div class="flex flex-col gap-12 w-full">
-      <div class="flex flex-col gap-4 max-w-3xl">
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">
-          Strategic capabilities
-        </span>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-          A hybrid profile across economics, data and technology.
-        </h2>
-        <p class="text-muted text-base md:text-lg leading-relaxed">
-          Economic reasoning, BI architecture, advanced financial analytics and structured decision-making come together to transform complex data into operational clarity and competitive advantage.
+  <section id="expertise" class="section">
+    <div class="section-inner">
+      <div class="section-header">
+        <span class="eyebrow">Strategic capabilities</span>
+        <h2 class="section-heading">A hybrid profile across economics, data and technology.</h2>
+        <p class="section-lead">
+          Economic reasoning, BI architecture, advanced financial analytics and structured strategic decision-making combine to translate large volumes of data into real competitive advantage.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 w-full">
+      <div class="metrics-grid">
         <Metric
           value="+8 years"
           label="BI & Analytics"
+          tag="Analytical architecture"
           description="Experience in executive reporting, automation, data modeling and advanced visualization."
-          trend="Analytical architecture"
         />
         <Metric
           value="Finance"
           label="Financial Analytics"
-          description="Market, indicator, scenario and evaluation analysis for financial decisions."
-          trend="Strategic reading"
+          tag="Strategic reading"
+          description="Analysis of indicators, markets, scenarios and evaluation criteria for financial decisions."
         />
         <Metric
           value="Strategy"
           label="Tech & Business"
-          description="Digital solution design, transformation processes and data-driven decision systems."
-          trend="Executive vision"
+          tag="Executive vision"
+          description="Design of digital solutions, transformation processes and data-driven decision systems."
         />
         <Metric
           value="Data-driven"
           label="Decision Intelligence"
+          tag="Applied insight"
           description="Translation of complex data into narratives, models and actionable recommendations."
-          trend="Applied insight"
         />
       </div>
     </div>
   </section>
 
-  <section id="about" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start w-full">
-      <div class="lg:col-span-7 flex flex-col gap-6">
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">
-          Professional framework
-        </span>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-          Applied economics, analytical architecture and technology strategy.
-        </h2>
-        <div class="flex flex-col gap-5 text-muted text-base leading-relaxed max-w-3xl">
-          <p>
-            My work is built at the intersection of economic thinking, Business Intelligence and financial analysis. The objective is not simply to produce dashboards, but to create analytical systems that explain performance, risk and opportunity with executive clarity.
-          </p>
-          <p>
-            This perspective connects market intelligence, data architecture and strategic technology into a single decision layer. It helps teams align technical implementation with financial priorities and business outcomes.
-          </p>
-          <p>
-            The result is a practical bridge between technical teams and decision makers: models, reporting structures and data products designed to support concrete decisions under uncertainty.
-          </p>
-        </div>
-      </div>
-
-      <div class="lg:col-span-5 flex flex-col gap-4 w-full">
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 shadow-md flex gap-4 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="font-mono text-accent text-xs font-bold shrink-0 mt-0.5 select-none">[01]</div>
-          <div class="flex flex-col gap-2">
-            <h3 class="font-display font-bold text-slate-100 text-sm tracking-wide">Economic reasoning</h3>
-            <p class="text-muted text-xs leading-relaxed">Methodological rigor for interpreting incentives, market dynamics, financial tradeoffs and growth constraints.</p>
-          </div>
-        </div>
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 shadow-md flex gap-4 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="font-mono text-accent text-xs font-bold shrink-0 mt-0.5 select-none">[02]</div>
-          <div class="flex flex-col gap-2">
-            <h3 class="font-display font-bold text-slate-100 text-sm tracking-wide">BI architecture</h3>
-            <p class="text-muted text-xs leading-relaxed">Data models, semantic layers and executive reporting systems designed to reduce fragmentation and improve trust.</p>
-          </div>
-        </div>
-        <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 shadow-md flex gap-4 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="font-mono text-accent text-xs font-bold shrink-0 mt-0.5 select-none">[03]</div>
-          <div class="flex flex-col gap-2">
-            <h3 class="font-display font-bold text-slate-100 text-sm tracking-wide">Strategic decision-making</h3>
-            <p class="text-muted text-xs leading-relaxed">Translation of quantitative signals into practical options, priorities and decision criteria for leadership teams.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="proyectos" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
-    <div class="flex flex-col gap-12 w-full">
-      <div class="flex flex-col gap-4 max-w-3xl">
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">
-          Strategic projects
-        </span>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-          Systems, models and initiatives that convert data into decisions.
-        </h2>
-        <p class="text-muted text-base md:text-lg leading-relaxed">
-          Selected analytical initiatives where financial thinking and data architecture create operational clarity and measurable strategic value.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-6 w-full">
-        <article class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="flex flex-col gap-4">
-            <span class="w-fit text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">DATA INFRASTRUCTURE</span>
-            <h3 class="font-display font-extrabold text-slate-100 text-lg sm:text-xl group-hover:text-accent-bronze transition-colors duration-300">RIO Servicios Financieros</h3>
-            <p class="text-muted text-xs sm:text-sm leading-relaxed">Business Intelligence infrastructure redesign, integrating transactional sources and relational databases into a unified analytical layer.</p>
-          </div>
-          <div class="flex flex-col gap-4 border-t border-white/5 pt-4">
-            <div class="flex flex-col gap-1">
-              <span class="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Strategic outcome</span>
-              <p class="text-slate-200 text-xs sm:text-sm font-medium">Executive reporting automation and improved consistency across portfolio performance indicators.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 mt-1">
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">dbt</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">SQL</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">Power BI</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="flex flex-col gap-4">
-            <span class="w-fit text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">QUANTITATIVE MODELS</span>
-            <h3 class="font-display font-extrabold text-slate-100 text-lg sm:text-xl group-hover:text-accent-bronze transition-colors duration-300">Lorenz / Algorithmic trading platform</h3>
-            <p class="text-muted text-xs sm:text-sm leading-relaxed">Research and backtesting of quantitative trading models based on macro variables, spreads and execution signals.</p>
-          </div>
-          <div class="flex flex-col gap-4 border-t border-white/5 pt-4">
-            <div class="flex flex-col gap-1">
-              <span class="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Strategic outcome</span>
-              <p class="text-slate-200 text-xs sm:text-sm font-medium">Scenario simulation with drawdown control and API-based execution criteria.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 mt-1">
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">Python</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">Pandas</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">APIs</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="flex flex-col gap-4">
-            <span class="w-fit text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">FINANCIAL INTELLIGENCE</span>
-            <h3 class="font-display font-extrabold text-slate-100 text-lg sm:text-xl group-hover:text-accent-bronze transition-colors duration-300">Mubiz Pro Studio</h3>
-            <p class="text-muted text-xs sm:text-sm leading-relaxed">Executive control dashboards focused on unit economics, cash flow projections and pricing intelligence.</p>
-          </div>
-          <div class="flex flex-col gap-4 border-t border-white/5 pt-4">
-            <div class="flex flex-col gap-1">
-              <span class="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Strategic outcome</span>
-              <p class="text-slate-200 text-xs sm:text-sm font-medium">Margin visibility by project and stronger commercial decision-making around key contracts.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 mt-1">
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">Power BI</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">Financial Models</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="glass-surface h-full p-5 sm:p-6 rounded-xl border border-white/5 shadow-xl flex flex-col justify-between gap-6 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-          <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-          <div class="flex flex-col gap-4">
-            <span class="w-fit text-[9px] font-mono font-bold px-2.5 py-0.5 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent">DATA DEMOCRATIZATION</span>
-            <h3 class="font-display font-extrabold text-slate-100 text-lg sm:text-xl group-hover:text-accent-bronze transition-colors duration-300">BI Systems for SMEs</h3>
-            <p class="text-muted text-xs sm:text-sm leading-relaxed">Modular data modeling and BI consulting for SMEs, connecting local databases and ERP systems with modern analytical tools.</p>
-          </div>
-          <div class="flex flex-col gap-4 border-t border-white/5 pt-4">
-            <div class="flex flex-col gap-1">
-              <span class="text-[9px] font-mono text-slate-400 uppercase tracking-wider">Strategic outcome</span>
-              <p class="text-slate-200 text-xs sm:text-sm font-medium">Reduced dependency on manual analysis for daily operational and inventory decisions.</p>
-            </div>
-            <div class="flex flex-wrap gap-1.5 mt-1">
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">Power BI</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">BigQuery</span>
-              <span class="font-mono text-[9px] text-slate-400 px-2 py-0.5 rounded bg-white/5 border border-white/5">ETL</span>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <section id="experiencia" class="section-container scroll-mt-28 border-t border-white/5 !py-20 md:!py-28">
-    <div class="flex flex-col gap-12 w-full">
-      <div class="flex flex-col gap-4 max-w-3xl">
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">Experience</span>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-          A professional progression across analysis, business and technology.
-        </h2>
-        <p class="text-muted text-base md:text-lg leading-relaxed">
-          A structured path combining economic methodology with modern BI platforms, financial analytics and strategic data products.
-        </p>
-      </div>
-
-      <div class="relative pl-5 sm:pl-8 border-l border-white/5 flex flex-col gap-8 md:gap-10 max-w-4xl mx-auto w-full mt-2">
-        {[
-          ["Quantitative foundations", "Initial stage", "Economics and strategic training", "A rigorous foundation in macroeconomics, econometrics and quantitative models for understanding markets, incentives and business dynamics."],
-          ["Data consolidation", "Analytical stage", "Business Intelligence & Analytics", "Practical specialization in data modeling, ETL automation, analytical warehouses and executive reporting for corporate teams."],
-          ["Market intelligence", "Specialization", "Financial analytics & capital markets focus", "Application of financial analysis and quantitative criteria to scenarios, portfolios, valuation logic and operating cash flow decisions."],
-          ["Products and platforms", "Strategic stage", "Data-driven products and strategic platforms", "Design of digital platforms that centralize business information and turn predictive analytics into management systems."]
-        ].map(([kicker, stage, title, copy]) => (
-          <div class="relative group">
-            <div class="absolute -left-[29px] sm:-left-[39px] top-1.5 w-4 h-4 rounded-full bg-obsidian-bg border-2 border-slate-700 group-hover:border-accent-bronze transition-colors duration-300 flex items-center justify-center">
-              <div class="w-1.5 h-1.5 rounded-full bg-slate-800 group-hover:bg-accent-bronze transition-colors duration-300"></div>
-            </div>
-            <div class="glass-surface p-5 sm:p-6 rounded-xl border border-white/5 hover:border-accent-bronze/10 shadow-lg transition-all duration-300 flex flex-col gap-2 relative overflow-hidden">
-              <div class="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-accent-bronze/0 via-accent-bronze/0 group-hover:via-accent-bronze/20 group-hover:to-accent-bronze/30 transition-all duration-500"></div>
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <span class="font-mono text-[10px] tracking-widest uppercase text-accent font-bold">{kicker}</span>
-                <span class="font-mono text-[9px] text-slate-500 px-2 py-0.5 rounded bg-white/5 border border-white/5">{stage}</span>
-              </div>
-              <h3 class="font-display font-extrabold text-slate-100 text-base sm:text-lg">{title}</h3>
-              <p class="text-muted text-xs sm:text-sm leading-relaxed mt-1">{copy}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <section id="contacto" class="section-container scroll-mt-28 border-t border-white/5 !pt-20 !pb-28 md:!pt-28 md:!pb-36">
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start w-full">
-      <div class="lg:col-span-6 flex flex-col gap-6 relative">
-        <div class="absolute -inset-6 sm:-inset-10 bg-accent-bronze/5 rounded-full blur-[100px] pointer-events-none -z-10"></div>
-        <span class="text-accent text-xs font-mono tracking-widest uppercase">Contact</span>
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-display font-extrabold text-slate-50 tracking-tight leading-tight">
-          Let’s talk if you need to turn data, finance or strategy into concrete decisions.
-        </h2>
-        <p class="text-muted text-base leading-relaxed">
-          Available for specialized consulting, Business Intelligence initiatives, financial modeling and analytical platform design. Reach out through direct professional channels to coordinate an initial discussion.
-        </p>
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap mt-2 w-full">
-          <a href="mailto:contacto@tomasrau.ar" class="flex items-center justify-center gap-3 px-6 py-4 rounded-lg bg-accent-bronze hover:bg-accent-bronze-hover text-obsidian-bg font-display font-bold text-sm tracking-wide transition-all duration-200 shadow-lg shadow-accent-bronze/10 hover:shadow-accent-bronze/20 active:scale-[0.98] shrink-0">Email</a>
-          <a href="#" class="flex items-center justify-center gap-3 px-6 py-4 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-bold text-sm tracking-wide transition-all duration-200 glass-surface active:scale-[0.98]">LinkedIn</a>
-          <a href="#" class="flex items-center justify-center gap-3 px-6 py-4 rounded-lg border border-white/10 hover:border-accent-bronze text-slate-200 hover:text-accent-bronze font-display font-bold text-sm tracking-wide transition-all duration-200 glass-surface active:scale-[0.98]">GitHub</a>
-        </div>
-      </div>
-
-      <div class="lg:col-span-6 flex flex-col gap-4 w-full">
-        {[
-          ["Consulting / projects", "End-to-end advisory for custom analytical models, BI pipeline assessment and corporate financial optimization."],
-          ["Professional collaborations", "Co-design of digital platforms, strategic data initiatives and executive collaboration around finance and analytics."],
-          ["Content, media and speaking", "Talks and panels on economics, corporate data value, advanced reporting architecture and technology-led decision-making."]
-        ].map(([title, copy]) => (
-          <div class="glass-surface p-5 rounded-xl border border-white/5 shadow-md flex items-start gap-4 relative overflow-hidden group hover:border-accent-bronze/20 transition-all duration-300">
-            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-accent-bronze/0 group-hover:via-accent-bronze/30 to-transparent transition-all duration-500"></div>
-            <div class="p-2 rounded bg-accent-bronze/10 border border-accent-bronze/20 text-accent shrink-0 mt-0.5">
-              <div class="w-4 h-4 rounded-sm border border-current"></div>
-            </div>
-            <div class="flex flex-col gap-1">
-              <h3 class="font-display font-bold text-slate-100 text-sm tracking-wide">{title}</h3>
-              <p class="text-muted text-xs leading-relaxed">{copy}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
+  <About lang="en" />
+  <CaseStudies lang="en" />
+  <Experience lang="en" />
+  <Contact lang="en" />
 </Layout>
+
+<style>
+  .hero {
+    position: relative;
+    width: 100%;
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-9) var(--page-margin);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    align-items: center;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-inner { grid-template-columns: 7fr 5fr; }
+  }
+
+  .hero-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .hero-heading {
+    font: var(--title-xl);
+    letter-spacing: var(--ls-title-xl);
+    color: var(--text-primary);
+    margin: 0;
+    max-width: 18ch;
+  }
+
+  .hero-desc {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .hero-desc strong {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .hero-desc em {
+    font-style: italic;
+    color: var(--text-primary);
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .hero-panel {
+    display: none;
+    justify-content: center;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-panel { display: flex; }
+  }
+
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 66ch;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--gutter);
+  }
+
+  @media (min-width: 640px) {
+    .metrics-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (min-width: 1024px) {
+    .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+</style>

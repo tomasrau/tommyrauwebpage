@@ -1,6 +1,5 @@
 ---
 import "../styles/global.css";
-import VisualGrid from "../components/core/VisualGrid.astro";
 import Header from "../components/core/Header.astro";
 import Footer from "../components/core/Footer.astro";
 
@@ -33,10 +32,14 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
       (() => {
         try {
           const storedTheme = localStorage.getItem("theme");
-          const theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
-          document.documentElement.dataset.theme = theme;
+          if (storedTheme === "light" || storedTheme === "dark") {
+            document.documentElement.dataset.theme = storedTheme;
+          } else {
+            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            document.documentElement.dataset.theme = prefersDark ? "dark" : "light";
+          }
         } catch {
-          document.documentElement.dataset.theme = "dark";
+          document.documentElement.dataset.theme = "light";
         }
       })();
     </script>
@@ -52,8 +55,9 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     <meta name="description" content={description} />
     <meta name="author" content="Tomás Rau" />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#070a13" />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#EDF0EE" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A1310" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="light dark" />
     <link rel="canonical" href={canonicalURL} />
     {alternateUrl && <link rel="alternate" href={new URL(alternateUrl, siteURL).toString()} hreflang={lang === "es" ? "en" : "es"} />}
 
@@ -82,14 +86,11 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <!-- Premium Data-driven Backdrop -->
-    <VisualGrid />
-
     <!-- Sticky Floating Navigation Header -->
     <Header lang={lang} alternateUrl={alternateUrl} />
 
@@ -98,6 +99,6 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     </main>
 
     <!-- Professional Editorial Footer -->
-    <Footer />
+    <Footer lang={lang} />
   </body>
 </html>
