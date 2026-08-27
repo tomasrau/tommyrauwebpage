@@ -1,128 +1,329 @@
 ---
-// Experience.astro - Sección "Trayectoria" (timeline con nodo cuadrado, §3.11)
+// Experience.astro — trayectoria como lista de definición editorial.
+// Numeración de dos dígitos (§3.5) para que el margen no se mueva.
+//
+// register-paper, no -ink: era ink hasta que se retiró la sección Trabajo
+// (paper), que antes separaba a ésta de Modelo (ink) — sin ese separador
+// quedaban dos secciones oscuras adyacentes, sin ninguna transición visual
+// entre ellas. Se resuelve acá, no en Modelo (SensitivityModel.astro es la
+// "pieza firma" del sitio, deliberadamente oscura para el máximo impacto).
+
 interface Props {
   lang?: "es" | "en";
 }
 const { lang = "es" } = Astro.props;
 
-const copy = {
-  es: {
-    eyebrow: "Trayectoria",
-    heading: "Una progresión profesional entre análisis, negocio y tecnología.",
-    lead: "Evolución que combina el rigor metodológico de la economía clásica con las herramientas y plataformas de Business Intelligence del stack tecnológico moderno.",
-    milestones: [
-      { tag: "Fundamentos cuantitativos", stage: "Etapa inicial", title: "Economía y formación estratégica", desc: "Formación rigurosa en teoría macroeconómica, econometría y modelos predictivos cuantitativos — base metodológica para el análisis de dinámicas corporativas complejas, elasticidades de mercado e interpretación de conjuntos de datos empresariales." },
-      { tag: "Consolidación de datos", stage: "Etapa analítica", title: "Business Intelligence & Analytics", desc: "Especialización en el stack moderno de datos: diseño e integración de almacenes de datos analíticos, automatización de canalizaciones ETL, esquemas estrella y reportería directiva de alto nivel para autogestión de datos corporativos." },
-      { tag: "Inteligencia de mercados", stage: "Especialización", title: "Financial analytics & capital markets focus", desc: "Aplicación de econometría avanzada y análisis financiero a carteras de inversión y valuación corporativa: modelado de sensibilidad a tasas, evaluación cuantitativa de activos y optimización del flujo de caja operativo." },
-      { tag: "Productos y plataformas", stage: "Etapa directiva", title: "Data-driven products and strategic platforms", desc: "Diseño e impulso de plataformas digitales que centralizan información clave de negocio: análisis predictivo, IA aplicada y dashboards interactivos como tableros de control directivo." },
-    ],
-  },
-  en: {
-    eyebrow: "Experience",
-    heading: "A professional progression across analysis, business and technology.",
-    lead: "A structured path combining the methodological rigor of classical economics with the tools and platforms of the modern Business Intelligence stack.",
-    milestones: [
-      { tag: "Quantitative foundations", stage: "Initial stage", title: "Economics and strategic training", desc: "A rigorous foundation in macroeconomic theory, econometrics and quantitative predictive models — the methodological base for analyzing complex corporate dynamics, market elasticities and business data sets." },
-      { tag: "Data consolidation", stage: "Analytical stage", title: "Business Intelligence & Analytics", desc: "Practical specialization in the modern data stack: design and integration of analytical data warehouses, ETL pipeline automation, star schemas and high-level executive reporting for data self-service." },
-      { tag: "Market intelligence", stage: "Specialization", title: "Financial analytics & capital markets focus", desc: "Application of advanced econometrics and financial analysis to investment portfolios and corporate valuation: rate-sensitivity modeling, quantitative asset evaluation and operating cash flow optimization." },
-      { tag: "Products and platforms", stage: "Strategic stage", title: "Data-driven products and strategic platforms", desc: "Design and delivery of digital platforms that centralize key business information: predictive analytics, applied AI and interactive dashboards as executive control panels." },
-    ],
-  },
-} as const;
-
-const t = copy[lang];
+const t = lang === "en"
+  ? {
+      kicker: "Trajectory",
+      title: "From econometric method to systems that carry it.",
+      lead: "Each stage exists because the previous one hit a limit that could not be solved with more of the same.",
+      stages: [
+        { stage: "Economics and quantitative training", detail: "Macroeconomic theory, econometrics and predictive modelling. The methodological base: what an estimator can and cannot claim, and where identification breaks.", limit: "Method without data infrastructure does not reach a decision." },
+        { stage: "Business Intelligence & analytics", detail: "Analytical warehouses, ETL automation, star schemas and executive reporting — the layer that turns transactional records into a single source of truth.", limit: "A reliable warehouse still does not tell you what to do." },
+        { stage: "Financial analytics & capital markets", detail: "Econometric method applied to portfolios and valuation: rate sensitivity, scenario work and cash flow under uncertainty.", limit: "Analysis that lives in a notebook does not survive an organisation." },
+        { stage: "Data-driven products and platforms", detail: "Platforms that centralise the business picture — predictive analytics and dashboards operating as instruments, not decoration.", limit: "" },
+      ],
+    }
+  : {
+      kicker: "Trayectoria",
+      title: "Del método econométrico a los sistemas que lo sostienen.",
+      lead: "Cada etapa existe porque la anterior chocó con un límite que no se resolvía con más de lo mismo.",
+      stages: [
+        { stage: "Economía y formación cuantitativa", detail: "Teoría macroeconómica, econometría y modelos predictivos. La base metodológica: qué puede y qué no puede afirmar un estimador, y dónde se rompe la identificación.", limit: "El método sin infraestructura de datos no llega a una decisión." },
+        { stage: "Business Intelligence y analítica", detail: "Almacenes analíticos, automatización de ETL, esquemas estrella y reportería directiva — la capa que convierte registros transaccionales en una única fuente de verdad.", limit: "Un warehouse confiable todavía no te dice qué hacer." },
+        { stage: "Analítica financiera y mercados de capitales", detail: "Método econométrico aplicado a carteras y valuación: sensibilidad a tasas, escenarios y flujo de caja bajo incertidumbre.", limit: "El análisis que vive en un notebook no sobrevive a una organización." },
+        { stage: "Productos y plataformas de datos", detail: "Plataformas que centralizan la imagen del negocio — analítica predictiva y tableros operando como instrumento, no como decoración.", limit: "" },
+      ],
+    };
 ---
 
-<section id="experiencia" class="section">
-  <div class="section-inner">
-    <div class="section-header">
-      <span class="eyebrow">{t.eyebrow}</span>
-      <h2 class="section-heading">{t.heading}</h2>
-      <p class="section-lead">{t.lead}</p>
+<section id="trayectoria" class="section register-paper">
+  <div class="chapter-body">
+    <div class="chapter-inner" data-reveal>
+
+    <div class="exp-head">
+      <span class="eyebrow">{t.kicker}</span>
+      <div class="exp-head-cols">
+        <h2 class="exp-head-title">{t.title}</h2>
+        <p class="exp-head-lead">{t.lead}</p>
+      </div>
     </div>
 
-    <ol class="timeline">
-      {t.milestones.map((m) => (
-        <li class="milestone">
-          <span class="milestone-node" aria-hidden="true"></span>
-          <div class="milestone-card card">
-            <div class="milestone-meta">
-              <span class="milestone-tag">{m.tag}</span>
-              <span class="tag tag-info">{m.stage}</span>
+    <div class="stage-track">
+      <div class="stage-graphic" aria-hidden="true">
+        <svg class="stage-svg" viewBox="0 0 40 400" preserveAspectRatio="none">
+          <line class="stage-line-bg" x1="20" y1="10" x2="20" y2="390" />
+          <line id="stageLineDraw" class="stage-line-draw" x1="20" y1="10" x2="20" y2="390" />
+          {t.stages.map((_, i) => (
+            <rect
+              class="stage-node"
+              data-node={i}
+              x="14"
+              y={10 + i * (380 / (t.stages.length - 1)) - 6}
+              width="12"
+              height="12"
+            />
+          ))}
+        </svg>
+        <span id="stageGraphicLabel" class="stage-graphic-label">01</span>
+      </div>
+
+      <ol class="stage-list">
+        {t.stages.map((s, i) => (
+          <li class="stage" data-stage={i}>
+            <span class="stage-num">{String(i + 1).padStart(2, "0")}</span>
+            <div class="stage-body">
+              <h3 class="stage-title">{s.stage}</h3>
+              <p class="stage-detail">{s.detail}</p>
             </div>
-            <h3 class="milestone-title">{m.title}</h3>
-            <p class="milestone-desc">{m.desc}</p>
-          </div>
-        </li>
-      ))}
-    </ol>
+            <div class="stage-aside">
+              {s.limit && <p class="stage-limit">{s.limit}</p>}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+
+    </div>
   </div>
 </section>
 
 <style>
-  .section-header {
-    display: flex;
-    flex-direction: column;
+  .chapter-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-7) var(--page-margin) 0;
+  }
+
+
+  .exp-head { margin-bottom: var(--space-8); }
+
+  .exp-head-cols {
+    display: grid;
+    grid-template-columns: 1fr;
     gap: var(--space-4);
-    max-width: 66ch;
+    margin-top: var(--space-3);
   }
 
-  .timeline {
-    list-style: none;
-    margin: var(--space-2) 0 0;
-    padding: 0 0 0 var(--space-6);
-    border-left: var(--hairline) solid var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-    max-width: 56rem;
+  @media (min-width: 900px) {
+    .exp-head-cols {
+      grid-template-columns: minmax(0, var(--col-read)) 1fr;
+      gap: var(--space-6);
+      align-items: baseline;
+    }
   }
 
-  .milestone {
-    position: relative;
+  .exp-head-title {
+    font: var(--title-l);
+    letter-spacing: var(--ls-title-l);
+    color: var(--text-primary);
+    margin: 0;
+    max-width: 22ch;
+    text-wrap: balance;
   }
 
-  .milestone-node {
-    position: absolute;
-    left: calc(var(--space-6) * -1 - 5px);
-    top: 6px;
-    width: var(--node-point);
-    height: var(--node-point);
-    background: var(--text-secondary);
-    border-radius: var(--radius-1);
+  .exp-head-lead {
+    font: var(--lead);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 46ch;
   }
 
-  .milestone-card {
-    padding: var(--space-5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+  /* ---- traza de fondo: sólo desktop, sticky (no GSAP pin — evita el bug
+     de pin+Lenis/sticky ya documentado en este proyecto). El trazo se
+     dibuja con el scroll y cada nodo se ilumina al llegar a esa etapa. */
+  .stage-track {
+    display: block;
   }
 
-  .milestone-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
+  .stage-graphic {
+    display: none;
   }
 
-  .milestone-tag {
-    font: var(--label);
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
+  @media (min-width: 900px) {
+    .stage-track {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-6);
+    }
+
+    .stage-graphic {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      position: sticky;
+      top: calc(var(--space-8) + var(--space-5));
+      flex-shrink: 0;
+      width: 40px;
+      padding-top: var(--space-2);
+    }
+
+    .stage-list { flex: 1; min-width: 0; }
+  }
+
+  .stage-svg {
+    width: 40px;
+    height: 320px;
+    overflow: visible;
+  }
+
+  .stage-line-bg {
+    stroke: var(--border);
+    stroke-width: 1.5;
+  }
+
+  .stage-line-draw {
+    stroke: var(--accent-rule);
+    stroke-width: 1.5;
+    stroke-dasharray: 380;
+    stroke-dashoffset: 380;
+  }
+
+  .stage-node {
+    fill: var(--bg);
+    stroke: var(--border-strong);
+    stroke-width: 1.5;
+    transition: fill var(--dur-fast) var(--ease-in-out), stroke var(--dur-fast) var(--ease-in-out);
+  }
+
+  .stage-node.is-active {
+    fill: var(--accent-rule);
+    stroke: var(--accent-rule);
+  }
+
+  .stage-graphic-label {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
     color: var(--text-tertiary);
   }
 
-  .milestone-title {
-    font: var(--title-s);
-    color: var(--text-primary);
+  .stage-list {
+    list-style: none;
     margin: 0;
+    padding: 0;
+    border-top: var(--hairline) solid var(--border);
   }
 
-  .milestone-desc {
+  .stage {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-5) 0;
+    border-bottom: var(--hairline) solid var(--border);
+  }
+
+  @media (min-width: 900px) {
+    .stage {
+      grid-template-columns: 64px minmax(0, var(--col-read)) 1fr;
+      gap: var(--space-5);
+      align-items: baseline;
+    }
+  }
+
+  .stage-num {
+    font: var(--data-s);
+    color: var(--text-tertiary);
+  }
+
+  .stage-body { min-width: 0; }
+
+  .stage-title {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2);
+  }
+
+  .stage-detail {
     font: var(--body-s);
     color: var(--text-secondary);
     margin: 0;
+    max-width: 62ch;
+  }
+
+  /* El límite que empuja a la etapa siguiente, en la columna de márgenes */
+  .stage-limit {
+    font: var(--footnote);
+    font-style: italic;
+    color: var(--text-tertiary);
+    margin: var(--space-2) 0 0;
+    padding-left: var(--space-4);
+    border-left: var(--rule) solid var(--border-strong);
+    max-width: 40ch;
+  }
+
+  @media (min-width: 900px) {
+    .stage-limit { margin-top: 0; }
   }
 </style>
+
+<script>
+  // Traza de fondo de Trayectoria: se dibuja con el scroll (scrub, no pin)
+  // y cada nodo cuadrado se ilumina en dorado al llegar a esa etapa. Sólo
+  // desktop (el contenedor .stage-graphic ya está oculto <900px por CSS).
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const track = document.querySelector(".stage-track");
+  const lineDraw = document.getElementById("stageLineDraw");
+  const label = document.getElementById("stageGraphicLabel");
+  const nodes = Array.from(document.querySelectorAll<SVGRectElement>(".stage-node"));
+  const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-stage]"));
+
+  if (track && lineDraw && label && nodes.length && stages.length) {
+    const mm = gsap.matchMedia();
+
+    mm.add(
+      { motionOK: "(prefers-reduced-motion: no-preference)", desktop: "(min-width: 900px)" },
+      (context) => {
+        const { motionOK, desktop } = context.conditions as { motionOK: boolean; desktop: boolean };
+        if (!desktop) return;
+
+        const setActive = (index: number) => {
+          nodes.forEach((n, i) => n.classList.toggle("is-active", i <= index));
+          label.textContent = String(index + 1).padStart(2, "0");
+        };
+
+        if (!motionOK) {
+          // Reduced motion: trazo ya resuelto, sin scrub — todo el
+          // camino recorrido queda visible, sin animación de dibujo.
+          gsap.set(lineDraw, { strokeDashoffset: 0 });
+          setActive(stages.length - 1);
+          return;
+        }
+
+        gsap.set(lineDraw, { strokeDashoffset: 380 });
+
+        const drawTrigger = ScrollTrigger.create({
+          trigger: track,
+          start: "top center",
+          end: "bottom center",
+          scrub: 0.5,
+          onUpdate: (self) => {
+            gsap.set(lineDraw, { strokeDashoffset: 380 * (1 - self.progress) });
+          },
+        });
+
+        const stageTriggers = stages.map((el, i) =>
+          ScrollTrigger.create({
+            trigger: el,
+            start: "top center",
+            end: "bottom center",
+            onToggle: (self) => {
+              if (self.isActive) setActive(i);
+            },
+          }),
+        );
+
+        return () => {
+          drawTrigger.kill();
+          stageTriggers.forEach((t) => t.kill());
+        };
+      },
+    );
+  }
+</script>

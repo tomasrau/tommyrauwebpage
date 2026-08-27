@@ -1,0 +1,854 @@
+---
+// Hero.astro — tercera reescritura (rediseño 2026-08-19).
+//
+// Las dos versiones anteriores eran, en el fondo, una columna centrada de
+// texto: primero eyebrow+H1+párrafo+botones, después un titular solo sin
+// el resto. Ninguna de las dos tenía una segunda zona real — todo el peso
+// visual era tipografía sobre fondo plano. Esta versión es una composición
+// partida de verdad (molde: aventuradentalarts.com): columna izquierda fija
+// de identidad + columna derecha a sangre completa reservada para retrato
+// real, tratamiento duotono real (filtro SVG feComponentTransfer, mapeo
+// por luminancia). El titular no vive en una sola columna: dos bloques
+// —romana e itálica— cruzan la costura entre columnas, cada uno con su
+// propio color/mecanismo de contraste (ver estilos — mix-blend-mode
+// resultó no confiable en este proyecto contra ningún tipo de fondo).
+//
+// Sin trama de fondo: rechazada explícitamente en una ronda anterior.
+// Sin eyebrow, sin par de botones, sin franja de cifras — la fórmula vieja.
+
+import portrait from "../../assets/media/photos/retrato-tomas-rau.jpg";
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const t = lang === "en"
+  ? {
+      titleRoman: "Economics, strategy",
+      titleItalic: "and capital markets.",
+      lead: "Quantitative research, economic models, econometrics and financial analysis to interpret macroeconomic dynamics, find patterns, identify signals and build evidence applied to capital markets.",
+      role: "Economist",
+      focus: "M.Sc. Strategic & Technology Management · Specialist in Quantitative Finance",
+      basedIn: "Based in",
+      city: "Buenos Aires, Argentina",
+      portraitAlt: "Portrait of Tomás Rau",
+      quoteLabel: "Thesis",
+      quote: "The value of a quantitative model isn't in reproducing the past, but in identifying relationships that hold up against new data, different regimes, and the uncertainty of the system and the market.",
+    }
+  : {
+      titleRoman: "Economía, estrategia",
+      titleItalic: "y mercado de capitales.",
+      lead: "Investigación cuantitativa, modelos económicos, econometría y análisis financiero para interpretar dinámicas macroeconómicas, hallar patrones, identificar señales y construir evidencia aplicada a los mercados de capitales.",
+      role: "Economista",
+      focus: "Mg. en Dirección Estratégica y Tecnológica · Especialista en Finanzas Cuantitativas",
+      basedIn: "Con base en",
+      city: "Buenos Aires, Argentina",
+      portraitAlt: "Retrato de Tomás Rau",
+      quoteLabel: "Tesis",
+      quote: "El valor de un modelo cuantitativo no está en reproducir el pasado, sino en identificar relaciones que resistan nuevos datos, distintos regímenes y la incertidumbre del sistema y del mercado.",
+    };
+---
+
+<section id="inicio" class="hero">
+  <div class="hero-grid">
+
+    <!-- Columna fija: identidad. El titular vive anidado ACÁ, entre el
+         bloque de rol y el de bajada — en desktop es position:absolute
+         (containing block real: .hero-grid, la anidación no cambia dónde
+         se pinta) así que no distorsiona el space-between de esta columna;
+         en mobile pasa a flujo normal y por fin queda en el orden de
+         lectura correcto: rol → titular → bajada, igual que en desktop de
+         arriba a abajo, en vez de titular primero y rol después. -->
+    <div class="hero-id">
+      <div class="hero-id-top">
+        <p class="hero-role">{t.role}</p>
+        <p class="hero-focus">{t.focus}</p>
+      </div>
+
+      <h1 class="hero-headline" aria-hidden="false">
+        <span class="hero-hl-roman" id="heroRoman">{t.titleRoman}</span>
+        <span class="hero-hl-italic" id="heroItalic">{t.titleItalic}</span>
+      </h1>
+
+      <div class="hero-id-bottom">
+        <p class="hero-lead" data-hero-reveal>{t.lead}</p>
+        <p class="hero-based">
+          <span class="hero-based-label">{t.basedIn}</span>
+          {t.city}
+        </p>
+      </div>
+    </div>
+
+    <!-- Columna ancha: retrato real a sangre completa. Tratamiento duotono
+         real de §8 (filtro SVG feComponentTransfer, mapeo por luminancia —
+         ver más abajo). MediaFrame.astro usa un mecanismo más simple
+         (overlay por posición, no por tono) que en la revisión de esta
+         pieza se vio perceptualmente débil — pendiente de unificar ahí
+         también en una próxima pasada. -->
+    <div class="hero-media">
+      <!-- Filtro de duotono real: feColorMatrix reduce a luminancia, luego
+           feComponentTransfer remapea esa luminancia por canal a los
+           tokens de marca — 0A1310 (--petrol-950, sombra) → EDF0EE (--bg,
+           luz). Mapeo por tono, no por posición del gradiente. -->
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <filter id="hero-duotone" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 1 0" />
+          <feComponentTransfer>
+            <feFuncR type="table" tableValues="0.0392 0.9294" />
+            <feFuncG type="table" tableValues="0.0745 0.9412" />
+            <feFuncB type="table" tableValues="0.0627 0.9333" />
+          </feComponentTransfer>
+        </filter>
+      </svg>
+
+      <figure class="hero-frame" id="heroFrame">
+        <img
+          class="hero-photo"
+          src={portrait.src}
+          width={portrait.width}
+          height={portrait.height}
+          alt={t.portraitAlt}
+          loading="eager"
+          decoding="async"
+        />
+        <!-- El video se superpone al retrato SÓLO si el archivo existe en la
+             ruta esperada (no está en el repo todavía). Mientras tanto se ve
+             el retrato real y el marcador de abajo declara qué falta — nunca
+             un contenido fabricado. Al soltar el archivo, funciona solo. -->
+        <video
+          class="hero-video"
+          id="heroVideo"
+          poster={portrait.src}
+          muted
+          loop
+          playsinline
+          autoplay
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/media/hero-loop.mp4" type="video/mp4" />
+        </video>
+      </figure>
+
+      <!-- La tesis aparece sobre el video mientras el panel se abre a
+           pantalla completa: bloque de cita con regla dorada, legible
+           entero, con una entrada lateral corta (no un barrido gigante). -->
+      <blockquote class="hero-sweep" id="heroSweep" aria-hidden="true">
+        <span class="hero-sweep-label">{t.quoteLabel}</span>
+        <span class="hero-sweep-text">{t.quote}</span>
+      </blockquote>
+
+      <!-- Fundido a papel al cerrar el hero: la sección siguiente no entra
+           por corte seco, el hero se disuelve hacia el fondo de la página. -->
+      <div class="hero-fade" id="heroFade" aria-hidden="true"></div>
+
+      <svg class="corner-mark" width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
+        <path d="M2 22V2h20" stroke="currentColor" stroke-width="1.4" />
+        <rect x="0.5" y="20.5" width="3" height="3" fill="currentColor" />
+      </svg>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .hero {
+    width: 100%;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(300px, 36%) 1fr;
+    min-height: 100svh;
+  }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; min-height: auto; }
+  }
+
+  /* ---------- columna de identidad ---------- */
+
+  .hero-id {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: calc(var(--space-8) + 56px) var(--space-7) var(--space-8) var(--page-margin);
+    border-right: var(--hairline) solid var(--border);
+  }
+
+  @media (max-width: 900px) {
+    .hero-id {
+      border-right: none;
+      border-bottom: var(--hairline) solid var(--border);
+      /* 96px arriba, no 48px: las píldoras flotantes del Header
+         arrancan en var(--space-4) (16px) y miden ~46px de alto, así
+         que su borde inferior cae en ~62px. Con 48px de padding la
+         primera línea del hero quedaba DEBAJO de la píldora de marca —
+         verificado en captura: la palabra "Economista" era invisible,
+         tapada por completo por el logo. El chrome se guarda al
+         scrollear (ver global.css), pero en el primer paint está
+         visible y ahí es donde tiene que haber lugar. */
+      padding: var(--space-9) var(--page-margin) var(--space-7);
+      /* 64px de gap entre los tres bloques era ritmo de desktop
+         trasladado tal cual: en una pantalla de 390px producía dos
+         franjas vacías enormes entre el rol, el titular y la bajada. */
+      gap: var(--space-6);
+    }
+  }
+
+  .hero-role {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 4px;
+  }
+
+  .hero-focus {
+    /* --ui-m en vez de --ui-s: al lado de un titular de 128px, los 13px de
+       --ui-s se sentían diminutos — --ui-m sigue siendo un token real del
+       sistema, no un tamaño inventado. */
+    font: var(--ui-m);
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+
+  .hero-id-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    max-width: 40ch;
+  }
+
+  .hero-lead {
+    /* --body en vez de --body-s: mismo motivo que .hero-focus, ambos
+       tokens documentados, sólo se sube un escalón. */
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .hero-based {
+    font: var(--source);
+    color: var(--text-tertiary);
+    margin: 0;
+    padding-top: var(--space-4);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .hero-based-label {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 2px;
+  }
+
+  /* ---------- columna de media ---------- */
+
+  .hero-media {
+    position: relative;
+    min-height: 320px;
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) { .hero-media { min-height: 60svh; } }
+
+  /* ---- MOBILE CINEMÁTICO ----
+     Traducción del mecanismo de desktop, rotada 90°.
+
+     En desktop la costura es VERTICAL: el panel cubre la grilla entera y
+     se recorta por izquierda desde el 36% (el ancho de la columna de
+     identidad); al scrollear el recorte se abre a 0 y la foto gana la
+     pantalla tapando el texto.
+
+     En mobile no hay dos columnas — las zonas están apiladas —, así que
+     la costura es HORIZONTAL: el mismo panel absoluto se recorta por
+     ARRIBA, desde donde termina el bloque de identidad, y el recorte se
+     abre hacia arriba hasta 0. Idéntico mecanismo (clip-path animado
+     sobre un panel absoluto), idéntico resultado conceptual: no es el
+     panel el que se va, es el que gana la pantalla.
+
+     El porcentaje de la costura NO es un número fijo: lo mide el script
+     contra el alto real del bloque de texto, que cambia con el idioma y
+     con el tamaño de fuente del sistema.
+
+     Todo esto vive detrás de .is-cinematic, una clase que agrega el
+     script SÓLO si hay JS y la preferencia de movimiento lo permite. Sin
+     JS o con prefers-reduced-motion, el hero mobile se queda exactamente
+     como está hoy (apilado, en flujo normal) — no hay forma de que este
+     efecto deje contenido escondido. */
+  @media (max-width: 900px) {
+    .hero.is-cinematic .hero-grid { min-height: 100svh; }
+
+    /* En modo cinemático la grilla mide 100svh y el ítem se estira a
+       todo ese alto. Con el `space-between` que usa el hero apilado, los
+       tres bloques se repartían por los 844px y el texto quedaba
+       desparramado; además la banda de foto no tenía dónde ir. Con el
+       contenido compactado arriba, el sobrante de abajo ES la banda de
+       foto — y el script mide exactamente dónde termina el texto para
+       poner ahí la costura. */
+    .hero.is-cinematic .hero-id { justify-content: flex-start; }
+
+    .hero.is-cinematic .hero-media {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      min-height: 0;
+      /* Valor de arranque conservador por si el primer frame se pinta
+         antes de que el script mida: muestra una banda de foto abajo,
+         nunca la pantalla entera tapando el texto. */
+      clip-path: inset(74% 0 0 0);
+      will-change: clip-path;
+    }
+
+    .hero.is-cinematic .hero-sweep {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      position: absolute;
+      top: 50%;
+      left: var(--page-margin);
+      right: var(--page-margin);
+      transform: translateY(-50%);
+      margin: 0;
+      z-index: 4;
+      padding-left: var(--space-4);
+      border-left: var(--rule) solid var(--accent-rule);
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    .hero.is-cinematic .hero-sweep-label {
+      font: var(--label);
+      letter-spacing: var(--ls-label);
+      text-transform: uppercase;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(10, 19, 16, 0.8);
+    }
+
+    /* Igual que en desktop: blanco sólido con sombra de contorno, no
+       dorado — la foto puede ser clara en cualquier zona y el croma
+       pleno no se leería. El dorado lo aporta la regla vertical, que es
+       área y no letra. */
+    .hero.is-cinematic .hero-sweep-text {
+      font-family: var(--font-read);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(18px, 4.9vw, 23px);
+      line-height: 1.32;
+      color: #ffffff;
+      text-shadow: 0 1px 5px rgba(10, 19, 16, 0.7), 0 4px 22px rgba(10, 19, 16, 0.5);
+    }
+
+    /* El velo de cierre tiene que quedar por encima del panel y de la
+       cita, si no el fundido a papel no taparía nada. */
+    .hero.is-cinematic .hero-fade { z-index: 6; }
+  }
+
+  /* En desktop el panel NO vive dentro de su columna: cubre la grilla
+     entera y se recorta por izquierda, arrancando justo en la costura
+     (36% = ancho de la columna de identidad). Al scrollear, ese recorte
+     se abre hasta 0 y el video se queda con todo el ancho del hero,
+     tapando la columna — que es el mecanismo de la referencia: no es el
+     panel el que se va, es el que gana la pantalla. */
+  @media (min-width: 901px) {
+    .hero-media {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      clip-path: inset(0 0 0 36%);
+    }
+
+    /* OJO: .hero-id NO lleva position/z-index acá. El titular está anidado
+       dentro de .hero-id (a propósito, por el orden de lectura en mobile);
+       darle un z-index a .hero-id crea un contexto de apilado y el z-index
+       del titular pasa a resolverse ADENTRO de ese contexto — el titular
+       terminaba pintándose debajo del panel de video y se veía cortado en
+       la costura. Sin contexto propio, el texto de identidad (sin posición)
+       queda debajo del panel posicionado, que es lo que se busca, y el
+       titular (position:absolute, z-index 5) queda por encima. */
+  }
+
+  /* ---- La tesis, barriendo por encima del video ---- */
+
+  .hero-sweep { display: none; }
+
+  @media (min-width: 901px) {
+    /* Bloque de cita, no un renglón de 84px que se sale de pantalla: a esa
+       escala la frase nunca entraba entera y quedaba cortada por los dos
+       lados. Acá se lee completa, en tres o cuatro líneas, con la regla
+       dorada de pull-quote del sistema. */
+    .hero-sweep {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: absolute;
+      top: 50%;
+      left: clamp(var(--space-7), 8vw, 132px);
+      margin: 0;
+      z-index: 3;
+      /* Ancho en px, no en `ch`: la unidad ch resuelve contra el font-size
+         del CONTENEDOR (16px heredados), no contra los 46px de la cita —
+         17ch daban ~110px y la frase caía a dos palabras por línea. */
+      width: min(500px, 36vw);
+      padding-left: var(--space-5);
+      border-left: var(--rule) solid var(--accent-rule);
+      opacity: 0;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+
+    /* Blanco y no dorado: el video puede ser claro en cualquier fotograma
+       y el croma pleno sobre fondo claro no alcanza para leerse. El dorado
+       lo aporta la regla vertical, que es área y no letra. */
+    .hero-sweep-label {
+      font: var(--label);
+      letter-spacing: var(--ls-label);
+      text-transform: uppercase;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(10, 19, 16, 0.8);
+    }
+
+    .hero-sweep-text {
+      font-family: var(--font-read);
+      font-style: italic;
+      font-weight: 400;
+      font-size: clamp(26px, 2.9vw, 46px);
+      line-height: 1.22;
+      letter-spacing: -0.008em;
+      color: #ffffff;
+      text-shadow: 0 1px 5px rgba(10, 19, 16, 0.7), 0 4px 22px rgba(10, 19, 16, 0.5);
+      text-wrap: balance;
+    }
+  }
+
+  /* Velo de papel que cierra el hero. */
+  .hero-fade {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    background: var(--bg);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hero-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Recorte neutro: la itálica ya no depende del encuadre para tener
+       contraste (la garantiza el text-shadow, ver más abajo), así que acá
+       el criterio es sólo composición — mostrar la escena completa sin
+       recortar manos/gesto. */
+    object-position: 50% 8%;
+    display: block;
+    /* Duotono real §8, no un filtro de posición: feComponentTransfer mapea
+       luminancia → color por píxel (sombra → petróleo, luz → papel), a
+       diferencia del overlay diagonal anterior (mix-blend-mode:color sobre
+       un gradiente por posición), que no correlacionaba con el tono real
+       de la foto y perceptualmente leía como blanco y negro plano, no
+       como tratamiento de marca. Filtro definido más abajo en el markup. */
+    filter: url(#hero-duotone) contrast(1.05);
+  }
+
+  .corner-mark {
+    position: absolute;
+    top: var(--space-5);
+    right: var(--space-5);
+    color: var(--text-tertiary);
+    opacity: 0.7;
+  }
+
+  /* ---------- titular, cruzando la costura ---------- */
+
+  /* Dos filas, no una: a esta escala tipográfica, romana e itálica en la
+     misma fila se pisan en la costura. Itálica va en la segunda fila,
+     empezando donde arranca la columna de foto — más abajo y más a la
+     derecha que la romana, como en la referencia (aventuradentalarts.com),
+     nunca a la misma altura exacta. */
+  .hero-headline {
+    position: absolute;
+    inset: auto 0 auto 0;
+    /* 30%, no 20%: el bloque de foco ahora lleva las credenciales
+       completas y pasa a dos líneas — con el titular en 20% quedaba
+       superpuesto, porque el titular tiene posición fija y no reacciona a
+       cuánto crezca el contenido de arriba. */
+    top: 30%;
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(300px, 36%) 1fr;
+    grid-template-rows: auto auto;
+    row-gap: 0.03em;
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  @media (max-width: 900px) {
+    .hero-headline {
+      position: static;
+      display: block;
+      padding: var(--space-7) var(--page-margin) 0;
+    }
+  }
+
+  .hero-hl-roman,
+  .hero-hl-italic {
+    display: block;
+    font-family: var(--font-read);
+    /* Escala arquitectónica (§ desvío autorizado), pero con techo mucho más
+       bajo que el resto del sitio (80px, no 128px): el titular real es una
+       frase descriptiva completa ("Economía, estrategia y mercado de
+       capitales", 30 caracteres en su línea más larga), no las 2-3
+       palabras cortas para las que se calibró el mecanismo nowrap
+       originalmente. Ni 128px ni 100px alcanzaron — ambos se
+       verificaron y ambos desbordaban el contenedor a 1440px de ancho. */
+    font-size: clamp(28px, 6vw, 80px);
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+    white-space: nowrap;
+  }
+
+  .hero-hl-roman {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    font-weight: 600;
+    font-style: normal;
+    padding-left: var(--page-margin);
+    /* Color sólido con el token de tema, no mix-blend-mode: esta línea
+       vive siempre sobre el papel (columna de identidad), y el blend
+       difference resultó no confiable contra un fondo plano — en más de
+       una prueba renderizó el blanco declarado tal cual, sin invertir,
+       en vez de computar el contraste real (mismo patrón que ya se vio
+       con el placeholder). var(--text-primary) además cambia solo entre
+       claro/oscuro, sin necesitar ningún truco. */
+    color: var(--text-primary);
+  }
+
+  .hero-hl-italic {
+    grid-column: 2;
+    grid-row: 2;
+    /* 400, no 500: el doc de marca sólo aprueba Newsreader itálica en peso
+       400 (tabla §4 — "400, 500, 600 + 400 italic", nunca itálica en otro
+       peso). 500 italic no es una combinación soportada; se notaba más
+       pesada de lo esperado. */
+    font-weight: 400;
+    font-style: italic;
+    padding-left: var(--space-7);
+    padding-right: var(--space-6);
+    /* En desktop esta línea vive siempre sobre la foto (nunca sobre el
+       papel), y la pantalla de proyección clara del fondo ocupa casi todo
+       el cuadrante superior derecho — no hay recorte que la saque del todo
+       sin perder la composición. Blanco sólido + sombra de contorno
+       oscura: contraste garantizado sin depender de mix-blend-mode, que
+       resultó no confiable en este proyecto contra ningún tipo de fondo
+       (ver .hero-hl-roman). En mobile esta línea queda apilada ANTES de la
+       foto, sobre el papel — el override de abajo cambia a color oscuro y
+       anula la sombra, que ahí sería ruido. */
+    color: #FFFFFF;
+    mix-blend-mode: normal;
+    text-shadow: 0 1px 4px rgba(10, 19, 16, 0.6), 0 3px 18px rgba(10, 19, 16, 0.4);
+  }
+
+  @media (max-width: 900px) {
+    .hero-hl-roman,
+    .hero-hl-italic {
+      grid-column: 1;
+      padding-left: 0;
+      white-space: normal;
+      /* En mobile el titular queda apilado ANTES de la columna de foto
+         (no superpuesto a ella) — no hay nada detrás salvo el fondo plano
+         de la página, y mix-blend-mode: difference contra un fondo sólido
+         no resuelve de forma confiable (mismo bug que ya se vio contra el
+         placeholder). Color sólido acá, blend sólo donde de verdad hay
+         foto inmediatamente detrás (desktop). */
+      color: var(--text-primary);
+      mix-blend-mode: normal;
+      text-shadow: none;
+    }
+    .hero-hl-italic { grid-row: 2; margin-top: 0.1em; }
+  }
+
+  /* Palabras — GSAP SplitText las envuelve en .word al cargar. */
+  .hero-hl-roman :global(.word),
+  .hero-hl-italic :global(.word) {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+  .no-js .hero-hl-roman :global(.word),
+  .no-js .hero-hl-italic :global(.word),
+  .hero-headline.is-static :global(.word) {
+    opacity: 1;
+    transform: none;
+  }
+
+  [data-hero-reveal] {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .no-js [data-hero-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { SplitText } from "gsap/SplitText";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(SplitText, ScrollTrigger);
+
+  /* ---- El video sólo se muestra si el archivo real cargó de verdad ----
+     Sin archivo (hoy), queda el retrato real + el marcador de pendiente:
+     nunca un contenido fabricado. Al soltar el .mp4 en la ruta esperada,
+     esto se activa solo, sin tocar código. */
+  const heroVideo = document.getElementById("heroVideo") as HTMLVideoElement | null;
+  const heroFrame = document.getElementById("heroFrame");
+  if (heroVideo && heroFrame) {
+    heroVideo.addEventListener("loadeddata", () => {
+      if (heroVideo.videoWidth > 0) heroFrame.classList.add("has-video");
+    });
+  }
+
+  /* ---- El panel de media gana la pantalla y la tesis aterriza encima ----
+     Dos traducciones del MISMO mecanismo (clip-path animado sobre un
+     panel absoluto), una por composición:
+
+     - Desktop: costura vertical. El recorte se abre por izquierda desde
+       el 36% (ancho de la columna de identidad) hasta 0.
+     - Mobile: costura horizontal. El recorte se abre por arriba desde
+       donde termina el bloque de identidad hasta 0. Las zonas están
+       apiladas, así que lo que se tapa está arriba, no al costado.
+
+     El pin en pantallas chicas es la parte frágil de esto, y la razón
+     concreta es conocida: la barra de direcciones del navegador móvil
+     aparece y desaparece al scrollear, cambia el alto del viewport a
+     mitad del recorrido y ScrollTrigger recalcula, produciendo un salto.
+     Se neutraliza con `ignoreMobileResize` (que existe exactamente para
+     esto) + `100svh`, que dimensiona contra el viewport MÁS CHICO — el
+     de barra visible — así que cuando la barra se esconde sobra
+     espacio en vez de faltar. */
+  ScrollTrigger.config({ ignoreMobileResize: true });
+
+  const heroSection = document.querySelector(".hero");
+  const heroMedia = document.querySelector<HTMLElement>(".hero-media");
+  const heroSweep = document.getElementById("heroSweep");
+
+  if (heroMedia && heroSection) {
+    const mmMedia = gsap.matchMedia();
+    mmMedia.add(
+      { motionOK: "(prefers-reduced-motion: no-preference)", desktop: "(min-width: 901px)" },
+      (ctx) => {
+        const { motionOK, desktop } = ctx.conditions as { motionOK: boolean; desktop: boolean };
+        if (!desktop || !motionOK) return;
+
+        // El titular en itálica está compuesto para vivir SOBRE la foto
+        // (blanco + sombra). Cuando el panel gana la pantalla, esa línea
+        // se cruza con la tesis que barre — por eso se desvanece: el foco
+        // pasa de "quién" a "qué sostiene".
+        const headlineEl = document.querySelector(".hero-headline");
+
+        const heroFade = document.getElementById("heroFade");
+
+        // La cita arranca contra el margen derecho y viaja hacia la
+        // izquierda a medida que el panel gana ancho: el recorrido se mide
+        // contra su posición final real (la que fija el CSS), no un número
+        // inventado, así el remate cae exactamente en su lugar.
+        let sweepFrom = 0;
+        if (heroSweep) {
+          gsap.set(heroSweep, { x: 0, y: "-50%" });
+          const r = heroSweep.getBoundingClientRect();
+          sweepFrom = Math.max(0, window.innerWidth - r.width - r.left - 44);
+        }
+
+        const st = ScrollTrigger.create({
+          trigger: heroSection,
+          start: "top top",
+          end: "+=120%",
+          pin: true,
+          pinSpacing: true,
+          scrub: 0.5,
+          onUpdate: (self) => {
+            const p = self.progress;
+            // El recorte se abre de 36% (la costura) a 0: el video no se
+            // va, se queda con todo.
+            gsap.set(heroMedia, { clipPath: `inset(0 0 0 ${36 * (1 - p)}%)` });
+            // El titular se va ANTES de que entre la cita: con los dos
+            // desvanecidos a la vez se superponían y no se leía ninguno.
+            if (headlineEl) gsap.set(headlineEl, { opacity: 1 - Math.min(1, p / 0.22) });
+            if (heroSweep) {
+              // Entra recién cuando el titular ya se fue (p≈0.26), pegada al
+              // margen derecho, y viaja a la izquierda hasta su posición
+              // final acompañando la apertura del panel.
+              const START = 0.26;
+              const q = Math.min(1, Math.max(0, (p - START) / (1 - START)));
+              gsap.set(heroSweep, {
+                x: sweepFrom * (1 - q),
+                y: "-50%",
+                opacity: Math.min(1, Math.max(0, (p - START) / 0.12)),
+              });
+            }
+            // Último tramo: el hero se disuelve hacia el papel de la página
+            // para que el mapa no entre por corte seco.
+            if (heroFade) {
+              // Recién en el último tramo: arrancando en 0.72 el velo se
+              // comía la mitad del recorrido de la cita, que queda ilegible
+              // justo cuando el panel termina de abrirse.
+              gsap.set(heroFade, { opacity: Math.min(1, Math.max(0, (p - 0.86) / 0.14)) });
+            }
+          },
+        });
+
+        return () => {
+          st.kill();
+          gsap.set(heroMedia, { clipPath: "inset(0 0 0 36%)" });
+          if (headlineEl) gsap.set(headlineEl, { opacity: 1 });
+          if (heroSweep) gsap.set(heroSweep, { clearProps: "all" });
+          if (heroFade) gsap.set(heroFade, { opacity: 0 });
+        };
+      },
+    );
+
+    /* ---- Mobile: la misma idea, con la costura horizontal ---- */
+    mmMedia.add(
+      { motionOK: "(prefers-reduced-motion: no-preference)", mobile: "(max-width: 900px)" },
+      (ctx) => {
+        const { motionOK, mobile } = ctx.conditions as { motionOK: boolean; mobile: boolean };
+        if (!mobile || !motionOK) return;
+
+        const heroGrid = heroSection.querySelector<HTMLElement>(".hero-grid");
+        const heroId = heroSection.querySelector<HTMLElement>(".hero-id");
+        const heroFade = document.getElementById("heroFade");
+        if (!heroGrid || !heroId) return;
+
+        // Recién acá se activa la composición cinemática: con la clase
+        // puesta desde CSS, un visitante sin JS o con reduced-motion
+        // vería el panel recortado y sin nada que lo abra — es decir,
+        // media foto tapada para siempre. Poniéndola desde el script,
+        // ese caso conserva el hero apilado normal.
+        heroSection.classList.add("is-cinematic");
+
+        // La costura no es un número fijo: depende de cuánto mide el
+        // bloque de texto, que cambia con el idioma (el lead en inglés
+        // ocupa una línea menos) y con el tamaño de fuente del sistema.
+        //
+        // Se mide contra el BORDE INFERIOR DEL CONTENIDO, no contra la
+        // caja de .hero-id: en modo cinemático la grilla mide 100svh y
+        // el ítem se estira a todo ese alto, así que su altura de caja
+        // siempre daba 100% y la costura caía en el tope del clamp — con
+        // la banda de foto cortando el párrafo a media frase (verificado
+        // en captura, no supuesto).
+        const idContent = heroSection.querySelector<HTMLElement>(".hero-id-bottom") ?? heroId;
+        const measureSeam = () => {
+          const gridRect = heroGrid.getBoundingClientRect();
+          const gridH = gridRect.height || 1;
+          const contentBottom = idContent.getBoundingClientRect().bottom - gridRect.top;
+          // +24: un respiro entre la última línea y el filo de la foto,
+          // para que no se lean pegados.
+          const pct = ((contentBottom + 24) / gridH) * 100;
+          // Cota inferior: que siempre se vea una banda de foto real.
+          // Cota superior: que el texto nunca quede tapado de entrada.
+          return Math.min(86, Math.max(40, pct));
+        };
+        let seam = measureSeam();
+        gsap.set(heroMedia, { clipPath: `inset(${seam}% 0 0 0)` });
+        if (heroSweep) gsap.set(heroSweep, { opacity: 0, yPercent: 8 });
+
+        // Mismo criterio que en desktop: el titular se desvanece cuando
+        // el panel empieza a ganar la pantalla — el foco pasa de "quién"
+        // a "qué sostiene", y las dos tipografías grandes no compiten.
+        // Acá además es necesario, no sólo deseable: el titular termina
+        // pintándose POR ENCIMA del panel y del velo de cierre (queda
+        // en tinta oscura sobre el traje oscuro de la foto, ilegible —
+        // verificado en captura). Desvanecerlo lo resuelve sin pelear
+        // con el contexto de apilado.
+        const headlineMobile = heroSection.querySelector<HTMLElement>(".hero-headline");
+
+        const st = ScrollTrigger.create({
+          trigger: heroSection,
+          start: "top top",
+          end: "+=120%",
+          pin: true,
+          pinSpacing: true,
+          scrub: 0.5,
+          invalidateOnRefresh: true,
+          onRefresh: () => {
+            seam = measureSeam();
+          },
+          onUpdate: (self) => {
+            const p = self.progress;
+            // El recorte se abre hacia arriba: la foto sube y se queda
+            // con la pantalla, tapando el bloque de identidad — el mismo
+            // gesto que en desktop, con la costura rotada 90°.
+            gsap.set(heroMedia, { clipPath: `inset(${seam * (1 - p)}% 0 0 0)` });
+
+            if (headlineMobile) {
+              gsap.set(headlineMobile, { opacity: 1 - Math.min(1, p / 0.25) });
+            }
+
+            if (heroSweep) {
+              // Entra cuando el panel ya ganó la mayor parte de la
+              // pantalla: antes de eso todavía hay texto abajo y la
+              // cita competiría con él.
+              const START = 0.38;
+              const q = Math.min(1, Math.max(0, (p - START) / 0.24));
+              gsap.set(heroSweep, { opacity: q, yPercent: 8 * (1 - q) });
+            }
+
+            if (heroFade) {
+              gsap.set(heroFade, { opacity: Math.min(1, Math.max(0, (p - 0.88) / 0.12)) });
+            }
+          },
+        });
+
+        return () => {
+          st.kill();
+          heroSection.classList.remove("is-cinematic");
+          gsap.set(heroMedia, { clearProps: "clipPath" });
+          if (headlineMobile) gsap.set(headlineMobile, { opacity: 1 });
+          if (heroSweep) gsap.set(heroSweep, { clearProps: "all" });
+          if (heroFade) gsap.set(heroFade, { opacity: 0 });
+        };
+      },
+    );
+  }
+
+  const roman = document.getElementById("heroRoman");
+  const italic = document.getElementById("heroItalic");
+  const reveals = document.querySelectorAll("[data-hero-reveal]");
+  const headline = document.querySelector(".hero-headline");
+
+  if (roman && italic) {
+    const mm = gsap.matchMedia();
+
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      const splitRoman = new SplitText(roman, { type: "words" });
+      const splitItalic = new SplitText(italic, { type: "words" });
+      const tl = gsap.timeline({ delay: 0.15 });
+      tl.fromTo(splitRoman.words, { opacity: 0, y: "0.5em" }, { opacity: 1, y: "0em", duration: 0.7, ease: "power3.out", stagger: 0.05 })
+        .fromTo(splitItalic.words, { opacity: 0, y: "0.5em" }, { opacity: 1, y: "0em", duration: 0.7, ease: "power3.out", stagger: 0.05 }, "-=0.45")
+        .fromTo(reveals, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.08 }, "-=0.3");
+
+      return () => {
+        splitRoman.revert();
+        splitItalic.revert();
+      };
+    });
+
+    mm.add("(prefers-reduced-motion: reduce)", () => {
+      headline?.classList.add("is-static");
+      reveals.forEach((el) => el.classList.add("is-static"));
+      gsap.set(reveals, { opacity: 1, y: 0 });
+    });
+  }
+</script>

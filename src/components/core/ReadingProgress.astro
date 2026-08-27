@@ -1,0 +1,77 @@
+---
+// ReadingProgress.astro — barra de progreso de lectura para una página de
+// nota/caso individual. Reemplaza al modo "progress" de Thread.astro
+// (retirado por completo junto con el hilo lateral de la landing — ver
+// CLAUDE.md). Es una pieza funcional simple y sin relación de código ni
+// vocabulario visual con lo que se retiró: una barra horizontal fija
+// arriba del viewport, sin nodos ni metáfora de red — el progreso de
+// lectura de un artículo no necesita más que eso.
+
+interface Props {
+  trackSelector: string;
+  lang?: "es" | "en";
+}
+const { trackSelector, lang = "es" } = Astro.props;
+const label = lang === "en" ? "Reading progress" : "Progreso de lectura";
+---
+
+<div class="reading-progress" data-reading-progress data-track={trackSelector} role="progressbar" aria-label={label} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="reading-progress-fill"></div>
+</div>
+
+<style>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--border);
+    z-index: 60;
+  }
+
+  .reading-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-rule);
+    transform-origin: left;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reading-progress-fill { transition: none; }
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  function init(root: HTMLElement) {
+    const trackSelector = root.dataset.track || "body";
+    const trackEl = document.querySelector(trackSelector) || document.body;
+    const fill = root.querySelector<HTMLElement>(".reading-progress-fill")!;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reduced) {
+      fill.style.width = "100%";
+      root.setAttribute("aria-valuenow", "100");
+      return;
+    }
+
+    ScrollTrigger.create({
+      trigger: trackEl,
+      start: "top top",
+      end: "bottom bottom",
+      scrub: 0.3,
+      onUpdate: (self) => {
+        const pct = Math.round(self.progress * 100);
+        fill.style.width = pct + "%";
+        root.setAttribute("aria-valuenow", String(pct));
+      },
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>("[data-reading-progress]").forEach(init);
+</script>

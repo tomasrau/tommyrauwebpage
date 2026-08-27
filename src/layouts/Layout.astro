@@ -1,7 +1,21 @@
 ---
 import "../styles/global.css";
+
+// Self-hosted, reemplaza los <link> a Google Fonts CDN que había antes.
+// standard(-italic) trae los ejes opsz+wght completos — Newsreader e
+// Instrument Sans son variables; Spline Sans Mono no lo es, se cargan los
+// dos pesos estáticos que el sistema usa.
+import "@fontsource-variable/newsreader/standard.css";
+import "@fontsource-variable/newsreader/standard-italic.css";
+import "@fontsource-variable/instrument-sans/standard.css";
+import "@fontsource/spline-sans-mono/400.css";
+import "@fontsource/spline-sans-mono/500.css";
+
 import Header from "../components/core/Header.astro";
 import Footer from "../components/core/Footer.astro";
+import CommandPalette from "../components/core/CommandPalette.astro";
+import BootTerminal from "../components/core/BootTerminal.astro";
+import WhatsAppButton from "../components/core/WhatsAppButton.astro";
 
 interface Props {
   title?: string;
@@ -24,7 +38,10 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
 ---
 
 <!doctype html>
-<html lang={lang}>
+<!-- `no-js` se quita en un script inline sincrónico en <head> (ver abajo),
+     antes del primer paint. Sin JS, el contenido revelado al scroll tiene
+     que quedar visible igual — por eso sigue siendo el fallback real. -->
+<html lang={lang} class="no-js">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -42,6 +59,27 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
           document.documentElement.dataset.theme = "light";
         }
       })();
+    </script>
+    <!-- Evita el flash de la pantalla de carga en navegaciones repetidas
+         dentro de la misma sesión — mismo patrón inline que el script de
+         tema de arriba, corre antes del primer paint. -->
+    <script is:inline>
+      try {
+        if (sessionStorage.getItem("loaderShown") === "1") {
+          document.documentElement.classList.add("loader-skip");
+        }
+      } catch {}
+    </script>
+    <!-- Saca "no-js" ACÁ, sincrónico, antes del primer paint — no en el
+         script grande al final del body. Ese script es type="module"
+         (diferido por naturaleza): el navegador ya pintaba el body entero
+         (hero visible, loader oculto por ".no-js .loader") antes de que
+         corriera y recién ahí el loader aparecía tapando el hero — el
+         flash "hero → loader → hero" que reportó el usuario. Acá el loader
+         ya se recorta el fondo dorado. Con JS deshabilitado este script
+         no corre y "no-js" queda, que es el fallback correcto. -->
+    <script is:inline>
+      document.documentElement.classList.remove("no-js");
     </script>
     <link rel="icon" type="image/png" sizes="500x500" href="/tomasrau_favicon_black_no_bkg.png" />
     <link rel="icon" type="image/png" sizes="500x500" href="/tomasrau_favicon_black_no_bkg.png" media="(prefers-color-scheme: light)" />
@@ -82,23 +120,769 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     <meta name="twitter:image" content={ogImageURL} />
     <meta name="twitter:image:alt" content="Tomás Rau - Economía, BI, Finanzas y Tecnología" />
 
-    <!-- Google Fonts Preconnect and Stylesheets -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
+    <!-- Pantalla de carga: una terminal de research que se enciende panel
+         por panel al ritmo real de carga (fuentes + retrato del hero).
+         El grafo del modelo es UN panel más — enmarcado, no flotando —, y
+         el porcentaje vive en la barra de estado inferior, con su lugar
+         propio. .no-js la oculta por completo. Cortina de dos mitades en
+         la salida (corte recto, nunca fade). -->
+    <div id="loader" class="loader" aria-hidden="true">
+      <div class="loader-half loader-half-top register-ink"></div>
+      <div class="loader-half loader-half-bottom register-ink"></div>
+      <BootTerminal lang={lang} />
+    </div>
+
     <!-- Sticky Floating Navigation Header -->
     <Header lang={lang} alternateUrl={alternateUrl} />
 
-    <main id="main-content" class="w-full min-h-screen flex flex-col justify-between">
+    <!-- ReadingProgress.astro se monta por página, sólo en nota/caso
+         individual (modo de progreso de lectura atado a su propio
+         contenedor de artículo) — la landing no pasa nada a este slot. -->
+    <slot name="thread" />
+
+    <main id="main-content">
       <slot />
     </main>
 
     <!-- Professional Editorial Footer -->
     <Footer lang={lang} />
+
+    <CommandPalette lang={lang} />
+
+    <WhatsAppButton lang={lang} />
+
+    <style>
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+      }
+
+      .no-js .loader,
+      .loader-skip .loader {
+        display: none;
+      }
+
+      .loader-half {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 50%;
+        will-change: transform;
+      }
+
+      .loader-half-top { top: 0; }
+      .loader-half-bottom { bottom: 0; }
+
+    </style>
+
+    <script>
+      // Capa de movimiento compartida. El riel de capítulos ya no vive acá
+      // (era ChapterRail, retirado) — Thread.astro trae su propio
+      // ScrollTrigger por página. Esto sólo inicializa el motor global
+      // (Lenis + ticker de GSAP) y conserva el revelado/parallax vanilla
+      // que ya funcionaban, sin reescribirlos sin necesidad.
+      import Lenis from "lenis";
+      import gsap from "gsap";
+      import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+      gsap.registerPlugin(ScrollTrigger);
+
+      const root = document.documentElement;
+
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      /* ---- Pantalla de carga: terminal de research ----
+         Los paneles (BootTerminal.astro) se encienden uno por uno según el
+         progreso REAL de carga (70% document.fonts.ready, 30% decode() del
+         retrato del hero) — no un timer inventado. El contenido de cada
+         panel se construye acá, leyendo los data-* del markup estático.
+         Piso mínimo de ~2.6s: no es un parpadeo, es el tiempo que hace
+         falta para leer la terminal armándose. Se salta por completo en
+         navegaciones repetidas de la misma sesión (script en <head>). */
+      const loader = document.getElementById("loader");
+      const pctEl = document.getElementById("loaderPct");
+      const barEl = document.getElementById("loaderBar");
+      const termEl = document.getElementById("bootTerm");
+      const loaderTop = document.querySelector<HTMLElement>(".loader-half-top");
+      const loaderBottom = document.querySelector<HTMLElement>(".loader-half-bottom");
+
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const svgEl = <K extends keyof SVGElementTagNameMap>(tag: K, attrs: Record<string, string | number>) => {
+        const el = document.createElementNS(SVG_NS, tag);
+        for (const k in attrs) el.setAttribute(k, String(attrs[k]));
+        return el;
+      };
+
+      /* Ruido determinista: la terminal se ve igual de "viva" en cada
+         carga sin depender de Math.random en el layout, que producía
+         solapamientos distintos en cada refresh. */
+      const rnd = (seed: number) => {
+        let s = seed >>> 0;
+        return () => {
+          s = (s * 1664525 + 1013904223) >>> 0;
+          return s / 4294967296;
+        };
+      };
+
+      const el = (tag: string, cls: string, text?: string) => {
+        const n = document.createElement(tag);
+        n.className = cls;
+        if (text !== undefined) n.textContent = text;
+        return n;
+      };
+
+      /* ---- Cotizaciones: símbolo, último, bid, ask, %día, %semana, señal.
+         Valores ILUSTRATIVOS de instrumentos públicos genéricos. Verde y
+         bordó salen del catálogo y aplican la convención del dominio. ---- */
+      const buildQuotes = (body: HTMLElement, spec: string, head: string) => {
+        const table = el("div", "q-table");
+        head.split("|").forEach((h, i) => {
+          table.appendChild(el("span", i === 0 ? "q-th q-sym" : "q-th", h));
+        });
+
+        const r = rnd(spec.length * 7919);
+        const rows = spec.split(",").map((entry) => {
+          const [sym, base, dec] = entry.split("|");
+          const decimals = Number(dec);
+          const value = Number(base);
+          const tick = Math.max(Number((value * 0.00012).toFixed(decimals + 2)), 10 ** -decimals);
+          const dayPct = (r() - 0.45) * 1.6;
+          const weekPct = (r() - 0.45) * 3.4;
+
+          const symEl = el("span", "q-sym", sym);
+          const lastEl = el("span", "q-num q-last", value.toFixed(decimals));
+          const bidEl = el("span", "q-num", (value - tick).toFixed(decimals));
+          const askEl = el("span", "q-num", (value + tick).toFixed(decimals));
+          const dEl = el("span", `q-num q-chg ${dayPct >= 0 ? "is-up" : "is-down"}`,
+            `${dayPct >= 0 ? "+" : ""}${dayPct.toFixed(2)}`);
+          const wEl = el("span", `q-num q-chg ${weekPct >= 0 ? "is-up" : "is-down"}`,
+            `${weekPct >= 0 ? "+" : ""}${weekPct.toFixed(2)}`);
+          const score = dayPct + weekPct * 0.4;
+          const sigEl = el("span", `q-sig ${score > 0.5 ? "is-up" : score < -0.5 ? "is-down" : "is-flat"}`,
+            score > 0.5 ? "L" : score < -0.5 ? "S" : "—");
+
+          table.append(symEl, lastEl, bidEl, askEl, dEl, wEl, sigEl);
+          return { lastEl, bidEl, askEl, value, decimals, tick };
+        });
+        body.appendChild(table);
+
+        if (reduced) return () => {};
+        const id = window.setInterval(() => {
+          const q = rows[Math.floor(Math.random() * rows.length)];
+          const up = Math.random() < 0.5;
+          q.value = Math.max(1e-4, q.value * (1 + (up ? 1 : -1) * (0.0003 + Math.random() * 0.0018)));
+          q.lastEl.textContent = q.value.toFixed(q.decimals);
+          q.bidEl.textContent = (q.value - q.tick).toFixed(q.decimals);
+          q.askEl.textContent = (q.value + q.tick).toFixed(q.decimals);
+          q.lastEl.classList.remove("flash-up", "flash-down");
+          void q.lastEl.offsetWidth;
+          q.lastEl.classList.add(up ? "flash-up" : "flash-down");
+        }, 260);
+        return () => window.clearInterval(id);
+      };
+
+      /* ---- Grafo de inferencia: capas etiquetadas, features de entrada,
+         salidas con valor, pesos sobre algunas aristas. No termina forzado
+         en un nodo único: la capa de salida tiene tres cabezas. ---- */
+      const buildModel = (svg: SVGSVGElement, body: HTMLElement, ds: DOMStringMap) => {
+        const W = Math.max(body.clientWidth, 260);
+        const H = Math.max(body.clientHeight - 16, 180);
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+        const caps = (ds.layers ?? "").split("|");
+        const inputs = (ds.inputs ?? "").split("|");
+        const outputs = (ds.outputs ?? "").split("|");
+        const counts = [inputs.length, 7, 6, 5, outputs.length];
+        const cols = counts.length;
+
+        const padL = Math.min(58, W * 0.16);
+        const padR = Math.min(52, W * 0.15);
+        const padT = 16;
+        const padB = 8;
+        const innerW = W - padL - padR;
+        const innerH = H - padT - padB;
+        const size = 6;
+        const r = rnd(4271);
+
+        type N = { x: number; y: number; el: SVGRectElement; lit: boolean };
+        const grid: N[][] = counts.map((count, ci) => {
+          const x = padL + (innerW / (cols - 1)) * ci;
+          svg.appendChild(Object.assign(svgEl("text", {
+            x, y: 8, class: "field-label field-cap", "text-anchor": ci === 0 ? "start" : ci === cols - 1 ? "end" : "middle",
+          }), { textContent: caps[ci] ?? "" }));
+          const slot = innerH / count;
+          return Array.from({ length: count }, (_, i) => {
+            const y = padT + slot * i + slot / 2;
+            const s = ci === cols - 1 ? size * 1.6 : size;
+            return { x, y, el: svgEl("rect", { x: x - s / 2, y: y - s / 2, width: s, height: s, class: "field-node" }), lit: false };
+          });
+        });
+
+        const edges: { ax: number; el: SVGLineElement }[] = [];
+        for (let ci = 0; ci < cols - 1; ci++) {
+          const from = grid[ci], to = grid[ci + 1];
+          to.forEach((tn) => {
+            from
+              .map((fn, i) => ({ i, d: Math.abs(fn.y - tn.y) }))
+              .sort((a, b) => a.d - b.d)
+              .slice(0, 3)
+              .forEach(({ i }) => {
+                const fn = from[i];
+                edges.push({ ax: fn.x, el: svgEl("line", { x1: fn.x, y1: fn.y, x2: tn.x, y2: tn.y, class: "field-edge" }) });
+              });
+          });
+        }
+        edges.forEach((e) => svg.appendChild(e.el));
+
+        // Pesos sobre algunas aristas — señal de que el grafo tiene números,
+        // no es un adorno.
+        const weightEls: SVGTextElement[] = [];
+        for (let k = 0; k < 6; k++) {
+          const ci = 1 + Math.floor(r() * (cols - 2));
+          const a = grid[ci - 1][Math.floor(r() * grid[ci - 1].length)];
+          const b = grid[ci][Math.floor(r() * grid[ci].length)];
+          const wt = svgEl("text", {
+            x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 - 2, class: "field-label field-weight", "text-anchor": "middle",
+          }) as SVGTextElement;
+          wt.textContent = (r() * 1.8 - 0.9).toFixed(2);
+          weightEls.push(wt);
+          svg.appendChild(wt);
+        }
+
+        const nodes = grid.flat();
+        nodes.forEach((n) => svg.appendChild(n.el));
+
+        // Etiquetas de features a la izquierda y de salidas a la derecha,
+        // con su valor — el grafo dice qué entra y qué sale.
+        const inLabels = grid[0].map((n, i) => {
+          const tx = svgEl("text", { x: n.x - size, y: n.y + 2.5, class: "field-label", "text-anchor": "end" }) as SVGTextElement;
+          tx.textContent = inputs[i] ?? "";
+          svg.appendChild(tx);
+          return tx;
+        });
+
+        const outVals = [0.68, 0.142, 0.34];
+        const outLabels = grid[cols - 1].map((n, i) => {
+          const tx = svgEl("text", { x: n.x + size * 1.6, y: n.y - 1, class: "field-label", "text-anchor": "start" }) as SVGTextElement;
+          tx.textContent = outputs[i] ?? "";
+          const vx = svgEl("text", { x: n.x + size * 1.6, y: n.y + 9, class: "field-label field-out-val", "text-anchor": "start" }) as SVGTextElement;
+          vx.textContent = (outVals[i] ?? 0).toFixed(i === 1 ? 3 : 2);
+          svg.append(tx, vx);
+          return [tx, vx];
+        });
+
+        return (local: number) => {
+          const x = padL - 10 + (innerW + 24) * local;
+          nodes.forEach((n) => n.el.classList.toggle("is-lit", n.x <= x));
+          edges.forEach((e) => e.el.classList.toggle("is-lit", e.ax <= x));
+          inLabels.forEach((l, i) => l.classList.toggle("is-lit", grid[0][i].x <= x));
+          outLabels.flat().forEach((l) => l.classList.toggle("is-lit", grid[cols - 1][0].x <= x));
+          weightEls.forEach((w) => (w.style.opacity = local > 0.55 ? "0.75" : "0"));
+        };
+      };
+
+      /* ---- Velas japonesas + volumen + medias móviles + RSI(14).
+         Serie ILUSTRATIVA generada con un paseo aleatorio determinista;
+         no son datos de mercado. Sólo tramos rectos, nunca Bézier. ---- */
+      const buildChart = (svg: SVGSVGElement, body: HTMLElement, legendEl: HTMLElement, ds: DOMStringMap) => {
+        const W = Math.max(body.clientWidth, 320);
+        const H = Math.max(body.clientHeight - 22, 200);
+        svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+        const axisW = 34;
+        const plotW = W - axisW;
+        const priceTop = 2, priceH = H * 0.54;
+        const volTop = priceTop + priceH + 8, volH = H * 0.13;
+        const rsiTop = volTop + volH + 14, rsiH = H - rsiTop - 2;
+
+        // Serie: paseo aleatorio determinista con volatilidad estable.
+        const n = Math.max(34, Math.min(70, Math.floor(plotW / 9)));
+        const warm = 30;
+        const r = rnd(90210);
+        const bars: { o: number; h: number; l: number; c: number; v: number }[] = [];
+        let px = 4650;
+        for (let i = 0; i < n + warm; i++) {
+          const o = px;
+          const drift = (r() - 0.47) * 26;
+          const c = Math.max(50, o + drift);
+          const h = Math.max(o, c) + r() * 12;
+          const l = Math.min(o, c) - r() * 12;
+          bars.push({ o, h, l, c, v: 0.4 + r() * 0.6 + Math.abs(drift) / 40 });
+          px = c;
+        }
+        const view = bars.slice(warm);
+
+        const ma = (period: number) =>
+          view.map((_, i) => {
+            const gi = i + warm;
+            const slice = bars.slice(gi - period + 1, gi + 1);
+            return slice.reduce((s, b) => s + b.c, 0) / slice.length;
+          });
+        const ma1 = ma(9), ma2 = ma(21);
+
+        // RSI(14) de Wilder sobre la serie completa, recortado a la vista.
+        const rsiAll: number[] = [];
+        let avgG = 0, avgL = 0;
+        for (let i = 1; i < bars.length; i++) {
+          const ch = bars[i].c - bars[i - 1].c;
+          const g = Math.max(ch, 0), l = Math.max(-ch, 0);
+          if (i <= 14) { avgG += g / 14; avgL += l / 14; }
+          else { avgG = (avgG * 13 + g) / 14; avgL = (avgL * 13 + l) / 14; }
+          rsiAll[i] = avgL === 0 ? 100 : 100 - 100 / (1 + avgG / avgL);
+        }
+        const rsi = view.map((_, i) => rsiAll[i + warm] ?? 50);
+
+        const lo = Math.min(...view.map((b) => b.l), ...ma2);
+        const hi = Math.max(...view.map((b) => b.h), ...ma2);
+        const pad = (hi - lo) * 0.08;
+        const yP = (v: number) => priceTop + priceH - ((v - lo + pad) / (hi - lo + pad * 2)) * priceH;
+        const maxV = Math.max(...view.map((b) => b.v));
+        const step = plotW / n;
+        const bodyW = Math.max(2, step * 0.62);
+
+        // Rejilla + eje de precio a la derecha
+        for (let i = 0; i <= 3; i++) {
+          const v = lo - pad + ((hi - lo + pad * 2) / 3) * i;
+          const y = yP(v);
+          svg.appendChild(svgEl("line", { x1: 0, y1: y, x2: plotW, y2: y, class: "ch-grid" }));
+          const tx = svgEl("text", { x: plotW + 4, y: y + 2.5, class: "ch-axis" }) as SVGTextElement;
+          tx.textContent = v.toFixed(0);
+          svg.appendChild(tx);
+        }
+
+        // Banda y guías del RSI (30/70)
+        svg.appendChild(svgEl("rect", { x: 0, y: rsiTop + rsiH * 0.3, width: plotW, height: rsiH * 0.4, class: "ch-band" }));
+        [30, 70].forEach((lvl) => {
+          const y = rsiTop + rsiH - (lvl / 100) * rsiH;
+          svg.appendChild(svgEl("line", { x1: 0, y1: y, x2: plotW, y2: y, class: "ch-guide" }));
+          const tx = svgEl("text", { x: plotW + 4, y: y + 2.5, class: "ch-axis" }) as SVGTextElement;
+          tx.textContent = String(lvl);
+          svg.appendChild(tx);
+        });
+        const rsiTag = svgEl("text", { x: 2, y: rsiTop - 3, class: "ch-axis" }) as SVGTextElement;
+        rsiTag.textContent = "RSI(14)";
+        svg.appendChild(rsiTag);
+        const volTag = svgEl("text", { x: 2, y: volTop - 2, class: "ch-axis" }) as SVGTextElement;
+        volTag.textContent = ds.vol ?? "VOL";
+        svg.appendChild(volTag);
+
+        // Velas + volumen
+        const candles = view.map((b, i) => {
+          const cx = step * i + step / 2;
+          const up = b.c >= b.o;
+          const cls = up ? "ch-up" : "ch-down";
+          const wick = svgEl("line", { x1: cx, y1: yP(b.h), x2: cx, y2: yP(b.l), class: `ch-wick ${cls}` });
+          const top = yP(Math.max(b.o, b.c));
+          const rect = svgEl("rect", {
+            x: cx - bodyW / 2, y: top, width: bodyW,
+            height: Math.max(1, yP(Math.min(b.o, b.c)) - top), class: cls,
+          });
+          const vh = (b.v / maxV) * volH;
+          const vol = svgEl("rect", {
+            x: cx - bodyW / 2, y: volTop + volH - vh, width: bodyW, height: vh,
+            class: up ? "ch-vol-up" : "ch-vol-down",
+          });
+          const g = svgEl("g", {});
+          g.append(wick, rect, vol);
+          svg.appendChild(g);
+          if (!reduced) g.style.opacity = "0";
+          return g;
+        });
+
+        const poly = (vals: number[], mapY: (v: number) => number, cls: string) => {
+          const d = vals.map((v, i) => `${i === 0 ? "M" : "L"} ${step * i + step / 2} ${mapY(v)}`).join(" ");
+          const p = svgEl("path", { d, class: cls }) as SVGPathElement;
+          svg.appendChild(p);
+          const len = p.getTotalLength();
+          p.style.strokeDasharray = String(len);
+          p.style.strokeDashoffset = reduced ? "0" : String(len);
+          return { p, len };
+        };
+        const l1 = poly(ma1, yP, "ch-ma ch-ma1");
+        const l2 = poly(ma2, yP, "ch-ma ch-ma2");
+        const lr = poly(rsi, (v) => rsiTop + rsiH - (v / 100) * rsiH, "ch-rsi");
+
+        const last = view[view.length - 1];
+        legendEl.innerHTML = "";
+        const addKey = (cls: string, label: string) => {
+          const k = el("span", `ch-key ${cls}`);
+          k.appendChild(document.createElement("i"));
+          k.appendChild(document.createTextNode(label));
+          legendEl.appendChild(k);
+        };
+        const ohlc = el("span", "ch-val", ds.legend ?? "");
+        legendEl.appendChild(ohlc);
+        addKey("ma1", "MA9");
+        addKey("ma2", "MA21");
+        const rsiVal = el("span", "ch-val", `RSI ${rsi[rsi.length - 1].toFixed(1)}`);
+        legendEl.appendChild(rsiVal);
+        const chg = ((last.c - view[0].o) / view[0].o) * 100;
+        const chgEl = el("span", `q-chg ${chg >= 0 ? "is-up" : "is-down"}`, `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`);
+        legendEl.appendChild(chgEl);
+
+        return (local: number) => {
+          const shown = Math.floor(local * candles.length);
+          candles.forEach((g, i) => (g.style.opacity = i < shown ? "1" : "0"));
+          l1.p.style.strokeDashoffset = String(l1.len * (1 - local));
+          l2.p.style.strokeDashoffset = String(l2.len * (1 - local));
+          lr.p.style.strokeDashoffset = String(lr.len * (1 - local));
+        };
+      };
+
+      /* ---- Libro de órdenes: escalera bid/ask con tamaño, acumulado y
+         barra de profundidad. Spread resaltado al medio. ---- */
+      const buildBook = (body: HTMLElement, ds: DOMStringMap) => {
+        const grid = el("div", "book-grid");
+        (ds.head ?? "").split("|").forEach((h) => grid.appendChild(el("span", "book-th", h)));
+
+        const r = rnd(31337);
+        const mid = 4831.75;
+        const levels = 6;
+        const mk = (side: "ask" | "bid") => {
+          let cum = 0;
+          const rows = [];
+          for (let i = 0; i < levels; i++) {
+            const px = side === "ask" ? mid + 0.25 * (i + 1) : mid - 0.25 * (i + 1);
+            const sz = Math.round(20 + r() * 180);
+            cum += sz;
+            rows.push({ px, sz, cum });
+          }
+          return rows;
+        };
+        const asks = mk("ask").reverse();
+        const bids = mk("bid");
+        const maxCum = Math.max(...asks.map((a) => a.cum), ...bids.map((b) => b.cum));
+
+        const addRows = (rows: { px: number; sz: number; cum: number }[], side: "ask" | "bid") => {
+          const out: HTMLElement[] = [];
+          rows.forEach((row) => {
+            const pxEl = el("span", `book-row book-px is-${side}`, row.px.toFixed(2));
+            const depth = el("i", `book-depth is-${side}`);
+            depth.style.width = `${(row.cum / maxCum) * 100}%`;
+            pxEl.appendChild(depth);
+            const szEl = el("span", "book-row book-sz", row.sz.toLocaleString("es-AR"));
+            const cumEl = el("span", "book-row book-cum", row.cum.toLocaleString("es-AR"));
+            grid.append(pxEl, szEl, cumEl);
+            out.push(pxEl, szEl, cumEl);
+          });
+          return out;
+        };
+
+        const askEls = addRows(asks, "ask");
+        const spread = el("span", "book-spread");
+        spread.append(el("span", "", ds.spread ?? "SPREAD"), el("span", "", "0.25"), el("span", "", mid.toFixed(2)));
+        grid.appendChild(spread);
+        const bidEls = addRows(bids, "bid");
+        body.appendChild(grid);
+
+        const all = [...askEls, spread, ...bidEls];
+        if (!reduced) all.forEach((n) => (n.style.opacity = "0"));
+
+        return (local: number) => {
+          const shown = Math.ceil(local * all.length);
+          all.forEach((n, i) => (n.style.opacity = i < shown ? "1" : "0"));
+        };
+      };
+
+      /* ---- Blotter: feed de ejecuciones que van entrando ---- */
+      const buildBlotter = (body: HTMLElement, ds: DOMStringMap) => {
+        const grid = el("div", "blot-grid");
+        (ds.head ?? "").split("|").forEach((h) => grid.appendChild(el("span", "blot-th", h)));
+
+        const instr = ["ES1", "UST 10Y", "EUR/USD", "NQ1", "BUND 10Y", "USD/JPY", "CL1", "GC1", "SPX 4800C", "USD/MXN"];
+        const r = rnd(5150);
+        const total = 14;
+        const fills = Array.from({ length: total }, (_, i) => {
+          const t = new Date(Date.UTC(2026, 0, 1, 13, 41 + Math.floor(i / 3), (i * 17) % 60));
+          const buy = r() < 0.5;
+          const sym = instr[Math.floor(r() * instr.length)];
+          const px = 100 + r() * 4800;
+          const els = [
+            el("span", "blot-time", `${String(t.getUTCHours()).padStart(2, "0")}:${String(t.getUTCMinutes()).padStart(2, "0")}:${String(t.getUTCSeconds()).padStart(2, "0")}`),
+            el("span", "blot-instr", sym),
+            el("span", `blot-side ${buy ? "is-buy" : "is-sell"}`, buy ? "C" : "V"),
+            el("span", "blot-qty", String(Math.round(5 + r() * 250))),
+            el("span", "blot-px", px.toFixed(2)),
+          ];
+          grid.append(...els);
+          return els;
+        });
+        body.appendChild(grid);
+        if (!reduced) fills.flat().forEach((n) => (n.style.opacity = "0"));
+
+        return (local: number) => {
+          const shown = Math.ceil(local * total);
+          fills.forEach((row, i) => row.forEach((n) => (n.style.opacity = i < shown ? "1" : "0")));
+        };
+      };
+
+      /* ---- Riesgo: métricas de cartera con conteo animado ---- */
+      const buildRisk = (body: HTMLElement, ds: DOMStringMap) => {
+        const grid = el("div", "risk-grid");
+        const cells = (ds.metrics ?? "").split(",").map((m) => {
+          const [label, value, suffix, note] = m.split("|");
+          const cell = el("div", "risk-cell");
+          const target = Number(value);
+          const valEl = el("div", `risk-value${target < 0 ? " is-neg" : ""}`);
+          const num = document.createTextNode("0");
+          valEl.appendChild(num);
+          if (suffix) {
+            const s = document.createElement("small");
+            s.textContent = suffix;
+            valEl.appendChild(s);
+          }
+          cell.append(el("div", "risk-label", label), valEl, el("div", "risk-note", note ?? ""));
+          grid.appendChild(cell);
+          const decimals = Math.abs(target) < 10 ? 2 : 1;
+          return { num, target, decimals };
+        });
+        body.appendChild(grid);
+
+        return (local: number) => {
+          cells.forEach((c) => (c.num.nodeValue = (c.target * Math.min(1, local)).toFixed(c.decimals)));
+        };
+      };
+
+      if (loader && pctEl && barEl && termEl && loaderTop && loaderBottom && !root.classList.contains("loader-skip")) {
+        try {
+          sessionStorage.setItem("loaderShown", "1");
+        } catch {}
+
+        const panels = Array.from(termEl.querySelectorAll<HTMLElement>(".term-panel"));
+        const stops: Array<() => void> = [];
+        const updaters: Array<(pct: number) => void> = [];
+
+        panels.forEach((panel) => {
+          const body = panel.querySelector<HTMLElement>(".term-body");
+          if (!body) return;
+          const at = Number(panel.dataset.at ?? 0);
+          const ds = panel.dataset;
+          // El contenido de cada panel termina de armarse en el 82% del
+          // progreso, no en el 100%: el tramo final deja toda la terminal
+          // completa y en movimiento antes de la transición al hero.
+          const local = (pct: number) => Math.max(0, Math.min(1, (pct - at) / Math.max(1, 82 - at)));
+
+          const svg = body.querySelector("svg") as SVGSVGElement | null;
+          switch (ds.kind) {
+            case "quotes":
+              stops.push(buildQuotes(body, ds.rows ?? "", ds.head ?? ""));
+              break;
+            case "model":
+              if (svg) { const u = buildModel(svg, body, ds); updaters.push((p) => u(local(p))); }
+              break;
+            case "chart": {
+              const legend = body.querySelector<HTMLElement>(".chart-legend");
+              if (svg && legend) { const u = buildChart(svg, body, legend, ds); updaters.push((p) => u(local(p))); }
+              break;
+            }
+            case "book": { const u = buildBook(body, ds); updaters.push((p) => u(local(p))); break; }
+            case "blotter": { const u = buildBlotter(body, ds); updaters.push((p) => u(local(p))); break; }
+            case "risk": { const u = buildRisk(body, ds); updaters.push((p) => u(local(p))); break; }
+          }
+
+          updaters.push((pct) => panel.classList.toggle("is-live", pct >= at));
+        });
+
+        const stopAll = () => stops.forEach((fn) => fn());
+
+        const state = { pct: 0 };
+        const setPct = (v: number) => {
+          pctEl.textContent = String(Math.round(v));
+          barEl.style.width = `${v}%`;
+          updaters.forEach((fn) => fn(v));
+        };
+        const startTime = performance.now();
+        const minDisplay = reduced ? 0 : 2600;
+
+        const heroImg = document.querySelector<HTMLImageElement>(".hero-photo");
+        const imageReady = heroImg
+          ? heroImg.complete
+            ? Promise.resolve()
+            : heroImg.decode
+              ? heroImg.decode().catch(() => {})
+              : new Promise<void>((res) => heroImg.addEventListener("load", () => res(), { once: true }))
+          : Promise.resolve();
+
+        const fontsReady = document.fonts?.ready ?? Promise.resolve();
+
+        const tweenTo = (value: number, duration: number) => {
+          if (reduced) {
+            state.pct = value;
+            setPct(value);
+            return Promise.resolve();
+          }
+          return new Promise<void>((resolve) => {
+            gsap.to(state, { pct: value, duration, ease: "power2.out", onUpdate: () => setPct(state.pct), onComplete: () => resolve() });
+          });
+        };
+
+        (async () => {
+          await tweenTo(18, 0.7);
+          await fontsReady;
+          await tweenTo(72, 1.3);
+          await imageReady;
+          await tweenTo(100, 0.8);
+
+          const elapsed = performance.now() - startTime;
+          if (elapsed < minDisplay) {
+            await new Promise((res) => setTimeout(res, minDisplay - elapsed));
+          }
+
+          stopAll();
+
+          if (reduced) {
+            gsap.to(loader, { opacity: 0, duration: 0.25, onComplete: () => loader.remove() });
+          } else {
+            // Cortina de dos mitades, corte recto — nunca fade. La terminal
+            // es un hijo a pantalla completa, no parte de ninguna mitad: si
+            // no se la incluye acá queda congelada sobre el hero ya
+            // revelado hasta que loader.remove() la borra de golpe. Se
+            // apaga antes de que la costura empiece a moverse.
+            const tl = gsap.timeline({ onComplete: () => loader.remove() });
+            tl.to(termEl, { opacity: 0, duration: 0.25, ease: "power1.in" })
+              .to(loaderTop, { yPercent: -100, duration: 0.7, ease: "power3.inOut" }, "curtain")
+              .to(loaderBottom, { yPercent: 100, duration: 0.7, ease: "power3.inOut" }, "curtain");
+          }
+        })();
+      } else if (loader) {
+        loader.remove();
+      }
+
+      /* ---- Scroll suave global, sincronizado al ticker de GSAP ----
+         Thread.astro (y cualquier otro consumidor de ScrollTrigger) no
+         necesita saber que Lenis existe: alcanza con que
+         ScrollTrigger.update() se llame en cada tick de Lenis. */
+      if (!reduced) {
+        const lenis = new Lenis();
+        (window as any).__lenis = lenis;
+        lenis.on("scroll", ScrollTrigger.update);
+        gsap.ticker.add((time) => lenis.raf(time * 1000));
+        gsap.ticker.lagSmoothing(0);
+
+        // Este script corre al final del body — cualquier ScrollTrigger con
+        // pin creado por un componente anterior ya calculó su spacer
+        // contra el scroll nativo, antes de que Lenis empezara a
+        // virtualizarlo. Sin este refresh, el pin se libera tarde y la
+        // sección siguiente queda visible por debajo mientras el elemento
+        // pineado sigue ocupando la pantalla (bug real, ya encontrado y
+        // corregido una vez en este proyecto). Un tick antes de refrescar
+        // para que Lenis termine de asentar su primer frame.
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      }
+
+      /* ---- Revelado al scroll ---- */
+      const targets = document.querySelectorAll("[data-reveal]");
+      if (reduced || !("IntersectionObserver" in window)) {
+        targets.forEach((el) => el.classList.add("reveal", "is-visible"));
+      } else {
+        targets.forEach((el) => el.classList.add("reveal"));
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { rootMargin: "0px 0px -12% 0px", threshold: 0.08 },
+        );
+        targets.forEach((el) => io.observe(el));
+      }
+
+      /* ---- Parallax: sólo transform:translateY (propiedad permitida) ---- */
+      const layers = document.querySelectorAll<HTMLElement>("[data-parallax]");
+      if (layers.length && !reduced) {
+        let ticking = false;
+        const update = () => {
+          layers.forEach((layer) => {
+            const host = layer.parentElement;
+            if (!host) return;
+            const rect = host.getBoundingClientRect();
+            if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+            const progress = -rect.top / Math.max(rect.height, 1);
+            layer.style.transform = `translate3d(0, ${(progress * 14).toFixed(2)}%, 0)`;
+          });
+          ticking = false;
+        };
+        const onScroll = () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        update();
+      }
+
+      /* ---- Chrome flotante que se guarda al bajar (SÓLO MOBILE) ----
+         En desktop las dos píldoras del Header y el botón de WhatsApp
+         viven en márgenes anchos que no compiten con la columna de
+         lectura. En mobile ocupan una fracción enorme del ancho y quedan
+         SIEMPRE encima del texto: verificado en captura, la píldora de
+         marca tapaba por completo la palabra "Economista" del hero y
+         renglones enteros de prosa en Método/Modelo/Contacto, y el botón
+         de WhatsApp tapaba el label "Expansiva" de un slider del modelo
+         — no es estética, es contenido y control perdidos.
+
+         Se resuelve con el MISMO vocabulario que ya usa FloatingNav
+         (guardar al bajar, revelar al subir con umbral), no con un
+         mecanismo nuevo. La clase va en <html> y las reglas viven en
+         global.css, no en un <style> de componente: Astro scopea cada
+         compound del selector y una regla que dependa de una clase en
+         <html> nunca matchearía desde un componente (misma trampa ya
+         documentada para [data-theme]).
+
+         Desktop queda literalmente intacto: el listener no se registra
+         si la media query no matchea, y al dejar de matchear se limpia
+         la clase. */
+      (() => {
+        const root = document.documentElement;
+        const mq = window.matchMedia("(max-width: 899px)");
+        const UP_REVEAL_PX = 48;
+        const TOP_SAFE_PX = 120;
+        let lastY = window.scrollY;
+        let anchorY = window.scrollY;
+        let attached = false;
+
+        const onChromeScroll = () => {
+          const y = window.scrollY;
+          if (y <= TOP_SAFE_PX) {
+            root.classList.remove("chrome-tucked");
+            anchorY = y;
+            lastY = y;
+            return;
+          }
+          if (y > lastY) {
+            // Bajando: se guarda al instante y se reancla en CADA tick
+            // (si sólo se reanclara en la transición visible→oculto, el
+            // punto de referencia quedaría clavado en el primer
+            // ocultamiento y el umbral de abajo no se cumpliría nunca).
+            anchorY = y;
+            root.classList.add("chrome-tucked");
+          } else if (anchorY - y >= UP_REVEAL_PX) {
+            root.classList.remove("chrome-tucked");
+          }
+          lastY = y;
+        };
+
+        const sync = () => {
+          if (mq.matches && !attached) {
+            window.addEventListener("scroll", onChromeScroll, { passive: true });
+            attached = true;
+            onChromeScroll();
+          } else if (!mq.matches && attached) {
+            window.removeEventListener("scroll", onChromeScroll);
+            attached = false;
+            root.classList.remove("chrome-tucked");
+          }
+        };
+        sync();
+        mq.addEventListener("change", sync);
+      })();
+    </script>
   </body>
 </html>

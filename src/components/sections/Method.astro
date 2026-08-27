@@ -1,0 +1,564 @@
+---
+// Method.astro — §2.7 (columna de lectura + columna de márgenes) + un
+// diagrama de proceso propio debajo del texto (§3.10/§3.11: gramática del
+// isotipo — vértices cuadrados, trazos ortogonales, sin curvas).
+//
+// El texto real vino de src/content/method/{metodo-investigacion-es,
+// research-method-en}.md (provistos por el usuario) — se transcribió acá
+// tal cual, sin content collection propia porque esta sección siempre fue
+// un objeto bilingüe hardcodeado (mismo patrón que Hero/Contact), no una
+// colección enrutable como `research`. Los .md de staging se borraron una
+// vez transcriptos.
+//
+// El diagrama visualiza el proceso descrito en el texto: ocho pasos, el
+// séptimo es un punto de validación con retorno (si la conclusión no
+// sobrevive al contraste con explicaciones alternativas, el proceso vuelve
+// a los datos antes de avanzar) — es la única parte del método que es
+// realmente una DECISIÓN, no un paso lineal, y es lo que pidió el usuario
+// ("diagrama de decisiones"). Nada de esto es ilustrativo: cada nodo
+// parafrasea una frase real del texto, no hay datos inventados.
+
+interface Stage {
+  num: string;
+  title: string;
+  desc: string;
+  phase: string;
+  kind?: "gate" | "decision";
+  branches?: { label: string; note: string }[];
+}
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const t = lang === "en"
+  ? {
+      kicker: "Method",
+      title: "Data describes. Method makes it understandable.",
+      lead: "Every analysis begins with a specific question, defines the evidence required and states its limitations before reaching a conclusion.",
+      paragraphs: [
+        "My method combines economic and financial research with business intelligence, statistics and quantitative analysis. The work begins by framing the problem, identifying the relevant variables and actors, and developing a hypothesis about the mechanisms that may explain the observed outcome.",
+        "Data is integrated, cleaned and tested to detect trends, anomalies and regime shifts. A signal, however, is never interpreted in isolation. It is examined within its macroeconomic, productive, institutional and financial context, connecting policies and incentives with the real economy, expectations and market prices.",
+        "An insight becomes useful when it clarifies what changed, why it may have changed and under which conditions it could persist. Each conclusion is tested against alternative explanations and translated into scenarios, risks and concrete decision implications—without claiming more than the evidence can support.",
+      ],
+      marginTitle: "Working principles",
+      marginItems: [
+        "Specific questions before data accumulation.",
+        "Traceable evidence and reproducible transformations.",
+        "Integration of data, theory and institutional context.",
+        "Clear separation of observation, inference and causality.",
+        "Decision-oriented scenarios and risk assessment.",
+      ],
+      diagramLabel: "Process",
+      diagramCaption: "Eight steps from question to decision, grouped into three phases.",
+      stages: [
+        { num: "01", title: "Question & framing", desc: "Frame the problem, identify the relevant variables and actors.", phase: "Framing" },
+        { num: "02", title: "Hypothesis", desc: "Develop a hypothesis about the mechanisms that may explain the outcome.", phase: "Framing" },
+        { num: "03", title: "Data integration", desc: "Integrate, clean and test the available data.", phase: "Evidence" },
+        { num: "04", title: "Detection", desc: "Trends, patterns, behaviors, anomalies and regime shifts.", phase: "Evidence" },
+        { num: "05", title: "Context", desc: "Macroeconomic, productive, institutional and financial — policies and incentives, the real economy, expectations and market prices.", phase: "Evidence" },
+        { num: "06", title: "Insight", desc: "What changed, why it may have changed, and under which conditions it could persist.", phase: "Evidence" },
+        {
+          num: "07", title: "Validation", desc: "The conclusion is tested against alternative explanations.", phase: "Resolution", kind: "gate",
+          branches: [
+            { label: "Survives", note: "continues to 08" },
+            { label: "Fails", note: "returns to 03" },
+          ],
+        },
+        { num: "08", title: "Decision", desc: "Scenarios, risks and concrete decision implications — without claiming more than the evidence supports.", phase: "Resolution", kind: "decision" },
+      ] as Stage[],
+    }
+  : {
+      kicker: "Método",
+      title: "Los datos describen. El método permite entender.",
+      lead: "Cada análisis parte de una pregunta concreta, define la evidencia necesaria y explicita sus límites antes de formular una conclusión.",
+      paragraphs: [
+        "Mi método combina investigación económica y financiera con business intelligence, estadística y análisis cuantitativo. El trabajo comienza por delimitar el problema, identificar las variables y los actores relevantes, y construir una hipótesis sobre los mecanismos que pueden explicar el fenómeno.",
+        "Los datos se integran, depuran y contrastan para detectar tendencias, anomalías y cambios de régimen. Sin embargo, una señal no se interpreta de manera aislada: se analiza dentro de su contexto macroeconómico, productivo, institucional y financiero, conectando políticas e incentivos con la economía real, las expectativas y los precios de mercado.",
+        "El insight surge al establecer qué cambió, por qué pudo haber cambiado y bajo qué condiciones podría persistir. Cada conclusión se contrasta con explicaciones alternativas y se traduce en escenarios, riesgos e implicancias concretas para la toma de decisiones, sin afirmar más de lo que permite la evidencia.",
+      ],
+      marginTitle: "Principios de trabajo",
+      marginItems: [
+        "Preguntas concretas antes que acumulación de datos.",
+        "Evidencia trazable y transformaciones reproducibles.",
+        "Integración de datos, teoría y contexto institucional.",
+        "Diferenciación entre observación, inferencia y causalidad.",
+        "Escenarios y riesgos orientados a la decisión.",
+      ],
+      diagramLabel: "Proceso",
+      diagramCaption: "Ocho pasos desde la pregunta hasta la decisión, agrupados en tres fases.",
+      stages: [
+        { num: "01", title: "Pregunta y delimitación", desc: "Delimitar el problema, identificar variables y actores relevantes.", phase: "Marco" },
+        { num: "02", title: "Hipótesis", desc: "Construir una hipótesis sobre los mecanismos que pueden explicar el fenómeno.", phase: "Marco" },
+        { num: "03", title: "Integración de datos", desc: "Integrar, depurar y contrastar los datos disponibles.", phase: "Evidencia" },
+        { num: "04", title: "Detección", desc: "Tendencias, patrones, comportamientos, anomalías y cambios de régimen.", phase: "Evidencia" },
+        { num: "05", title: "Contexto", desc: "Macroeconómico, productivo, institucional y financiero: políticas e incentivos, economía real, expectativas y precios de mercado.", phase: "Evidencia" },
+        { num: "06", title: "Insight", desc: "Qué cambió, por qué pudo haber cambiado y bajo qué condiciones podría persistir.", phase: "Evidencia" },
+        {
+          num: "07", title: "Validación", desc: "La conclusión se contrasta contra explicaciones alternativas.", phase: "Resolución", kind: "gate",
+          branches: [
+            { label: "Sobrevive", note: "continúa a 08" },
+            { label: "No sobrevive", note: "vuelve a 03" },
+          ],
+        },
+        { num: "08", title: "Decisión", desc: "Escenarios, riesgos e implicancias concretas, sin afirmar más de lo que permite la evidencia.", phase: "Resolución", kind: "decision" },
+      ] as Stage[],
+    };
+
+---
+
+<section id="metodo" class="section register-paper">
+  <div class="chapter-body">
+    <div class="chapter-inner" data-reveal>
+
+    <div class="method-grid">
+
+      <div class="reading-column">
+        <span class="eyebrow">{t.kicker}</span>
+        <h2 class="method-title">{t.title}</h2>
+        <p class="method-lead" id="methodLead">{t.lead}</p>
+        {t.paragraphs.map((p) => <p class="prose">{p}</p>)}
+      </div>
+
+      <aside class="margin-column">
+        <h3 class="margin-title">{t.marginTitle}</h3>
+        <ul class="node-list">
+          {t.marginItems.map((item) => <li>{item}</li>)}
+        </ul>
+      </aside>
+
+    </div>
+
+    <div class="diagram-block">
+      <div class="diagram-head">
+        <span class="diagram-label">{t.diagramLabel}</span>
+        <p class="diagram-caption">{t.diagramCaption}</p>
+      </div>
+
+      <div class="diagram-rail" id="methodDiagram" role="list" aria-label={t.diagramLabel}>
+        <div class="diagram-spine" style="grid-row: 1 / 8;"><span class="spine-fill"></span></div>
+        <div class="diagram-loop" style="grid-row: 3 / 7;"><span class="loop-fill"></span></div>
+        <span class="loop-tick top" style="grid-row: 3;" aria-hidden="true"><span class="loop-arrow"></span></span>
+        <span class="loop-tick bottom" style="grid-row: 7;" aria-hidden="true"></span>
+
+        {t.stages.map((stage, i) => {
+          const newPhase = i > 0 && stage.phase !== t.stages[i - 1].phase;
+          return (
+            <>
+              <div class="stage-rail" style={`grid-row: ${i + 1};`}>
+                {stage.kind === "decision" ? (
+                  <span class="stage-node" data-kind="decision"><span class="stage-node-core"></span></span>
+                ) : (
+                  <span class="stage-node" data-kind={stage.kind ?? "step"}></span>
+                )}
+              </div>
+              <div class={`stage-body${newPhase ? " is-new-phase" : ""}`} style={`grid-row: ${i + 1};`} role="listitem">
+                <span class="stage-num">{stage.num}</span>
+                <h4 class="stage-title">{stage.title}</h4>
+                <p class="stage-desc">{stage.desc}</p>
+                {stage.branches && (
+                  <ul class="stage-branches">
+                    {stage.branches.map((b) => (
+                      <li><span class="branch-label">{b.label}</span> — {b.note}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div class={`stage-meta${newPhase ? " is-new-phase" : ""}`} style={`grid-row: ${i + 1};`} aria-hidden="true">
+                {(i === 0 || newPhase) && <span class="stage-phase">{stage.phase}</span>}
+              </div>
+            </>
+          );
+        })}
+      </div>
+    </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .chapter-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-7) var(--page-margin) 0;
+  }
+
+
+  /* ---- columna de lectura + columna de márgenes (§2.7) ---- */
+
+  .method-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  @media (min-width: 1024px) {
+    .method-grid {
+      grid-template-columns: var(--col-read) var(--col-margin);
+      gap: var(--space-7);
+      align-items: start;
+    }
+  }
+
+  .reading-column {
+    max-width: var(--col-read);
+  }
+
+  .eyebrow { display: block; }
+
+  .method-title {
+    font: var(--title-l);
+    letter-spacing: var(--ls-title-l);
+    color: var(--text-primary);
+    margin: var(--space-3) 0 0;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+
+  .method-lead {
+    font: var(--lead);
+    color: var(--text-secondary);
+    margin: var(--space-4) 0 var(--flow-h2);
+    max-width: 52ch;
+  }
+
+  .prose {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0 0 var(--flow-p);
+    max-width: 66ch;
+  }
+
+  .prose:last-child { margin-bottom: 0; }
+
+  .margin-column {
+    padding-top: var(--space-2);
+    border-top: var(--rule) solid var(--text-primary);
+  }
+
+  @media (min-width: 1024px) {
+    .margin-column { border-top: none; border-left: var(--hairline) solid var(--border); padding: 0 0 0 var(--space-5); }
+  }
+
+  .margin-title {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin: 0 0 var(--space-4);
+  }
+
+  /* ============================================================
+     DIAGRAMA DE PROCESO — gramática del isotipo (§3.10/§3.11):
+     vértices cuadrados, trazos sólo ortogonales, sin curvas, sin
+     relleno bajo línea, sin sombra, sin 3D. El loop de validación
+     (07 → 03) se resuelve enteramente en CSS Grid (spans de
+     grid-row atados a los índices reales de las etapas), no con
+     coordenadas SVG calculadas a mano — así se mantiene correcto
+     sin importar cuánto ocupe cada descripción en ningún breakpoint.
+     ============================================================ */
+
+  .diagram-block {
+    padding-top: var(--space-8);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .diagram-head { max-width: var(--col-read); margin-bottom: var(--space-6); }
+
+  .diagram-label {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-2);
+  }
+
+  .diagram-caption {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    max-width: 60ch;
+  }
+
+  .diagram-rail {
+    display: grid;
+    grid-template-columns: 64px 1fr 120px;
+    column-gap: var(--space-5);
+  }
+
+  @media (max-width: 719px) {
+    .diagram-rail { grid-template-columns: 64px 1fr; }
+    .stage-meta { display: none; }
+  }
+
+  /* columna de riel: spine + loop viven acá, nunca en la columna de texto */
+  .diagram-spine,
+  .diagram-loop {
+    grid-column: 1;
+    position: relative;
+  }
+
+  .spine-fill {
+    position: absolute;
+    left: 16px;
+    top: 10px;
+    bottom: -10px;
+    width: 2px;
+    /* --text-primary, no --border-strong: el riel principal necesita más
+       peso que el loop (--chart-4) para leerse como "el camino", no como
+       una segunda línea paralela del mismo rango tonal (hallazgo del
+       crítico: spine y loop eran casi indistinguibles). */
+    background: var(--text-primary);
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+
+  .loop-fill {
+    position: absolute;
+    left: 48px;
+    top: 10px;
+    bottom: -10px;
+    width: 0;
+    border-left: 2px dashed var(--chart-4);
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+
+  .loop-tick {
+    grid-column: 1;
+    position: relative;
+    pointer-events: none;
+  }
+
+  .loop-tick::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    width: 32px;
+    height: 0;
+    border-top: 2px dashed var(--chart-4);
+  }
+
+  /* Cabeza de flecha en el extremo que reconecta con el nodo 03 — sin
+     esto el loop se leía como un segundo riel paralelo, no como un
+     retorno (hallazgo del crítico). Apunta a la izquierda (hacia el
+     nodo), no hacia arriba: en este tramo el tick ya es horizontal, la
+     vuelta de vertical a horizontal ocurre en la esquina del loop, no
+     acá. Triángulo recto, dentro de lo que autoriza §3.10 ("ortogonal o
+     45°, sin curvas"). Apex apenas afuera del cuadrado del nodo (que
+     ocupa ~10.5–21.5px) para no quedar tapada por su z-index. */
+  .loop-arrow {
+    position: absolute;
+    top: 5px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid var(--chart-4);
+  }
+
+  .stage-rail {
+    grid-column: 1;
+    position: relative;
+  }
+
+  .stage-node {
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    transform: translate(-50%, -50%);
+    width: var(--node-point);
+    height: var(--node-point);
+    background: var(--text-tertiary);
+    border-radius: var(--radius-1);
+    z-index: 2;
+    transition: background-color var(--dur-slow) var(--ease-out), opacity var(--dur-slow) var(--ease-out);
+  }
+
+  .stage-node[data-kind="gate"] {
+    background: var(--bg);
+    border: 2px solid var(--text-primary);
+  }
+
+  /* Nodo 08: el único punto del diagrama donde el dorado está permitido
+     (sostiene la conclusión, §3.10). Antes era el mismo cuadrado de 11px
+     que cualquier paso intermedio — sólo cambiaba de tinte, no de peso,
+     así que pasaba desapercibido (hallazgo del crítico). Ahora es un
+     marco concéntrico más grande: cuadrado exterior a línea (--radius-1,
+     sin relleno) + núcleo dorado sólido — sigue siendo un vértice
+     cuadrado, sólo que con jerarquía real. */
+  .stage-node[data-kind="decision"] {
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    border: 1.5px solid var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .stage-node-core {
+    width: 10px;
+    height: 10px;
+    background: var(--chart-accent);
+    border-radius: var(--radius-1);
+  }
+
+  .stage-body {
+    grid-column: 2;
+    padding-bottom: var(--space-7);
+  }
+
+  /* Ruptura de ritmo entre fases (marco → evidencia → resolución) — sin
+     esto las ocho etapas leían como una lista monótona de igual peso
+     (hallazgo del crítico). El riel/spine sigue continuo a propósito:
+     sólo la columna de texto marca el quiebre. */
+  .stage-body.is-new-phase {
+    padding-top: var(--space-5);
+    margin-top: calc(-1 * var(--space-2));
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .stage-meta {
+    grid-column: 3;
+    padding-top: 2px;
+  }
+
+  .stage-meta.is-new-phase { padding-top: calc(var(--space-5) + 2px); }
+
+  .stage-phase {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .stage-num {
+    display: block;
+    font: var(--data-s);
+    letter-spacing: 0.02em;
+    color: var(--text-tertiary);
+  }
+
+  .stage-title {
+    font: var(--ui-m);
+    color: var(--text-primary);
+    margin: var(--space-1) 0 var(--space-2);
+  }
+
+  .stage-desc {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 58ch;
+  }
+
+  .stage-branches {
+    list-style: none;
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .stage-branches li {
+    font: var(--data-s);
+    color: var(--text-tertiary);
+  }
+
+  .branch-label {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+</style>
+
+<script>
+  // Revelado de la bajada palabra por palabra, atado al scroll (no a un
+  // timer ni a una sola entrada) — cada palabra pasa de --text-tertiary
+  // (apagada) a --text-primary (plena) a medida que el scroll la cruza.
+  // Mismo mecanismo que ya usa Hero.astro para el titular (SplitText +
+  // GSAP), acá con scrub en vez de una entrada única, porque el usuario
+  // llega a este párrafo scrolleando, no lo ve de entrada como el hero.
+  import gsap from "gsap";
+  import { SplitText } from "gsap/SplitText";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(SplitText, ScrollTrigger);
+
+  const lead = document.getElementById("methodLead");
+  if (lead) {
+    const mm = gsap.matchMedia();
+
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
+      // GSAP interpola color de verdad (frame a frame), no un salto al
+      // final — necesita valores resueltos, un string "var(--token)" no
+      // le alcanza para calcular los pasos intermedios. Se lee el color
+      // real del tema activo en cada carga (claro/oscuro cambian el
+      // valor de estos tokens).
+      const rootStyle = getComputedStyle(document.documentElement);
+      const dim = rootStyle.getPropertyValue("--text-tertiary").trim();
+      const full = rootStyle.getPropertyValue("--text-primary").trim();
+
+      const split = new SplitText(lead, { type: "words" });
+      gsap.set(split.words, { color: dim });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: lead,
+          start: "top bottom",
+          end: "bottom top",
+          scrub: 0.6,
+        },
+      });
+      tl.to(split.words, { color: full, stagger: 0.06, ease: "none" });
+
+      return () => split.revert();
+    });
+    // Con reduced-motion, el párrafo se queda con su color final normal
+    // (--text-secondary, ya definido en CSS) — no hace falta tocar nada.
+  }
+
+  // Diagrama de proceso: la línea principal y el loop de validación se
+  // "dibujan" con el scroll (scaleY 0→1, transform-origin:top — sólo
+  // transform, dentro de las propiedades que autoriza el §2.9) y cada
+  // nodo pasa de atenuado a pleno en el mismo tramo. Con reduced-motion
+  // el CSS ya deja todo en su estado final (scaleY:1, opacity:1 por
+  // defecto), así que esa rama no hace nada — mismo criterio que arriba.
+  const diagram = document.getElementById("methodDiagram");
+  if (diagram) {
+    const spineFill = diagram.querySelector<HTMLElement>(".spine-fill");
+    const loopFill = diagram.querySelector<HTMLElement>(".loop-fill");
+    const nodes = Array.from(diagram.querySelectorAll<HTMLElement>(".stage-node"));
+
+    const mm2 = gsap.matchMedia();
+    mm2.add("(prefers-reduced-motion: no-preference)", () => {
+      gsap.set([spineFill, loopFill], { scaleY: 0 });
+      gsap.set(nodes, { opacity: 0.32 });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: diagram,
+          start: "top 75%",
+          end: "bottom 65%",
+          scrub: 0.6,
+        },
+      });
+
+      tl.to(spineFill, { scaleY: 1, ease: "none" }, 0);
+      tl.to(nodes, { opacity: 1, stagger: 0.12, ease: "none" }, 0);
+      tl.to(loopFill, { scaleY: 1, ease: "none" }, 0.32);
+
+      return () => {
+        gsap.set([spineFill, loopFill, ...nodes], { clearProps: "all" });
+      };
+    });
+  }
+</script>

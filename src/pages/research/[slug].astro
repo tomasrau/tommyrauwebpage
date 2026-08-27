@@ -1,0 +1,154 @@
+---
+// Página dedicada de una nota de Research — decisión de estructura del
+// usuario: quien llega desde un buscador a una nota puntual aterriza acá,
+// no en la portada completa. Barra de progreso de lectura simple, ver
+// ReadingProgress.astro.
+
+import { getCollection, render } from "astro:content";
+import Layout from "../../layouts/Layout.astro";
+import ReadingProgress from "../../components/core/ReadingProgress.astro";
+import FloatingNav from "../../components/core/FloatingNav.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("research", (e) => e.data.lang === "es");
+  return entries.map((entry) => ({
+    params: { slug: entry.data.routeSlug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<Layout
+  lang="es"
+  title={`${entry.data.title} | Tomás Rau`}
+  description={entry.data.summary}
+>
+  <ReadingProgress slot="thread" trackSelector="#note-body" lang="es" />
+  <FloatingNav lang="es" homeHref="/" />
+
+  <article id="note-body" class="note register-paper">
+    <div class="note-inner">
+      <a href="/#research" class="note-back">← Research</a>
+
+      <div class="note-tags">
+        {entry.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+      </div>
+
+      <h1 class="note-title">{entry.data.title}</h1>
+
+      <div class="note-meta">
+        <span>{entry.data.date}</span>
+        <span>{entry.data.readMinutes} min de lectura</span>
+      </div>
+
+      <p class="note-summary">{entry.data.summary}</p>
+
+      <div class="note-prose">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Layout>
+
+<style>
+  /* --grid-max, no --col-read: el bloque de prosa (.note-prose p/h2/h3)
+     ya limita su propio ancho de lectura más abajo (66ch/34ch,
+     independiente del contenedor) — angostar TODO el contenedor a
+     --col-read era redundante con eso y sólo apretaba título/tags/meta
+     en la misma columna de 680px, dejando enorme espacio sin usar a los
+     costados en pantallas anchas (reportado: "hace que el scrolling sea
+     eterno"). Acá se ensancha el contenedor sin tocar el ancho real de
+     lectura de la prosa. */
+  .note-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-9) var(--page-margin);
+  }
+
+
+  .note-back {
+    font: var(--ui-s);
+    color: var(--text-tertiary);
+    text-decoration: none;
+  }
+  .note-back:hover { color: var(--text-primary); }
+
+  .note-tags {
+    display: flex;
+    gap: var(--space-2);
+    margin: var(--space-6) 0 0;
+  }
+
+  .note-title {
+    font: var(--title-xl);
+    letter-spacing: var(--ls-title-xl);
+    color: var(--text-primary);
+    margin: var(--space-4) 0 0;
+    max-width: 26ch;
+    text-wrap: balance;
+  }
+
+  .note-meta {
+    display: flex;
+    gap: var(--space-4);
+    margin: var(--space-4) 0 0;
+    font: var(--data-s);
+    color: var(--text-tertiary);
+  }
+
+  .note-summary {
+    font: var(--lead);
+    color: var(--text-secondary);
+    margin: var(--space-5) 0 0;
+    padding-bottom: var(--space-6);
+    border-bottom: var(--hairline) solid var(--border-strong);
+    max-width: 56ch;
+  }
+
+  .note-prose {
+    margin-top: var(--flow-h2);
+  }
+
+  .note-prose :global(p) {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0 0 var(--flow-p);
+    max-width: 66ch;
+  }
+
+  .note-prose :global(em) {
+    font-style: italic;
+    color: var(--text-tertiary);
+  }
+
+  .note-prose :global(strong) {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .note-prose :global(h2) {
+    font: var(--title-m);
+    letter-spacing: var(--ls-title-m);
+    color: var(--text-primary);
+    margin: var(--flow-h2) 0 var(--space-4);
+    max-width: 34ch;
+    text-wrap: balance;
+  }
+
+  .note-prose :global(h2:first-child) { margin-top: 0; }
+
+  .note-prose :global(h3) {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: var(--space-7) 0 var(--space-3);
+  }
+
+  .note-prose :global(hr) {
+    border: none;
+    border-top: var(--hairline) solid var(--border-strong);
+    margin: var(--space-8) 0;
+  }
+</style>

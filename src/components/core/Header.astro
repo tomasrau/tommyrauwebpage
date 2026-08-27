@@ -1,8 +1,19 @@
 ---
-// Header.astro - Cabecera de una línea (§3.7 del design system): sin fondo propio ni
-// sombra al hacer scroll, isotipo + nombre, nav en --ui-l, filete petróleo en el activo.
-import logoBlack from "../../assets/media/logos/logo_black_cropped.png";
-import logoWhite from "../../assets/media/logos/logo_white_cropped.png";
+// Header.astro — sin barra (rediseño 2026-08-20).
+//
+// Ya no hay header: hay DOS piezas flotantes, una en cada esquina superior
+// — la marca a la izquierda, los controles reales a la derecha (⌘K, idioma,
+// tema). La navegación por secciones ya no pasa por acá: el grafo del mapa
+// del sitio (NavHub.astro) se retiró — "no está bien logrado", feedback
+// directo del usuario — y en su lugar vive FloatingNav.astro, una píldora
+// flotante propia abajo al centro, sólo en las páginas de la landing.
+//
+// Flotan de verdad (position: fixed + --shadow-float, la única sombra que
+// el sistema permite y sólo para elementos flotantes). Sin backdrop-filter:
+// el glassmorphism está prohibido — las píldoras van sobre superficie
+// sólida.
+import logoOnLight from "../../assets/media/logos/logo_black_cropped.png";
+import logoOnDark from "../../assets/media/logos/logo_white_cropped.png";
 
 interface Props {
   lang?: "es" | "en";
@@ -11,103 +22,53 @@ interface Props {
 
 const { lang = "es", alternateUrl = lang === "es" ? "/en/" : "/" } = Astro.props;
 
-const labels = lang === "en"
+const t = lang === "en"
   ? {
-      home: "Home",
-      expertise: "Expertise",
-      projects: "Projects",
-      contact: "Contact",
-      cta: "Let's talk",
-      brand: "Economist · BI · Finance",
       ariaHome: "Back to home",
-      ariaNav: "Main navigation",
       switcher: "Language selector",
-      menu: "Open navigation menu",
       theme: "Toggle light and dark theme",
+      search: "Jump to…",
     }
   : {
-      home: "Inicio",
-      expertise: "Expertise",
-      projects: "Proyectos",
-      contact: "Contacto",
-      cta: "Hablemos",
-      brand: "Economista · BI · Finanzas",
       ariaHome: "Volver al inicio",
-      ariaNav: "Navegación principal",
       switcher: "Selector de idioma",
-      menu: "Abrir menú de navegación",
       theme: "Cambiar tema claro u oscuro",
+      search: "Saltar a…",
     };
-
-const esActive = lang === "es";
-const enActive = lang === "en";
 ---
 
-<header class="site-header">
-  <div class="site-header-inner">
+<a href="#inicio" class="float-brand" aria-label={t.ariaHome}>
+  <span class="brand-mark" aria-hidden="true">
+    <img class="brand-ink brand-ink-on-light" src={logoOnLight.src} alt="" width={logoOnLight.width} height={logoOnLight.height} loading="eager" decoding="async" />
+    <img class="brand-ink brand-ink-on-dark" src={logoOnDark.src} alt="" width={logoOnDark.width} height={logoOnDark.height} loading="eager" decoding="async" />
+  </span>
+</a>
 
-    <a href="#inicio" class="brand" aria-label={labels.ariaHome}>
-      <span class="brand-lockup" aria-hidden="true">
-        <img class="brand-logo brand-logo-dark" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="eager" decoding="async" />
-        <img class="brand-logo brand-logo-light" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="eager" decoding="async" />
-      </span>
-      <span class="brand-tag">{labels.brand}</span>
-    </a>
+<div class="float-controls">
+  <button type="button" class="cmdk-trigger" data-cmdk-trigger aria-label={t.search}>
+    <kbd class="cmdk-trigger-key">⌘K</kbd>
+  </button>
 
-    <nav class="main-nav" aria-label={labels.ariaNav}>
-      <a href="#inicio" class="nav-link is-active">{labels.home}</a>
-      <a href="#expertise" class="nav-link">Expertise</a>
-      <a href="#proyectos" class="nav-link">{labels.projects}</a>
-      <a href="#contacto" class="nav-link">{labels.contact}</a>
-    </nav>
+  <nav class="lang-switch" aria-label={t.switcher}>
+    {lang === "es"
+      ? <span class="lang-option is-current" aria-current="true">es</span>
+      : <a href={alternateUrl} class="lang-option" aria-label="Ver sitio en español">es</a>}
+    <span class="lang-sep" aria-hidden="true">/</span>
+    {lang === "en"
+      ? <span class="lang-option is-current" aria-current="true">en</span>
+      : <a href={alternateUrl} class="lang-option" aria-label="View site in English">en</a>}
+  </nav>
 
-    <div class="controls">
-      <nav class="lang-switch" aria-label={labels.switcher}>
-        {esActive ? (
-          <span class="lang-option is-current" aria-current="true">ES</span>
-        ) : (
-          <a href={alternateUrl} class="lang-option" aria-label="Ver sitio en español">ES</a>
-        )}
-        {enActive ? (
-          <span class="lang-option is-current" aria-current="true">EN</span>
-        ) : (
-          <a href={alternateUrl} class="lang-option" aria-label="View site in English">EN</a>
-        )}
-      </nav>
-
-      <button type="button" class="theme-toggle" aria-label={labels.theme} aria-pressed="false" data-theme-toggle>
-        <svg class="theme-icon theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3a6 6 0 0 0 9 7.5A9 9 0 1 1 12 3Z"></path>
-        </svg>
-        <svg class="theme-icon theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4"></circle>
-          <path d="M12 2v2"></path><path d="M12 20v2"></path>
-          <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
-          <path d="M2 12h2"></path><path d="M20 12h2"></path>
-          <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
-        </svg>
-      </button>
-
-      <a href="#contacto" class="cta-button">{labels.cta}</a>
-
-      <details class="mobile-menu">
-        <summary class="mobile-menu-trigger" aria-label={labels.menu}>
-          <span class="burger" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </span>
-        </summary>
-        <nav class="mobile-menu-panel" aria-label={labels.ariaNav}>
-          <a href="#inicio" class="mobile-link">{labels.home}</a>
-          <a href="#expertise" class="mobile-link">Expertise</a>
-          <a href="#proyectos" class="mobile-link">{labels.projects}</a>
-          <a href="#contacto" class="mobile-link">{labels.contact}</a>
-          <a href="#contacto" class="cta-button mobile-cta">{labels.cta}</a>
-        </nav>
-      </details>
-    </div>
-
-  </div>
-</header>
+  <button type="button" class="theme-toggle" aria-label={t.theme} aria-pressed="false" data-theme-toggle>
+    <svg class="theme-icon theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.2"></circle>
+      <path d="M12 2.6v2.2M12 19.2v2.2M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"></path>
+    </svg>
+    <svg class="theme-icon theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3a6 6 0 0 0 9 7.5A9 9 0 1 1 12 3Z"></path>
+    </svg>
+  </button>
+</div>
 
 <script is:inline>
   (() => {
@@ -115,254 +76,142 @@ const enActive = lang === "en";
     const button = document.querySelector("[data-theme-toggle]");
     if (!button) return;
 
-    const applyTheme = (theme) => {
-      root.dataset.theme = theme;
-      try {
-        localStorage.setItem("theme", theme);
-      } catch {}
-      button.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
-    };
+    const sync = (theme) => button.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
+    sync(root.dataset.theme === "dark" ? "dark" : "light");
 
-    const currentTheme = root.dataset.theme === "dark" ? "dark" : "light";
-    button.setAttribute("aria-pressed", currentTheme === "light" ? "true" : "false");
     button.addEventListener("click", () => {
-      applyTheme(root.dataset.theme === "light" ? "dark" : "light");
+      const next = root.dataset.theme === "light" ? "dark" : "light";
+      root.dataset.theme = next;
+      try { localStorage.setItem("theme", next); } catch {}
+      sync(next);
     });
   })();
 </script>
 
 <style>
-  .site-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: var(--bg);
-    border-bottom: var(--hairline) solid var(--border);
-  }
+  /* ---------- las dos piezas flotantes ---------- */
 
-  .site-header-inner {
-    max-width: var(--grid-max);
-    margin: 0 auto;
-    padding: var(--space-3) var(--page-margin);
+  .float-brand,
+  .float-controls {
+    position: fixed;
+    top: var(--space-4);
+    z-index: 60;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
+    background: var(--surface-raised);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-float);
   }
 
-  .brand {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: var(--space-1);
+  .float-brand {
+    left: var(--space-4);
+    padding: 9px 14px;
     text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-in-out);
+  }
+  .float-brand:hover { border-color: var(--border-strong); }
+  .float-brand:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .float-controls {
+    right: var(--space-4);
+    gap: var(--space-4);
+    padding: 8px 14px;
   }
 
-  .brand-lockup {
+  @media (min-width: 900px) {
+    .float-brand, .float-controls { top: var(--space-5); }
+    .float-brand { left: var(--space-5); }
+    .float-controls { right: var(--space-5); }
+  }
+
+  /* ---------- marca ---------- */
+
+  .brand-mark {
     position: relative;
     display: block;
-    height: 28px;
-    width: 148px;
-    flex-shrink: 0;
+    width: 132px;
+    height: 25px;
   }
 
-  .brand-logo {
+  .brand-ink {
     position: absolute;
     inset: 0;
-    height: 100%;
     width: 100%;
+    height: 100%;
     object-fit: contain;
-    object-position: left;
+    object-position: left center;
   }
 
-  [data-theme="light"] .brand-logo-dark,
-  :root:not([data-theme="dark"]) .brand-logo-dark { opacity: 0; }
-  [data-theme="dark"] .brand-logo-light { opacity: 0; }
+  /* ---------- controles ---------- */
 
-  .brand-tag {
+  .cmdk-trigger {
     display: none;
-    font: var(--label);
-    letter-spacing: var(--ls-label);
-    text-transform: uppercase;
+    align-items: center;
+    background: none;
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-1);
+    padding: 4px 9px;
+    cursor: pointer;
     color: var(--text-tertiary);
+    transition: color var(--dur-fast) var(--ease-in-out), border-color var(--dur-fast) var(--ease-in-out);
   }
+  @media (min-width: 900px) { .cmdk-trigger { display: flex; } }
+  .cmdk-trigger:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .cmdk-trigger:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
-  @media (min-width: 640px) {
-    .brand-tag { display: inline; }
-  }
-
-  .main-nav {
-    display: none;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  @media (min-width: 1024px) {
-    .main-nav { display: flex; }
-  }
-
-  .nav-link {
-    font: var(--ui-l);
-    padding: 10px 14px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    box-shadow: inset 0 -2px 0 transparent;
-    transition: color var(--dur-fast) var(--ease-in-out), box-shadow var(--dur-fast) var(--ease-in-out);
-  }
-
-  .nav-link:hover {
-    color: var(--text-primary);
-    box-shadow: inset 0 -2px 0 var(--border-strong);
-  }
-
-  .nav-link.is-active {
-    color: var(--text-primary);
-    box-shadow: inset 0 -2px 0 var(--text-primary);
-  }
-
-  .controls {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
+  .cmdk-trigger-key {
+    font-family: var(--font-data);
+    font-size: 13px;
+    letter-spacing: 0.04em;
   }
 
   .lang-switch {
-    display: flex;
+    display: none;
     align-items: center;
-    gap: 2px;
-    border: var(--hairline) solid var(--border);
-    padding: 2px;
+    gap: 6px;
+    font-family: var(--font-data);
+    font-size: 14px;
   }
+  @media (min-width: 640px) { .lang-switch { display: flex; } }
+
+  .lang-sep { color: var(--border-strong); }
 
   .lang-option {
-    font: var(--label);
-    letter-spacing: var(--ls-label);
-    padding: 5px 9px;
     color: var(--text-tertiary);
     text-decoration: none;
-    transition: background-color var(--dur-fast) var(--ease-in-out), color var(--dur-fast) var(--ease-in-out);
+    transition: color var(--dur-fast) var(--ease-in-out);
   }
-
   .lang-option:hover { color: var(--text-primary); }
-
-  .lang-option.is-current {
-    background: var(--text-primary);
-    color: var(--surface);
-  }
+  .lang-option.is-current { color: var(--accent); }
+  .lang-option:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
 
   .theme-toggle {
     display: flex;
-    height: 36px;
-    width: 36px;
     align-items: center;
     justify-content: center;
-    border: var(--hairline) solid var(--border);
-    background: transparent;
-    color: var(--text-secondary);
+    background: none;
+    border: 0;
+    padding: 2px;
     cursor: pointer;
-    transition: border-color var(--dur-fast) var(--ease-in-out), color var(--dur-fast) var(--ease-in-out);
+    color: var(--text-tertiary);
+    transition: color var(--dur-fast) var(--ease-in-out);
   }
+  .theme-toggle:hover { color: var(--accent); }
+  .theme-toggle:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+  .theme-toggle svg { width: 18px; height: 18px; }
 
-  .theme-toggle:hover {
-    border-color: var(--border-strong);
-    color: var(--text-primary);
-  }
-
-  .theme-icon { width: 16px; height: 16px; }
-  :root:not([data-theme="dark"]) .theme-icon-dark { display: none; }
-  [data-theme="dark"] .theme-icon-light { display: none; }
-
-  .cta-button {
-    display: none;
-    white-space: nowrap;
-    padding: 10px 18px;
-    height: 44px;
-    align-items: center;
-    background: var(--text-primary);
-    color: var(--surface);
-    border: var(--hairline) solid var(--text-primary);
-    border-radius: var(--radius-2);
-    font: var(--ui-m);
-    text-decoration: none;
-    transition: background-color var(--dur-fast) var(--ease-in-out), border-color var(--dur-fast) var(--ease-in-out);
-  }
-
-  @media (min-width: 1024px) {
-    .cta-button { display: inline-flex; }
-  }
-
-  .cta-button:hover {
-    background: var(--petrol-800);
-    border-color: var(--petrol-800);
-    color: var(--surface);
-  }
-
-  .cta-button:active {
-    background: var(--petrol-950);
-    border-color: var(--petrol-950);
-  }
-
-  .mobile-menu { position: relative; }
-
-  @media (min-width: 1024px) {
-    .mobile-menu { display: none; }
-  }
-
-  .mobile-menu-trigger {
-    display: flex;
-    height: 36px;
-    width: 36px;
-    cursor: pointer;
-    list-style: none;
-    align-items: center;
-    justify-content: center;
-    border: var(--hairline) solid var(--border);
-    color: var(--text-primary);
-  }
-
-  .mobile-menu-trigger::-webkit-details-marker { display: none; }
-
-  .burger {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .burger span {
-    display: block;
-    height: 1.5px;
-    width: 16px;
-    background: currentColor;
-  }
-
-  .mobile-menu-panel {
-    position: absolute;
-    right: 0;
-    top: calc(100% + var(--space-3));
-    display: flex;
-    width: min(16rem, calc(100vw - var(--space-5) * 2));
-    flex-direction: column;
-    background: var(--surface-raised);
-    border: var(--hairline) solid var(--border-strong);
-    box-shadow: var(--shadow-float);
-    padding: var(--space-2);
-  }
-
-  .mobile-link {
-    padding: var(--space-3) var(--space-4);
-    font: var(--ui-l);
-    color: var(--text-secondary);
-    text-decoration: none;
-  }
-
-  .mobile-link:hover {
-    background: var(--state-hover);
-    color: var(--text-primary);
-  }
-
-  .mobile-cta {
-    display: flex;
-    justify-content: center;
-    margin-top: var(--space-1);
+  /* MOBILE — el conmutador es el único control que queda en la píldora
+     derecha por debajo de 640px (⌘K y el selector de idioma se ocultan
+     antes), y medía 22×22px de área tocable: por debajo del piso de
+     WCAG 2.5.8 (24px) y muy lejos de los 44px que los sliders del
+     modelo sí respetan en este mismo sitio. El ícono no cambia de
+     tamaño — sólo crece el área que recibe el dedo. */
+  @media (max-width: 899px) and (pointer: coarse) {
+    .theme-toggle {
+      min-width: 44px;
+      min-height: 44px;
+      margin: -11px -8px;
+    }
   }
 </style>

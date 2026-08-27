@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --font-read: "Newsreader", Georgia, "Times New Roman", serif;
-  --font-ui:   "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Nombres de familia self-hosted vía @fontsource-variable (importados en
+     Layout.astro) — "Variable" es el nombre real que registra el paquete,
+     no "Newsreader"/"Instrument Sans" a secas. Sin este sufijo la fuente
+     cae en silencio al fallback del sistema. Spline Sans Mono no es
+     variable, su nombre de familia ya coincide con el token. */
+  --font-read: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --font-ui:   "Instrument Sans Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-data: "Spline Sans Mono", ui-monospace, "SF Mono", "Cascadia Mono", monospace;
 }
 
@@ -59,30 +64,37 @@
      Sintaxis shorthand: weight size/line-height family.
      El interletrado va aparte porque no entra en el shorthand. */
 
-  /* rol LECTURA Y TÍTULOS — Newsreader */
-  --title-xl:  600 52px/1.10 var(--font-read);
-  --title-l:   600 38px/1.15 var(--font-read);
-  --title-m:   600 27px/1.25 var(--font-read);
-  --title-s:   600 21px/1.35 var(--font-read);
-  --lead:      italic 400 21px/1.50 var(--font-read);
-  --body:      400 20px/1.70 var(--font-read);
-  --body-s:    400 17px/1.65 var(--font-read);
-  --pullquote: italic 400 27px/1.45 var(--font-read);
-  --footnote:  400 15.5px/1.60 var(--font-read);
+  /* rol LECTURA Y TÍTULOS — Newsreader
+     Toda la escala subida ~10% (pedido explícito del usuario,
+     2026-08-26: "agranda todas las fuentes de toda la web un poco más").
+     El line-height va en ratio, no en px, así que escala solo con el
+     tamaño — no hace falta tocarlo. Los tokens de --line/--flow-* (ritmo
+     vertical) quedan sin cambios a propósito: el pedido fue de tamaño de
+     fuente, no de espaciado, y resolver el grid vertical entero es un
+     cambio de alcance mayor que esto. */
+  --title-xl:  600 57px/1.10 var(--font-read);
+  --title-l:   600 42px/1.15 var(--font-read);
+  --title-m:   600 30px/1.25 var(--font-read);
+  --title-s:   600 23px/1.35 var(--font-read);
+  --lead:      italic 400 23px/1.50 var(--font-read);
+  --body:      400 22px/1.70 var(--font-read);
+  --body-s:    400 19px/1.65 var(--font-read);
+  --pullquote: italic 400 30px/1.45 var(--font-read);
+  --footnote:  400 17px/1.60 var(--font-read);
 
   /* rol INTERFAZ — Instrument Sans */
-  --ui-l:      500 17px/1.50 var(--font-ui);
-  --ui-m:      500 15px/1.45 var(--font-ui);
-  --ui-s:      500 13px/1.40 var(--font-ui);
-  --label:     500 11.5px/1.20 var(--font-ui);
-  --source:    500 12.5px/1.45 var(--font-ui);
-  --ref-marker:500 11px/1 var(--font-ui);
+  --ui-l:      500 19px/1.50 var(--font-ui);
+  --ui-m:      500 17px/1.45 var(--font-ui);
+  --ui-s:      500 14px/1.40 var(--font-ui);
+  --label:     500 13px/1.20 var(--font-ui);
+  --source:    500 14px/1.45 var(--font-ui);
+  --ref-marker:500 12px/1 var(--font-ui);
 
   /* rol DATOS — Spline Sans Mono */
-  --data-xl:   400 34px/1.05 var(--font-data);
-  --data-m:    400 15px/1.50 var(--font-data);
-  --data-s:    400 13px/1.50 var(--font-data);
-  --formula:   400 18px/1.70 var(--font-data);
+  --data-xl:   400 37px/1.05 var(--font-data);
+  --data-m:    400 17px/1.50 var(--font-data);
+  --data-s:    400 14px/1.50 var(--font-data);
+  --formula:   400 20px/1.70 var(--font-data);
 
   /* ---------- TIPOGRAFÍA · interletrado ---------- */
   --ls-title-xl:  -0.010em;
@@ -118,7 +130,13 @@
   --flow-notes:68px;   /* cuerpo → notas al pie */
 
   /* ---------- GRID ---------- */
-  --grid-max:    1120px;
+  /* 1320px, no 1120px: en pantallas anchas (1440px+) quedaba demasiado
+     espacio ocioso a los costados — la columna de contenido se veía chica
+     en relación a la pantalla aunque el tamaño de fuente en sí no hubiera
+     cambiado. Pedido explícito del usuario (2026-08-26). No toca
+     --col-read/--col-margin: la columna de lectura de Method.astro sigue
+     acotada a 66ch por legibilidad, no por ancho de viewport. */
+  --grid-max:    1320px;
   --grid-cols:   12;
   --gutter:      24px;
   --page-margin: 64px;
@@ -300,38 +318,297 @@ table,
     --line: 30px;
     --flow-p: 22px;
 
-    --title-xl:  600 34px/1.15 var(--font-read);
-    --title-l:   600 28px/1.20 var(--font-read);
-    --title-m:   600 22px/1.30 var(--font-read);
-    --lead:      italic 400 19px/1.50 var(--font-read);
-    --body:      400 18px/1.65 var(--font-read);
-    --pullquote: italic 400 22px/1.45 var(--font-read);
-    --data-xl:   400 26px/1.10 var(--font-data);
+    --title-xl:  600 37px/1.15 var(--font-read);
+    --title-l:   600 31px/1.20 var(--font-read);
+    --title-m:   600 24px/1.30 var(--font-read);
+    --lead:      italic 400 21px/1.50 var(--font-read);
+    --body:      400 20px/1.65 var(--font-read);
+    --pullquote: italic 400 24px/1.45 var(--font-read);
+    --data-xl:   400 29px/1.10 var(--font-data);
   }
 }
 
+
 /* ============================================================
    PRIMITIVAS COMPARTIDAS
-   Implementación reutilizable de §3 del design system, para no
-   repetir la misma especificación de componente en cada sección.
+   Implementación reutilizable de §3 del design system.
+   Estas reglas viven acá (no en <style> de componente) porque
+   Astro scopea los estilos de componente y rompe cualquier
+   selector que dependa de [data-theme] en <html>.
+   ============================================================ */
+
+/* ---------- Marca: qué tinta se muestra en cada modo ----------
+   Verificado componiendo cada archivo sobre fondo real:
+   logo_black_cropped = tinta NEGRA sobre transparente → modo claro
+   logo_white_cropped = tinta BLANCA sobre transparente → modo oscuro
+   Los isotype_*_cropped sí traen caja opaca; se usan sólo sobre
+   la superficie que coincide con su fondo.                      */
+
+.brand-ink {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  object-position: left;
+}
+
+.brand-ink-on-dark { opacity: 0; }
+.brand-ink-on-light { opacity: 1; }
+
+[data-theme="dark"] .brand-ink-on-dark { opacity: 1; }
+[data-theme="dark"] .brand-ink-on-light { opacity: 0; }
+
+/* Sobre registro de tinta, la marca usa siempre la tinta contraria */
+.register-ink .brand-ink-on-dark { opacity: 1; }
+.register-ink .brand-ink-on-light { opacity: 0; }
+
+[data-theme="dark"] .register-ink .brand-ink-on-dark { opacity: 0; }
+[data-theme="dark"] .register-ink .brand-ink-on-light { opacity: 1; }
+
+/* .register-invert: banda SIEMPRE contraria al tema vigente (Footer.astro,
+   antes la consola del mapa del sitio retirado). En tema claro se comporta
+   igual que .register-ink (banda oscura → tinta blanca). En tema oscuro
+   diverge: es la banda de PAPEL, no la banda oscura más clara que da
+   .register-ink en ese modo — ahí la tinta correcta es la negra, lo
+   opuesto de lo que hace .register-ink. */
+.register-invert .brand-ink-on-dark { opacity: 1; }
+.register-invert .brand-ink-on-light { opacity: 0; }
+
+[data-theme="dark"] .register-invert .brand-ink-on-dark { opacity: 0; }
+[data-theme="dark"] .register-invert .brand-ink-on-light { opacity: 1; }
+
+/* Íconos del conmutador de tema */
+.theme-icon-dark { display: none; }
+.theme-icon-light { display: block; }
+[data-theme="dark"] .theme-icon-dark { display: block; }
+[data-theme="dark"] .theme-icon-light { display: none; }
+
+/* ============================================================
+   REGISTROS DE CAPÍTULO
+   Las secciones no se separan con un hairline: alternan registro
+   a sangre completa. Los dos registros derivan de los tokens del
+   tema, así que el conmutador cambia toda la página.
+
+   La relación se INVIERTE entre modos, y es deliberado (§2.1):
+   en claro la tinta es una banda oscura dramática; en oscuro es
+   una banda más clara. Mismo token map, distinta distribución.
+   ============================================================ */
+
+.register-paper {
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+/* Modo claro: banda de tinta petróleo profunda */
+.register-ink {
+  --bg:               #132420;
+  --surface:          #1A2C27;
+  --surface-raised:   #1E332D;
+  --text-primary:     #E6EBE8;
+  --text-secondary:   #A8B5B0;
+  --text-tertiary:    #7A8C86;
+  --border:           #2A423B;
+  --border-strong:    #3A544C;
+  --accent:           #C9A227;
+  --accent-hover:     #E0BC4A;
+  --accent-rule:      #C9A227;
+  --accent-substrate: #3B2F0B;
+  --state-hover:      #1A2C27;
+  --state-active:     #24403A;
+  --state-focus:      #C9A227;
+  --state-disabled:   #3A544C;
+  --state-error:      #D4695E;
+  --chart-1:          #E6EBE8;
+  --chart-2:          #A8B5B0;
+  --chart-3:          #7A8C86;
+  --chart-4:          #3A544C;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+/* Modo oscuro: la tinta se aclara para seguir contrastando */
+[data-theme="dark"] .register-ink {
+  --bg:               #1E332D;
+  --surface:          #24403A;
+  --surface-raised:   #2A423B;
+  --border:           #3A544C;
+  --border-strong:    #5C6B66;
+  --state-hover:      #24403A;
+  --state-active:     #2A423B;
+}
+
+/* ============================================================
+   REGISTRO INVERSO — chrome del mapa del sitio (NavHub.astro)
+   La consola del site graph va SIEMPRE en el registro contrario
+   al modo vigente: en claro es una caja de tinta, en oscuro es
+   una caja de papel. El lienzo del grafo NO se invierte — sigue
+   el color del modo elegido, y esa diferencia es la que hace que
+   la consola se lea como instrumento y no como una lámina más.
+
+   Vive acá y no en el <style> del componente porque depende de
+   [data-theme] sobre <html> (trampa #2 de CLAUDE.md: Astro
+   scopea el selector del <html> y la regla nunca matchea).
+   ============================================================ */
+
+/* Modo claro → consola en tinta (mismos valores que .register-ink) */
+/* NO copia los valores de .register-ink a propósito (versión anterior sí
+   lo hacía, #132420 igual en los dos) — Footer.astro usa este registro
+   para su banda, y esa banda queda pegada a la última sección del
+   contenido real, que puede terminar en .register-ink. Si ambos valieran
+   lo mismo, footer y sección se funden en el mismo color exacto en modo
+   claro (bug real, reportado). Acá se reutiliza el triple oscuro que
+   .register-ink ya usa en SU PROPIO modo oscuro (#1E332D/#24403A/#2A423B)
+   — sigue siendo un verde petróleo oscuro (mismo efecto de banda
+   invertida que se buscaba), pero un tono que ninguna sección de
+   contenido usa nunca en modo claro, así que nunca colisiona. */
+.register-invert {
+  --bg:               #1E332D;
+  --surface:          #24403A;
+  --surface-raised:   #2A423B;
+  --text-primary:     #E6EBE8;
+  --text-secondary:   #A8B5B0;
+  --text-tertiary:    #7A8C86;
+  --border:           #2A423B;
+  --border-strong:    #3A544C;
+  --accent:           #C9A227;
+  --accent-hover:     #E0BC4A;
+  --accent-rule:      #C9A227;
+  --accent-substrate: #3B2F0B;
+  --state-hover:      #24403A;
+  --state-active:     #2A423B;
+  --state-focus:      #C9A227;
+  --state-disabled:   #3A544C;
+  --state-error:      #D4695E;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+/* Modo oscuro → consola en papel */
+[data-theme="dark"] .register-invert {
+  --bg:               #EDF0EE;
+  --surface:          #F5F7F5;
+  --surface-raised:   #FFFFFF;
+  --text-primary:     #132420;
+  --text-secondary:   #3A544C;
+  --text-tertiary:    #5C6B66;
+  --border:           #DDE2DF;
+  --border-strong:    #A8B5B0;
+  --accent:           #75590C;
+  --accent-hover:     #5C4609;
+  --accent-rule:      #C9A227;
+  --accent-substrate: #F1E7C6;
+  --state-hover:      #E2E7E4;
+  --state-active:     #D3DAD6;
+  --state-focus:      #75590C;
+  --state-disabled:   #A8B5B0;
+  --state-error:      #8C2F26;
+}
+
+/* ============================================================
+   MOVIMIENTO AL SCROLL
+   Desvío autorizado respecto del §2.9 (ver CLAUDE.md): el
+   sistema restringe el movimiento a "confirmar una acción".
+   Acá se usa para dar flujo de lectura, pero SÓLO con las dos
+   propiedades que el documento permite: opacity y translate.
+   ============================================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-out);
+  transition-delay: calc(var(--stagger-index, 0) * 70ms);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sin JS el contenido tiene que ser visible igual */
+.no-js .reveal { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Trazo que se dibuja al entrar en viewport */
+.draw-in {
+  stroke-dasharray: var(--draw-length, 1200);
+  stroke-dashoffset: var(--draw-length, 1200);
+  transition: stroke-dashoffset 900ms var(--ease-out);
+}
+
+.is-visible .draw-in { stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .draw-in { stroke-dashoffset: 0; transition: none; }
+}
+
+/* ============================================================
+   ESTRUCTURA DE SECCIÓN
    ============================================================ */
 
 .section {
   width: 100%;
-  border-top: var(--hairline) solid var(--border);
 }
 
 .section-inner {
   max-width: var(--grid-max);
   margin: 0 auto;
   padding: var(--space-9) var(--page-margin);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-7);
 }
 
 @media (max-width: 1023px) {
   .section-inner { padding: var(--space-7) var(--page-margin); }
+}
+
+/* Encabezado de sección: numeral mono + regla, luego título serif.
+   El numeral da orden editorial y evita la pila de cards genérica. */
+
+.section-head {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: var(--hairline) solid var(--border-strong);
+  margin-bottom: var(--space-7);
+}
+
+@media (min-width: 900px) {
+  .section-head {
+    grid-template-columns: var(--col-margin) 1fr;
+    gap: var(--space-7);
+    align-items: start;
+  }
+}
+
+.section-num {
+  font: var(--data-s);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.section-title {
+  font: var(--title-l);
+  letter-spacing: var(--ls-title-l);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-4);
+  max-width: 24ch;
+  text-wrap: balance;
+}
+
+.section-lead {
+  font: var(--lead);
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 62ch;
 }
 
 .eyebrow {
@@ -341,22 +618,9 @@ table,
   color: var(--text-tertiary);
 }
 
-.section-heading {
-  font: var(--title-m);
-  letter-spacing: var(--ls-title-m);
-  color: var(--text-primary);
-  margin: 0;
-  max-width: 32ch;
-}
-
-.section-lead {
-  font: var(--body-s);
-  color: var(--text-secondary);
-  max-width: 66ch;
-  margin: 0;
-}
-
-/* ---------- Botón — §3.1, tres jerarquías, un primario por vista ---------- */
+/* ============================================================
+   BOTONES — §3.1 · un primario por vista
+   ============================================================ */
 
 .btn {
   display: inline-flex;
@@ -370,16 +634,17 @@ table,
   border-radius: var(--radius-2);
   border: var(--hairline) solid transparent;
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-in-out), border-color var(--dur-fast) var(--ease-in-out), color var(--dur-fast) var(--ease-in-out);
+  transition: background-color var(--dur-fast) var(--ease-in-out),
+              border-color var(--dur-fast) var(--ease-in-out),
+              color var(--dur-fast) var(--ease-in-out);
 }
 
 .btn-primary {
   background: var(--text-primary);
   border-color: var(--text-primary);
-  color: var(--surface);
+  color: var(--bg);
 }
-.btn-primary:hover { background: var(--petrol-800); border-color: var(--petrol-800); color: var(--surface); }
-.btn-primary:active { background: var(--petrol-950); border-color: var(--petrol-950); }
+.btn-primary:hover { background: var(--text-secondary); border-color: var(--text-secondary); color: var(--bg); }
 
 .btn-secondary {
   background: transparent;
@@ -387,52 +652,61 @@ table,
   color: var(--text-primary);
 }
 .btn-secondary:hover { background: var(--state-hover); border-color: var(--text-tertiary); color: var(--text-primary); }
-.btn-secondary:active { background: var(--state-active); border-color: var(--text-secondary); }
 
 .btn-tertiary {
   background: transparent;
-  border-color: transparent;
   padding-left: 10px;
   padding-right: 10px;
   color: var(--text-secondary);
 }
 .btn-tertiary:hover { color: var(--text-primary); box-shadow: inset 0 -1px 0 var(--text-primary); }
 
-/* ---------- Tag — §3.2 ---------- */
+/* ============================================================
+   TAGS — §3.2 · el seleccionado invierte, nunca colorea
+   ============================================================ */
 
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
   padding: 5px 10px;
   font: var(--ui-s);
+  letter-spacing: var(--ls-ui-s);
   border-radius: var(--radius-1);
-}
-
-.tag-info {
   background: var(--border);
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
-.tag-status {
-  font: var(--label);
-  letter-spacing: var(--ls-label);
-  text-transform: uppercase;
-  padding: 4px 8px;
+.tag-outline {
+  background: transparent;
   border: var(--hairline) solid var(--border-strong);
   color: var(--text-secondary);
 }
 
-/* ---------- Tarjeta — superficie nivel 1 (§2.1), sin sombra ni radio ---------- */
-
-.card {
-  background: var(--surface);
-  border: var(--hairline) solid var(--border);
-  transition: background-color var(--dur-fast) var(--ease-in-out), border-color var(--dur-fast) var(--ease-in-out);
+.label-status {
+  font: var(--label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
-.card:hover { border-color: var(--border-strong); }
 
-/* ---------- Lista de nodo — §3.5/§3.11 ---------- */
+/* ============================================================
+   DATO DESTACADO — el único dorado de la vista
+   ============================================================ */
+
+.figure-accent {
+  display: inline-block;
+  width: fit-content;
+  background: var(--accent-substrate);
+  box-shadow: inset 0 -3px 0 var(--accent-rule);
+  color: var(--text-primary);
+  padding: 0 8px 2px;
+}
+
+/* ============================================================
+   LISTA DE NODO — §3.5 · viñeta cuadrada, nunca punto redondo
+   ============================================================ */
 
 .node-list {
   list-style: none;
@@ -454,8 +728,591 @@ table,
   content: "";
   position: absolute;
   left: 0;
-  top: 0.5em;
+  top: 0.55em;
   width: var(--node-dot);
   height: var(--node-dot);
-  background: var(--text-secondary);
+  background: var(--text-tertiary);
+}
+
+/* ============================================================
+   LÍNEA DE FUENTE — obligatoria en toda tabla y gráfico
+   ============================================================ */
+
+.source-line {
+  font: var(--source);
+  letter-spacing: var(--ls-source);
+  color: var(--text-tertiary);
+  margin: var(--space-3) 0 0;
+}
+
+.source-line b {
+  font: var(--label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Marca de contenido ilustrativo: honestidad sobre datos de ejemplo */
+.placeholder-note {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  border: var(--hairline) dashed var(--border-strong);
+  padding: 4px 8px;
+}
+
+/* ============================================================
+   ESCALA ARQUITECTÓNICA
+   Desvío autorizado del tope de 52px (--title-xl). Sólo para el
+   numeral de capítulo y el titular del hero, que funcionan como
+   el "momento visual" que en las referencias aporta la fotografía.
+   ============================================================ */
+
+.display-numeral {
+  font-family: var(--font-data);
+  font-size: clamp(72px, 13vw, 180px);
+  line-height: 0.82;
+  font-weight: 400;
+  color: var(--text-primary);
+  opacity: 0.14;
+  letter-spacing: -0.02em;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.display-title {
+  font-family: var(--font-read);
+  font-size: clamp(38px, 6.4vw, 84px);
+  line-height: 1.04;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  color: var(--text-primary);
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* ============================================================
+   CAMPOS DE FORMULARIO — §3.8
+   Etiqueta siempre visible. El placeholder describe el formato,
+   no el campo.
+   ============================================================ */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.field-label {
+  font: var(--label);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.field-input,
+.field-select,
+.field-textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  font: var(--ui-m);
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: var(--hairline) solid var(--border-strong);
+  border-radius: var(--radius-2);
+  transition: border-color var(--dur-fast) var(--ease-in-out);
+}
+
+.field-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font: var(--body-s);
+}
+
+.field-input:hover,
+.field-select:hover,
+.field-textarea:hover { border-color: var(--text-tertiary); }
+
+.field-input:focus,
+.field-select:focus,
+.field-textarea:focus { border-color: var(--text-secondary); }
+
+.field-error {
+  font: var(--source);
+  letter-spacing: var(--ls-source);
+  color: var(--state-error);
+}
+
+/* ---------- Control de rango (modelo interactivo) ---------- */
+
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--border-strong);
+}
+
+.range::-moz-range-track {
+  height: 2px;
+  background: var(--border-strong);
+}
+
+/* El pulgar es un nodo: cuadrado con --radius-1, como el isotipo */
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  margin-top: -6.5px;
+  background: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-1);
+  transition: background-color var(--dur-fast) var(--ease-in-out);
+}
+
+.range::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  background: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-1);
+}
+
+.range:hover::-webkit-slider-thumb { background: var(--accent); }
+.range:hover::-moz-range-thumb { background: var(--accent); }
+
+.range:focus-visible { outline: var(--focus-ring); outline-offset: 4px; }
+
+/* ============================================================
+   CUERPO DE CAPÍTULO
+   El aire vertical de cada capítulo. Va en el registro, no en el
+   contenido, para que la banda de color llegue a sangre completa.
+   ============================================================ */
+
+.chapter-body {
+  padding: var(--space-9) 0;
+}
+
+@media (max-width: 1023px) {
+  .chapter-body { padding: var(--space-7) 0; }
+}
+
+/* La cabecera es sticky: sin esto, un salto por ancla esconde el título. */
+.section,
+.hero {
+  scroll-margin-top: 84px;
+}
+
+
+/* ============================================================
+   CONTENIDO DE LOS PANELES DEL BOOT TERMINAL
+   (markup estático en BootTerminal.astro, contenido generado por el
+   script de Layout.astro)
+
+   Todo lo de acá se crea en cliente con createElement/createElementNS:
+   un elemento insertado dinámicamente nunca recibe el atributo
+   data-astro-cid-* que Astro estampa sólo sobre el template estático,
+   así que un <style> scopeado jamás lo alcanza (misma familia de
+   trampa que [data-theme], ver CLAUDE.md). Por eso vive acá.
+
+   Verde y bordó salen del catálogo de marca y aplican la convención
+   universal del dominio (suba/baja); no son colores nuevos.
+   Todos los valores son ilustrativos, de instrumentos públicos
+   genéricos: nunca datos de mercado en vivo ni track record propio.
+   ============================================================ */
+
+.term { --up: #7fae92; --down: #d4695e; }
+
+/* ---- Tablas de cotizaciones ---- */
+
+.q-table {
+  display: grid;
+  grid-template-columns: minmax(52px, 1.5fr) repeat(3, minmax(34px, 1fr)) repeat(2, minmax(30px, 0.85fr)) minmax(26px, 0.7fr);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  line-height: 1.9;
+  column-gap: 5px;
+}
+
+.q-table > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.q-th {
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+  background: var(--term-panel-bg, #16261f);
+  color: var(--text-tertiary);
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+
+.q-th:not(.q-sym),
+.q-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.q-sym { color: var(--text-secondary); letter-spacing: 0.03em; }
+.q-num { color: var(--text-tertiary); }
+.q-last { color: var(--text-primary); padding: 0 2px; transition: color 0.2s ease, background-color 0.55s ease; }
+
+.q-last.flash-up   { color: var(--up);   background: color-mix(in srgb, var(--up) 26%, transparent); }
+.q-last.flash-down { color: var(--down); background: color-mix(in srgb, var(--down) 26%, transparent); }
+
+.q-chg.is-up   { color: var(--up); }
+.q-chg.is-down { color: var(--down); }
+
+.q-sig { text-align: right; letter-spacing: 0.06em; }
+.q-sig.is-up   { color: var(--up); }
+.q-sig.is-down { color: var(--down); }
+.q-sig.is-flat { color: var(--text-tertiary); }
+
+/* ---- Grafo de inferencia ----
+   El nodo lleva relleno SÓLIDO del color del panel, no `fill: none`, para
+   que ninguna arista se vea cruzándolo por dentro. */
+
+.field-node {
+  fill: var(--term-panel-bg, #16261f);
+  stroke: var(--border-strong);
+  stroke-width: 1.1;
+  transition: fill 0.4s ease, stroke 0.4s ease;
+}
+
+.field-node.is-lit {
+  fill: var(--accent-rule);
+  stroke: var(--accent-rule);
+  filter: drop-shadow(0 0 4px var(--accent-rule));
+}
+
+.field-edge {
+  stroke: var(--border);
+  stroke-width: 0.8;
+  transition: stroke 0.4s ease, opacity 0.4s ease;
+  opacity: 0.85;
+}
+
+.field-edge.is-lit { stroke: var(--accent-rule); opacity: 0.55; }
+
+.field-label {
+  font-family: var(--font-data);
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  fill: var(--text-tertiary);
+  transition: fill 0.4s ease;
+}
+
+.field-label.is-lit { fill: var(--text-secondary); }
+.field-cap { fill: var(--text-tertiary); font-size: 7px; letter-spacing: 0.1em; }
+.field-out-val { fill: var(--accent-rule); font-size: 8.5px; }
+.field-weight { fill: var(--text-tertiary); font-size: 6.5px; opacity: 0.75; }
+
+/* ---- Gráfico de velas + volumen + RSI ---- */
+
+.ch-grid { stroke: color-mix(in srgb, var(--border) 60%, transparent); stroke-width: 1; }
+.ch-guide { stroke: var(--border-strong); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+.ch-axis { font-family: var(--font-data); font-size: 7.5px; fill: var(--text-tertiary); }
+.ch-wick { stroke-width: 1; }
+.ch-up   { fill: var(--up);   stroke: var(--up); }
+.ch-down { fill: var(--down); stroke: var(--down); }
+.ch-vol-up   { fill: var(--up);   opacity: 0.5; }
+.ch-vol-down { fill: var(--down); opacity: 0.5; }
+.ch-ma { fill: none; stroke-width: 1.2; }
+.ch-ma1 { stroke: var(--accent-rule); }
+.ch-ma2 { stroke: var(--text-tertiary); stroke-dasharray: 4 3; }
+.ch-rsi { fill: none; stroke: var(--accent-rule); stroke-width: 1.2; }
+.ch-band { fill: var(--border); opacity: 0.16; }
+
+.ch-key { display: inline-flex; align-items: center; gap: 4px; }
+.ch-key i { width: 9px; height: 2px; display: inline-block; }
+.ch-key.ma1 i { background: var(--accent-rule); }
+.ch-key.ma2 i { background: var(--text-tertiary); }
+.ch-val { color: var(--text-secondary); }
+
+/* ---- Libro de órdenes ---- */
+
+.book-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  line-height: 1.85;
+  column-gap: 6px;
+}
+
+.book-grid > span {
+  min-width: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+  z-index: 1;
+}
+
+.book-th {
+  color: var(--text-tertiary);
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+
+.book-row { position: relative; }
+.book-px.is-ask { color: var(--down); }
+.book-px.is-bid { color: var(--up); }
+.book-sz, .book-cum { color: var(--text-tertiary); }
+
+/* Barra de profundidad: se pinta detrás de la fila, desde la derecha */
+.book-depth {
+  position: absolute;
+  right: 0;
+  top: 1px;
+  bottom: 1px;
+  z-index: 0;
+  opacity: 0.16;
+  transition: width 0.4s ease;
+}
+.book-depth.is-ask { background: var(--down); }
+.book-depth.is-bid { background: var(--up); }
+
+.book-spread {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--accent-rule);
+  border-block: 1px solid var(--border-strong);
+  margin: 2px 0;
+  padding: 1px 0;
+  letter-spacing: 0.07em;
+}
+
+/* ---- Blotter de ejecuciones ---- */
+
+.blot-grid {
+  display: grid;
+  grid-template-columns: minmax(44px, 1fr) minmax(48px, 1.2fr) 14px minmax(30px, 0.8fr) minmax(44px, 1fr);
+  font-family: var(--font-data);
+  font-size: 9.5px;
+  line-height: 1.9;
+  column-gap: 6px;
+}
+
+.blot-grid > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-tertiary);
+}
+
+.blot-th {
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+  background: var(--term-panel-bg, #16261f);
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border-strong);
+  padding-bottom: 2px;
+  margin-bottom: 2px;
+}
+
+.blot-instr { color: var(--text-secondary); }
+.blot-qty, .blot-px { text-align: right; font-variant-numeric: tabular-nums; }
+.blot-px { color: var(--text-primary); }
+.blot-side.is-buy  { color: var(--up); }
+.blot-side.is-sell { color: var(--down); }
+
+/* ---- Panel de riesgo ---- */
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 1px;
+  height: 100%;
+  background: var(--border);
+}
+
+.risk-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 7px;
+  background: var(--term-panel-bg, #16261f);
+  min-width: 0;
+}
+
+.risk-label {
+  font-family: var(--font-data);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.risk-value {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-size: 19px;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.risk-value.is-neg { color: var(--down); }
+.risk-value small { font-size: 0.5em; color: var(--text-tertiary); margin-left: 1px; }
+
+.risk-note {
+  font-family: var(--font-data);
+  font-size: 7.5px;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+
+/* ============================================================
+   MOBILE — chrome flotante que se guarda al bajar
+   ============================================================
+   TODO lo de este bloque está dentro de @media (max-width: 899px):
+   en laptop/desktop no cambia absolutamente nada (pedido explícito
+   del usuario, 2026-08-26).
+
+   Por qué vive acá y no en Header.astro / WhatsAppButton.astro: la
+   clase la pone el controlador de Layout.astro sobre <html>, y Astro
+   scopea cada compound de un selector de componente añadiéndole su
+   [data-astro-cid-…] — incluido el compound que apunta a <html>, que
+   nunca lleva ese atributo. Un `html.chrome-tucked .foo` escrito en un
+   <style> de componente no matchearía jamás (la trampa ya documentada
+   en CLAUDE.md para [data-theme]). */
+@media (max-width: 899px) {
+  .float-brand,
+  .float-controls,
+  .wa-fab {
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out),
+                visibility 0s linear 0s;
+  }
+
+  /* Sale del viewport hacia su borde más cercano (arriba las píldoras
+     del header, abajo el botón flotante) — el mismo gesto de "se
+     guardó para después" que ya usa FloatingNav, no un fundido en el
+     lugar que leería como que desapareció sin motivo. */
+  html.chrome-tucked .float-brand,
+  html.chrome-tucked .float-controls {
+    transform: translateY(calc(-100% - var(--space-5)));
+    opacity: 0;
+    visibility: hidden;
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out),
+                visibility 0s linear var(--dur-base);
+  }
+
+  html.chrome-tucked .wa-fab {
+    transform: translateY(calc(100% + var(--space-6)));
+    opacity: 0;
+    visibility: hidden;
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out),
+                visibility 0s linear var(--dur-base);
+  }
+
+  /* Con prefers-reduced-motion el chrome no se mueve: queda siempre
+     visible y estable. El solapamiento se vuelve a resolver por
+     padding (ver .hero-id más abajo en Hero.astro), no por movimiento
+     — que es exactamente lo que la preferencia pide evitar. */
+  @media (prefers-reduced-motion: reduce) {
+    .float-brand,
+    .float-controls,
+    .wa-fab,
+    html.chrome-tucked .float-brand,
+    html.chrome-tucked .float-controls,
+    html.chrome-tucked .wa-fab {
+      transform: none;
+      opacity: 1;
+      visibility: visible;
+      transition: none;
+    }
+  }
+}
+
+
+/* ============================================================
+   MOBILE — áreas táctiles reales
+   ============================================================
+   Todo dentro de @media (max-width: 899px) + puntero grueso.
+   Desktop no cambia.
+
+   `pointer: coarse` además de la media query de ancho: lo que
+   justifica un target de 44px es el dedo, no el ancho de la
+   ventana. Una laptop con la ventana angosta sigue con puntero
+   fino y no necesita (ni debe) agrandar los controles. */
+@media (max-width: 899px) and (pointer: coarse) {
+  /* 15px de lado es un target de puntero, no de dedo. El mínimo
+     táctil de las guías de accesibilidad (WCAG 2.5.8 / HIG) es
+     24-44px: el pulgar sube a 24px reales y el input recibe
+     padding vertical para llegar a 44px de alto tocable sin que
+     el track de 2px se engorde. */
+  .range::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+    margin-top: -11px;
+  }
+
+  .range::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .range { height: 44px; }
+}
+
+
+/* ============================================================
+   MOBILE — colchón de ancla bajo el chrome fijo
+   ============================================================
+   Al tocar un ancla de FloatingNav la sección se alinea con el
+   borde superior del viewport, que es exactamente donde viven las
+   píldoras fijas del Header: el título de la sección aterrizaba
+   DEBAJO del logo y quedaba ilegible justo en el momento en que el
+   visitante acababa de pedir ir ahí.
+
+   scroll-margin-top mueve el punto de aterrizaje, no el layout: no
+   agrega espacio visible ni corre nada de lugar.
+
+   Ya existe `scroll-margin-top: 84px` sobre `.section` y `.hero` (ver
+   más arriba), pero la sección del modelo NO lleva la clase `.section`
+   — es `.model-section` — así que quedaba fuera de esa regla y era
+   justamente la que peor aterrizaba. Acá se cubre por selector de
+   elemento+id, reusando el MISMO valor de 84px en vez de introducir un
+   segundo número para lo mismo.
+
+   Sólo mobile: arriba de 900px el chrome vive en márgenes que no
+   compiten con la columna de contenido, y tocar el aterrizaje de las
+   anclas en desktop sería cambiar comportamiento de escritorio. */
+@media (max-width: 899px) {
+  section[id] {
+    scroll-margin-top: 84px;
+  }
 }

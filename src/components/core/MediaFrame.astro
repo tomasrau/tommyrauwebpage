@@ -1,0 +1,182 @@
+---
+// MediaFrame.astro — contenedor real de foto/video, con el tratamiento exacto
+// de §8 del design system (Tratamiento de imagen) ya cableado en CSS.
+//
+// No fabrica contenido: si no hay `src`, muestra un estado de placeholder
+// honesto (no una foto falsa) que dice exactamente qué archivo poner y dónde.
+// En cuanto el archivo exista en esa ruta, pasar `src` alcanza para que
+// aparezca tratado — sin tocar el resto del componente que lo usa.
+//
+// Tratamientos (§8, valores fijos del doc, independientes del tema claro/
+// oscuro del sitio — una foto no cambia de proceso porque el visitante
+// prenda el modo oscuro):
+//   duotono          — sombras petróleo / luces papel. Default.
+//   duotono-acento   — luces altas en dorado en vez de papel. Para piezas
+//                       donde la foto es protagonista.
+//   velo              — blanco y negro + velo verde sutil. Menos intervenido.
+
+interface Props {
+  kind?: "image" | "video";
+  src?: string;
+  poster?: string;
+  alt: string;
+  treatment?: "duotono" | "duotono-acento" | "velo";
+  aspect?: string;
+  expectedPath: string;
+  caption?: string;
+  lang?: "es" | "en";
+}
+
+const {
+  kind = "image",
+  src,
+  poster,
+  alt,
+  treatment = "duotono",
+  aspect = "4 / 5",
+  expectedPath,
+  caption,
+  lang = "es",
+} = Astro.props;
+
+const t = lang === "en"
+  ? { pending: "Media pending", drop: "Drop the file at", image: "Image", video: "Video" }
+  : { pending: "Falta el archivo", drop: "Poné el archivo en", image: "Imagen", video: "Video" };
+---
+
+<figure class={`media-frame media-${treatment} ${src ? "has-media" : "is-pending"}`} style={`aspect-ratio: ${aspect}`}>
+  {src ? (
+    kind === "video" ? (
+      <video class="media-el" src={src} poster={poster} muted loop playsinline aria-label={alt}></video>
+    ) : (
+      <img class="media-el" src={src} alt={alt} loading="lazy" decoding="async" />
+    )
+  ) : (
+    <div class="media-pending" role="img" aria-label={`${t.pending}: ${alt}`}>
+      <svg class="pending-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+        {kind === "video"
+          ? <path d="M4 5h13a1 1 0 0 1 1 1v3.2l4-2.4v10.4l-4-2.4V17a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
+          : <>
+              <rect x="3" y="4" width="18" height="16" rx="0" />
+              <circle cx="9" cy="10" r="1.6" />
+              <path d="m4 18 5.5-5.5a1.5 1.5 0 0 1 2 0L16 17M14.5 15.5 17 13a1.5 1.5 0 0 1 2 0L21 15" />
+            </>}
+      </svg>
+      <span class="pending-label">{t.pending} · {kind === "video" ? t.video : t.image}</span>
+      <code class="pending-path">{t.drop} <b>{expectedPath}</b></code>
+    </div>
+  )}
+
+  {caption && <figcaption class="media-caption">{caption}</figcaption>}
+</figure>
+
+<style>
+  .media-frame {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: var(--surface);
+    border: var(--hairline) solid var(--border-strong);
+    margin: 0;
+  }
+
+  .media-el {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ---- tratamientos reales, §8 del doc — valores fijos, no tokens de tema ---- */
+
+  .media-duotono .media-el,
+  .media-duotono-acento .media-el { filter: grayscale(1) contrast(1.05); }
+
+  .media-velo .media-el { filter: grayscale(1); }
+
+  /* El overlay de duotono va en un pseudo-elemento del frame (no del <img>,
+     que no admite ::after) posicionado exactamente encima. Sólo cuando hay
+     media real — `.is-pending` no lleva overlay, si no el estado "falta el
+     archivo" queda teñido del tratamiento y deja de leerse como neutro. */
+  .has-media.media-duotono::after,
+  .has-media.media-duotono-acento::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    mix-blend-mode: color;
+    opacity: 0.92;
+    pointer-events: none;
+  }
+
+  .has-media.media-duotono::after { background: linear-gradient(135deg, #0A1310, #EDF0EE); }
+  .has-media.media-duotono-acento::after { background: linear-gradient(135deg, #0A1310, #C9A227); }
+
+  .has-media.media-velo::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #132420;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+
+  /* ---- estado pendiente: honesto, no una foto falsa ---- */
+
+  .media-pending {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    text-align: center;
+    background:
+      repeating-linear-gradient(
+        45deg,
+        var(--border) 0 1px,
+        transparent 1px 14px
+      );
+  }
+
+  .pending-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--text-tertiary);
+  }
+
+  .pending-label {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .pending-path {
+    font: var(--data-s);
+    color: var(--text-secondary);
+    background: var(--surface-raised);
+    border: var(--hairline) solid var(--border);
+    padding: 4px 8px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  .pending-path b { color: var(--text-primary); font-weight: 500; }
+
+  .media-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--space-3) var(--space-4);
+    font: var(--source);
+    letter-spacing: var(--ls-source);
+    color: var(--text-tertiary);
+    background: var(--surface);
+    border-top: var(--hairline) solid var(--border);
+  }
+</style>

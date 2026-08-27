@@ -1,0 +1,86 @@
+---
+// WhatsAppButton.astro — botón flotante, esquina inferior derecha.
+//
+// Reusa el vocabulario de chrome flotante que ya existe (Header.astro:
+// var(--surface-raised) + hairline + --radius-2 + --shadow-float), en vez
+// de inventar un tratamiento nuevo — mismo criterio que ya se aplicó en
+// Footer.astro para la navegación con "·" (ver CLAUDE.md, "vocabulario que
+// sigue vivo"). Cuadrado con --radius-2, no un círculo verde: el círculo
+// verde de WhatsApp es exactamente el patrón de plugin genérico que este
+// proyecto viene evitando, y el sistema de marca es monocromo — el ícono
+// va en currentColor, no en el verde de marca de WhatsApp.
+//
+// FloatingNav.astro sólo se monta en la landing (bottom, centrado); este
+// botón va sitewide desde Layout.astro (bottom, a la derecha) — no hay
+// colisión de posición ni de z-index compartido.
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+// +54 9 11 6865-9656 → dígitos puros, sin +/espacios/guiones (formato que
+// wa.me espera: código de país + 9 + área + número, todo junto).
+const PHONE = "5491168659656";
+
+const t = lang === "en"
+  ? { label: "Message me on WhatsApp", prefill: "Hi Tomás, I'm reaching out from tomasrau.ar" }
+  : { label: "Escribime por WhatsApp", prefill: "Hola Tomás, te escribo desde tomasrau.ar" };
+
+const href = `https://wa.me/${PHONE}?text=${encodeURIComponent(t.prefill)}`;
+---
+
+<a class="wa-fab" href={href} target="_blank" rel="noopener noreferrer" aria-label={t.label} data-wa-fab>
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.199.534 1.286.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.087.274.072.376-.043.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564c.173.087.289.13.332.202.043.072.043.419-.101.824zM12.004 2C6.486 2 2.001 6.486 2.001 12.005c0 1.752.457 3.478 1.324 4.988L2.058 22l5.117-1.342A9.958 9.958 0 0 0 12.004 22c5.518 0 10.001-4.487 10.001-10.005C22.005 6.486 17.523 2 12.004 2z"></path>
+  </svg>
+</a>
+
+<style>
+  .wa-fab {
+    position: fixed;
+    right: var(--space-4);
+    bottom: var(--space-4);
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    background: var(--surface-raised);
+    border: var(--hairline) solid var(--border);
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-float);
+    color: var(--text-secondary);
+    transition: color var(--dur-fast) var(--ease-in-out), border-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wa-fab:hover { color: var(--accent); border-color: var(--border-strong); }
+  .wa-fab:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .wa-fab svg { width: 26px; height: 26px; }
+
+  /* Debajo de 900px, FloatingNav.astro fuerza su píldora a su propio
+     max-width (borde a borde menos un margen fijo) — su borde derecho
+     cae siempre justo donde iría este botón, sin importar el ancho de
+     viewport (es un margen fijo desde el borde, no proporcional al
+     contenido). Se despeja subiendo el botón por encima de esa franja
+     en vez de competir por el mismo espacio horizontal. */
+  @media (max-width: 899px) {
+    .wa-fab {
+      bottom: calc(var(--space-4) + 64px);
+      /* 52px en una pantalla de 390px es el 13% del ancho, flotando
+         permanentemente sobre la columna de lectura. A 46px sigue muy
+         por encima del mínimo táctil de 44px y devuelve espacio.
+         (El solapamiento real se resuelve con el guardado al scrollear
+         de global.css; esto sólo baja el peso visual.) */
+      width: 46px;
+      height: 46px;
+    }
+    .wa-fab svg { width: 23px; height: 23px; }
+  }
+
+  @media (min-width: 900px) {
+    .wa-fab { right: var(--space-5); bottom: var(--space-5); }
+  }
+</style>

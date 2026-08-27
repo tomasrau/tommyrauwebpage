@@ -1,0 +1,372 @@
+---
+// BootTerminal.astro — pantalla de carga: una terminal de research/trading
+// que se enciende panel por panel mientras cargan los recursos reales.
+//
+// Sólo markup + estilos del chrome. El contenido de cada panel lo construye
+// el script de Layout.astro leyendo los data-* de acá — así el orquestador
+// del progreso vive en un solo lugar y no hay coordinación entre scripts.
+//
+// Los estilos de los hijos generados por JS viven en global.css: un elemento
+// insertado con createElement nunca recibe el data-astro-cid-* que Astro
+// estampa sobre el template estático, así que un <style> scopeado no los
+// alcanzaría (misma familia de trampa que [data-theme], ver CLAUDE.md).
+//
+// TODOS los valores son ilustrativos, de instrumentos públicos genéricos.
+// Nunca datos de mercado en vivo ni cifras de track record propio.
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const es = lang !== "en";
+
+const t = {
+  status: es ? "MONTANDO ESPACIO DE TRABAJO" : "BUILDING WORKSPACE",
+  rates: es ? "TASAS · SOBERANOS · RENDIMIENTO %" : "RATES · SOVEREIGN · YIELD %",
+  fx: es ? "FX · CONTADO · MID" : "FX · SPOT · MID",
+  chart: es ? "SPX · 1D · OHLC" : "SPX · 1D · OHLC",
+  model: es ? "MODELO · GRAFO DE INFERENCIA" : "MODEL · INFERENCE GRAPH",
+  book: es ? "LIBRO DE ÓRDENES · ES1" : "ORDER BOOK · ES1",
+  blotter: es ? "EJECUCIONES" : "EXECUTIONS",
+  risk: es ? "RIESGO · CARTERA" : "RISK · PORTFOLIO",
+  qHead: es
+    ? "SÍMBOLO|ÚLT|BID|ASK|%D|%S|SEÑ"
+    : "SYMBOL|LAST|BID|ASK|%D|%W|SIG",
+  bookHead: es ? "PRECIO|TAMAÑO|ACUM" : "PRICE|SIZE|CUM",
+  blotHead: es ? "HORA|INSTR|L|CANT|PRECIO" : "TIME|INSTR|S|QTY|PRICE",
+  spread: es ? "SPREAD" : "SPREAD",
+  modelFoot: es
+    ? "épocas 240 · pérdida 0.0143 · val_acc 0.71 · λ 1e-4"
+    : "epochs 240 · loss 0.0143 · val_acc 0.71 · λ 1e-4",
+  modelLayers: es
+    ? "FACTORES|OCULTA 1|OCULTA 2|OCULTA 3|SALIDA"
+    : "FACTORS|HIDDEN 1|HIDDEN 2|HIDDEN 3|OUTPUT",
+  modelInputs: es
+    ? "CARRY|MOMENTUM|VALOR|VOL|LIQUIDEZ"
+    : "CARRY|MOMENTUM|VALUE|VOL|LIQUIDITY",
+  modelOutputs: es ? "P(↑)|σ EST|β" : "P(↑)|σ EST|β",
+  chartLegend: es
+    ? "O 4812.20  A 4839.55  B 4795.10  C 4831.90"
+    : "O 4812.20  H 4839.55  L 4795.10  C 4831.90",
+  volLabel: es ? "VOL" : "VOL",
+  // etiqueta|valor|sufijo|nota
+  riskMetrics: es
+    ? "VaR 99% 1D|-1.84|%|paramétrico,SHARPE|1.62||36m móvil,BETA|0.34||vs SPX,DD MÁX|-7.9|%|24m,VOL ANUAL|11.4|%|ex-post,EXP NETA|62|%|bruta 118%"
+    : "VaR 99% 1D|-1.84|%|parametric,SHARPE|1.62||36m rolling,BETA|0.34||vs SPX,MAX DD|-7.9|%|24m,ANN VOL|11.4|%|ex-post,NET EXP|62|%|gross 118%",
+};
+
+// símbolo|último|decimales
+const ratesRows = [
+  "UST 2Y|4.61|2", "UST 5Y|4.32|2", "UST 10Y|4.28|2", "UST 30Y|4.44|2",
+  "BUND 10Y|2.34|2", "OAT 10Y|2.87|2", "BTP 10Y|3.61|2", "SPGB 10Y|3.12|2",
+  "GILT 10Y|4.05|2", "JGB 10Y|1.07|2", "ACGB 10Y|4.19|2", "CAN 10Y|3.48|2",
+  "MBONO 10Y|9.42|2", "NTNB 10Y|6.18|2", "SOFR 3M|5.31|2", "EURIBOR 3M|3.87|2",
+].join(",");
+
+const fxRows = [
+  "EUR/USD|1.0842|4", "USD/JPY|151.37|2", "GBP/USD|1.2673|4", "USD/CHF|0.8814|4",
+  "AUD/USD|0.6592|4", "USD/CAD|1.3547|4", "NZD/USD|0.6104|4", "USD/MXN|17.04|2",
+  "USD/BRL|4.97|2", "USD/CLP|942.60|2", "USD/COP|3914.20|2", "USD/CNH|7.2318|4",
+  "USD/ZAR|18.74|2", "USD/TRY|32.19|2", "EUR/GBP|0.8555|4", "EUR/JPY|164.11|2",
+].join(",");
+---
+
+<div id="bootTerm" class="term register-ink">
+  <div class="term-grid">
+    <section class="term-panel panel-rates" data-at="4" data-kind="quotes"
+      data-rows={ratesRows} data-head={t.qHead}>
+      <header class="term-head"><span class="term-dot"></span>{t.rates}</header>
+      <div class="term-body"></div>
+    </section>
+
+    <section class="term-panel panel-fx" data-at="6" data-kind="quotes"
+      data-rows={fxRows} data-head={t.qHead}>
+      <header class="term-head"><span class="term-dot"></span>{t.fx}</header>
+      <div class="term-body"></div>
+    </section>
+
+    <section class="term-panel panel-model" data-at="2" data-kind="model"
+      data-layers={t.modelLayers} data-inputs={t.modelInputs}
+      data-outputs={t.modelOutputs} data-foot={t.modelFoot}>
+      <header class="term-head"><span class="term-dot"></span>{t.model}</header>
+      <div class="term-body">
+        <svg class="model-svg" preserveAspectRatio="none"></svg>
+        <p class="model-foot">{t.modelFoot}</p>
+      </div>
+    </section>
+
+    <section class="term-panel panel-chart" data-at="8" data-kind="chart"
+      data-legend={t.chartLegend} data-vol={t.volLabel}>
+      <header class="term-head"><span class="term-dot"></span>{t.chart}</header>
+      <div class="term-body">
+        <div class="chart-legend"></div>
+        <svg class="chart-svg" preserveAspectRatio="none"></svg>
+      </div>
+    </section>
+
+    <section class="term-panel panel-book" data-at="10" data-kind="book"
+      data-head={t.bookHead} data-spread={t.spread}>
+      <header class="term-head"><span class="term-dot"></span>{t.book}</header>
+      <div class="term-body"></div>
+    </section>
+
+    <section class="term-panel panel-blot" data-at="12" data-kind="blotter"
+      data-head={t.blotHead}>
+      <header class="term-head"><span class="term-dot"></span>{t.blotter}</header>
+      <div class="term-body"></div>
+    </section>
+
+    <section class="term-panel panel-risk" data-at="14" data-kind="risk"
+      data-metrics={t.riskMetrics}>
+      <header class="term-head"><span class="term-dot"></span>{t.risk}</header>
+      <div class="term-body"></div>
+    </section>
+  </div>
+
+  <footer class="term-status">
+    <span class="term-status-label">{t.status}</span>
+    <span class="term-status-rule"><i id="loaderBar"></i></span>
+    <span id="loaderPct" class="term-status-pct">0</span>
+  </footer>
+</div>
+
+<style>
+  /* register-ink aporta el bloque de tokens de tinta; el fondo lo pintan las
+     dos mitades de la cortina, así que acá se anula. */
+  .term.register-ink {
+    background: transparent;
+  }
+
+  .term {
+    --term-panel-bg: #16261f;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    will-change: opacity;
+  }
+
+  .term-grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: 1fr 1.15fr 0.95fr;
+    grid-template-areas:
+      "rates rates rates rates fx    fx    fx    fx    model model model model"
+      "chart chart chart chart chart chart chart chart model model model model"
+      "book  book  book  blot  blot  blot  blot  risk  risk  risk  risk  risk";
+  }
+
+  .panel-rates { grid-area: rates; }
+  .panel-fx    { grid-area: fx; }
+  .panel-model { grid-area: model; }
+  .panel-chart { grid-area: chart; }
+  .panel-book  { grid-area: book; }
+  .panel-blot  { grid-area: blot; }
+  .panel-risk  { grid-area: risk; }
+
+  .term-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: var(--term-panel-bg);
+    border: 1px solid var(--border);
+    opacity: 0.45;
+    transition: opacity 0.45s ease, border-color 0.45s ease;
+  }
+
+  .term-panel.is-live {
+    opacity: 1;
+    border-color: var(--border-strong);
+  }
+
+  .term-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    padding: 5px 9px;
+    font-family: var(--font-data);
+    font-size: 9.5px;
+    letter-spacing: 0.09em;
+    color: var(--text-tertiary);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.45s ease;
+  }
+
+  .term-panel.is-live .term-head { color: var(--text-secondary); }
+
+  .term-dot {
+    width: 5px;
+    height: 5px;
+    flex-shrink: 0;
+    background: var(--border-strong);
+    transition: background-color 0.4s ease;
+  }
+
+  .term-panel.is-live .term-dot {
+    background: var(--accent-rule);
+    box-shadow: 0 0 7px var(--accent-rule);
+  }
+
+  .term-body {
+    flex: 1;
+    min-height: 0;
+    padding: 6px 8px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+  }
+
+  .term-panel.is-live .term-body { opacity: 1; }
+
+  /* Las tablas de cotizaciones scrollean: hay más instrumentos de los que
+     entran, igual que en una terminal real. */
+  .term-panel[data-kind="quotes"] .term-body,
+  .term-panel[data-kind="blotter"] .term-body {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+  }
+
+  .term-panel[data-kind="quotes"] .term-body::-webkit-scrollbar,
+  .term-panel[data-kind="blotter"] .term-body::-webkit-scrollbar { width: 6px; }
+
+  .term-panel[data-kind="quotes"] .term-body::-webkit-scrollbar-thumb,
+  .term-panel[data-kind="blotter"] .term-body::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+  }
+
+  .panel-model .term-body,
+  .panel-chart .term-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 9px 8px;
+  }
+
+  .model-svg,
+  .chart-svg {
+    display: block;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .model-foot {
+    flex-shrink: 0;
+    margin: 0;
+    font-family: var(--font-data);
+    font-size: 8.5px;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chart-legend {
+    flex-shrink: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-family: var(--font-data);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    color: var(--text-tertiary);
+  }
+
+  /* ---- Barra de estado: el lugar propio del porcentaje ---- */
+
+  .term-status {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 12px;
+    background: var(--term-panel-bg);
+    border: 1px solid var(--border-strong);
+  }
+
+  .term-status-label {
+    font-family: var(--font-data);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+
+  .term-status-rule {
+    flex: 1;
+    height: 3px;
+    min-width: 0;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .term-status-rule i {
+    display: block;
+    width: 0%;
+    height: 100%;
+    background: var(--accent-rule);
+    box-shadow: 0 0 9px var(--accent-rule);
+  }
+
+  .term-status-pct {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--accent-rule);
+    min-width: 3.4ch;
+    text-align: right;
+  }
+
+  .term-status-pct::after {
+    content: "%";
+    font-size: 0.42em;
+    margin-left: 0.2em;
+    color: var(--text-tertiary);
+  }
+
+  @media (max-width: 1180px) {
+    .term-grid {
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: 1.15fr 1fr 0.9fr;
+      grid-template-areas:
+        "model model model chart chart chart"
+        "rates rates rates fx    fx    fx"
+        "book  book  blot  blot  risk  risk";
+    }
+  }
+
+  @media (max-width: 700px) {
+    .term { padding: 9px; gap: 7px; }
+    .term-grid {
+      gap: 7px;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1.1fr 1fr;
+      grid-template-areas:
+        "model"
+        "chart"
+        "rates";
+    }
+    .panel-fx,
+    .panel-book,
+    .panel-blot,
+    .panel-risk { display: none; }
+    .term-status-label { display: none; }
+    .term-status-pct { font-size: 24px; }
+  }
+</style>

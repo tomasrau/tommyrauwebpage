@@ -1,0 +1,377 @@
+---
+// CommandPalette.astro — navegación por teclado (⌘K / Ctrl K), al estilo de
+// las herramientas técnicas que sí sirven de referencia para esta marca
+// (Linear, Vercel, terminales de research) en vez de sitios de marketing de
+// consumo. Es interacción real —filtra, navega con flechas, salta al elegir—
+// no un adorno. Único componente del sitio, junto al menú móvil, que usa
+// --shadow-float (§3.9: elemento flotante).
+//
+// El filtro usa fuse.js (fuzzy search real, tolera errores de tipeo) sobre
+// un índice que ahora incluye, además de las secciones, cada nota de
+// Research — así ⌘K salta directo a cualquier contenido, no sólo a las
+// secciones de la landing.
+
+import { getCollection } from "astro:content";
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const researchEntries = await getCollection("research", (e) => e.data.lang === lang);
+const researchBase = lang === "en" ? "/en/research" : "/research";
+
+const t = lang === "en"
+  ? {
+      placeholder: "Jump to a section or channel…",
+      empty: "No matches.",
+      hint: "Navigate",
+      hintSelect: "Select",
+      hintClose: "Close",
+      groupSections: "Sections",
+      groupResearch: "Research",
+      groupChannels: "Channels",
+      items: [
+        { id: "inicio", label: "Opening", num: "00", href: "#inicio" },
+        { id: "research", label: "Research", num: "01", href: "#research" },
+        { id: "metodo", label: "Method", num: "02", href: "#metodo" },
+        { id: "modelo", label: "Interactive model", num: "03", href: "#modelo" },
+        { id: "trayectoria", label: "Trajectory", num: "04", href: "#trayectoria" },
+        { id: "contacto", label: "Contact", num: "05", href: "#contacto" },
+      ],
+      channels: [
+        { label: "Email", href: "mailto:tomasrau@lorenz.ar" },
+        { label: "LinkedIn", href: "https://www.linkedin.com/in/tomasezequielrau" },
+        { label: "GitHub", href: "https://github.com/tomasrau" },
+      ],
+    }
+  : {
+      placeholder: "Saltar a una sección o canal…",
+      empty: "Sin resultados.",
+      hint: "Navegar",
+      hintSelect: "Seleccionar",
+      hintClose: "Cerrar",
+      groupSections: "Secciones",
+      groupResearch: "Research",
+      groupChannels: "Canales",
+      items: [
+        { id: "inicio", label: "Apertura", num: "00", href: "#inicio" },
+        { id: "research", label: "Research", num: "01", href: "#research" },
+        { id: "metodo", label: "Método", num: "02", href: "#metodo" },
+        { id: "modelo", label: "Modelo interactivo", num: "03", href: "#modelo" },
+        { id: "trayectoria", label: "Trayectoria", num: "04", href: "#trayectoria" },
+        { id: "contacto", label: "Contacto", num: "05", href: "#contacto" },
+      ],
+      channels: [
+        { label: "Email", href: "mailto:tomasrau@lorenz.ar" },
+        { label: "LinkedIn", href: "https://www.linkedin.com/in/tomasezequielrau" },
+        { label: "GitHub", href: "https://github.com/tomasrau" },
+      ],
+    };
+---
+
+<div class="cmdk-root" data-cmdk hidden>
+  <div class="cmdk-backdrop" data-cmdk-backdrop></div>
+
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label={t.placeholder}>
+    <div class="cmdk-input-row">
+      <span class="cmdk-prompt" aria-hidden="true">&gt;</span>
+      <input
+        class="cmdk-input"
+        type="text"
+        placeholder={t.placeholder}
+        autocomplete="off"
+        spellcheck="false"
+        data-cmdk-input
+      />
+      <kbd class="cmdk-esc">esc</kbd>
+    </div>
+
+    <div class="cmdk-list" data-cmdk-list role="listbox">
+      <div class="cmdk-group-label">{t.groupSections}</div>
+      {t.items.map((item) => (
+        <a href={item.href} class="cmdk-item" data-cmdk-item data-cmdk-key={item.label} role="option">
+          <span class="cmdk-item-num">{item.num}</span>
+          <span class="cmdk-item-label">{item.label}</span>
+          <span class="cmdk-item-node" aria-hidden="true"></span>
+        </a>
+      ))}
+
+      {researchEntries.length > 0 && <div class="cmdk-group-label">{t.groupResearch}</div>}
+      {researchEntries.map((entry) => (
+        <a href={`${researchBase}/${entry.data.routeSlug}/`} class="cmdk-item" data-cmdk-item data-cmdk-key={entry.data.title} role="option">
+          <span class="cmdk-item-num">↗</span>
+          <span class="cmdk-item-label">{entry.data.title}</span>
+        </a>
+      ))}
+
+      <div class="cmdk-group-label">{t.groupChannels}</div>
+      {t.channels.map((ch) => (
+        <a
+          href={ch.href}
+          target={ch.href.startsWith("http") ? "_blank" : undefined}
+          rel={ch.href.startsWith("http") ? "noopener noreferrer" : undefined}
+          class="cmdk-item"
+          data-cmdk-item
+          data-cmdk-key={ch.label}
+          role="option"
+        >
+          <span class="cmdk-item-num">↗</span>
+          <span class="cmdk-item-label">{ch.label}</span>
+        </a>
+      ))}
+
+      <p class="cmdk-empty" data-cmdk-empty hidden>{t.empty}</p>
+    </div>
+
+    <div class="cmdk-footer">
+      <span><kbd>↑</kbd><kbd>↓</kbd> {t.hint}</span>
+      <span><kbd>↵</kbd> {t.hintSelect}</span>
+      <span><kbd>esc</kbd> {t.hintClose}</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import Fuse from "fuse.js";
+
+  (() => {
+    const root = document.querySelector<HTMLElement>("[data-cmdk]");
+    if (!root) return;
+
+    const backdrop = root.querySelector("[data-cmdk-backdrop]") as HTMLElement;
+    const input = root.querySelector("[data-cmdk-input]") as HTMLInputElement;
+    const list = root.querySelector("[data-cmdk-list]") as HTMLElement;
+    const empty = root.querySelector("[data-cmdk-empty]") as HTMLElement;
+    const items = Array.from(root.querySelectorAll<HTMLAnchorElement>("[data-cmdk-item]"));
+
+    // Fuzzy search real: tolera errores de tipeo, no exige coincidencia
+    // literal como el .includes() anterior.
+    const searchIndex = items.map((el, i) => ({ i, key: el.dataset.cmdkKey ?? "" }));
+    const fuse = new Fuse(searchIndex, { keys: ["key"], threshold: 0.6, ignoreLocation: true });
+
+    let activeIndex = 0;
+
+    const visibleItems = () => items.filter((el) => el.style.display !== "none");
+
+    const setActive = (index: number) => {
+      const visible = visibleItems();
+      if (!visible.length) return;
+      activeIndex = (index + visible.length) % visible.length;
+      items.forEach((el) => el.classList.remove("is-active"));
+      visible[activeIndex].classList.add("is-active");
+      visible[activeIndex].scrollIntoView({ block: "nearest" });
+    };
+
+    const filter = () => {
+      const q = input.value.trim();
+      let anyVisible = false;
+
+      if (!q) {
+        items.forEach((el) => { el.style.display = ""; });
+        anyVisible = items.length > 0;
+      } else {
+        const matchedIndices = new Set(fuse.search(q).map((r) => r.item.i));
+        items.forEach((el, i) => {
+          const match = matchedIndices.has(i);
+          el.style.display = match ? "" : "none";
+          if (match) anyVisible = true;
+        });
+      }
+
+      root.querySelectorAll(".cmdk-group-label").forEach((label) => {
+        // Oculta el label de grupo si ningún item del grupo hasta el próximo label quedó visible
+        let el = label.nextElementSibling as HTMLElement | null;
+        let hasVisible = false;
+        while (el && !el.classList.contains("cmdk-group-label")) {
+          if (el.style.display !== "none") hasVisible = true;
+          el = el.nextElementSibling as HTMLElement | null;
+        }
+        (label as HTMLElement).style.display = hasVisible ? "" : "none";
+      });
+      empty.hidden = anyVisible;
+      setActive(0);
+    };
+
+    const open = () => {
+      root.hidden = false;
+      document.body.style.overflow = "hidden";
+      input.value = "";
+      filter();
+      requestAnimationFrame(() => input.focus());
+    };
+
+    const close = () => {
+      root.hidden = true;
+      document.body.style.overflow = "";
+    };
+
+    // Disparadores: ⌘K / Ctrl K en cualquier parte, y cualquier botón con data-cmdk-trigger
+    window.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        root.hidden ? open() : close();
+      } else if (e.key === "Escape" && !root.hidden) {
+        close();
+      }
+    });
+
+    document.querySelectorAll("[data-cmdk-trigger]").forEach((btn) => {
+      btn.addEventListener("click", open);
+    });
+
+    backdrop.addEventListener("click", close);
+
+    input.addEventListener("input", filter);
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); setActive(activeIndex + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActive(activeIndex - 1); }
+      else if (e.key === "Enter") {
+        e.preventDefault();
+        visibleItems()[activeIndex]?.click();
+      }
+    });
+
+    items.forEach((el) => el.addEventListener("click", close));
+  })();
+</script>
+
+<style>
+  .cmdk-root[hidden] { display: none; }
+
+  .cmdk-root {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: min(18svh, 160px);
+  }
+
+  .cmdk-backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--petrol-950) 55%, transparent);
+  }
+
+  .cmdk-panel {
+    position: relative;
+    width: min(560px, calc(100vw - var(--space-6) * 2));
+    max-height: min(60svh, 520px);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-raised);
+    border: var(--hairline) solid var(--border-strong);
+    box-shadow: var(--shadow-float);
+  }
+
+  .cmdk-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: var(--hairline) solid var(--border);
+  }
+
+  .cmdk-prompt {
+    font: var(--data-m);
+    color: var(--accent);
+  }
+
+  .cmdk-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font: var(--ui-l);
+    color: var(--text-primary);
+  }
+
+  .cmdk-input::placeholder { color: var(--text-tertiary); }
+
+  .cmdk-esc {
+    font: var(--label);
+    color: var(--text-tertiary);
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-1);
+    padding: 2px 6px;
+  }
+
+  .cmdk-list {
+    overflow-y: auto;
+    padding: var(--space-2);
+  }
+
+  .cmdk-group-label {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    padding: var(--space-3) var(--space-3) var(--space-2);
+  }
+
+  .cmdk-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    text-decoration: none;
+    color: var(--text-secondary);
+  }
+
+  .cmdk-item-num {
+    font: var(--data-s);
+    color: var(--text-tertiary);
+    width: 24px;
+    flex-shrink: 0;
+  }
+
+  .cmdk-item-label {
+    font: var(--ui-m);
+    color: var(--text-primary);
+    flex: 1;
+  }
+
+  .cmdk-item-node {
+    width: var(--node-dot);
+    height: var(--node-dot);
+    background: var(--accent-rule);
+    opacity: 0;
+    flex-shrink: 0;
+  }
+
+  .cmdk-item.is-active {
+    background: var(--state-hover);
+  }
+
+  .cmdk-item.is-active .cmdk-item-node { opacity: 1; }
+  .cmdk-item.is-active .cmdk-item-num { color: var(--text-primary); }
+
+  .cmdk-empty {
+    padding: var(--space-5);
+    font: var(--body-s);
+    color: var(--text-tertiary);
+    margin: 0;
+  }
+
+  .cmdk-footer {
+    display: flex;
+    gap: var(--space-5);
+    padding: var(--space-3) var(--space-5);
+    border-top: var(--hairline) solid var(--border);
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    color: var(--text-tertiary);
+  }
+
+  .cmdk-footer kbd {
+    font-family: var(--font-data);
+    font-size: 10px;
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-1);
+    padding: 1px 4px;
+    margin-right: 2px;
+  }
+</style>

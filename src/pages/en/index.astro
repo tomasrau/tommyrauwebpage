@@ -1,193 +1,25 @@
 ---
 import Layout from "../../layouts/Layout.astro";
-import VisualGrid from "../../components/core/VisualGrid.astro";
-import FocusPanel from "../../components/ui/FocusPanel.astro";
-import Metric from "../../components/ui/Metric.astro";
-import About from "../../components/sections/About.astro";
-import CaseStudies from "../../components/sections/CaseStudies.astro";
+import Hero from "../../components/sections/Hero.astro";
+import FloatingNav from "../../components/core/FloatingNav.astro";
+import ResearchIndex from "../../components/sections/ResearchIndex.astro";
+import Method from "../../components/sections/Method.astro";
+import ISLMModel from "../../components/sections/ISLMModel.astro";
 import Experience from "../../components/sections/Experience.astro";
 import Contact from "../../components/sections/Contact.astro";
-
-const focusItems = [
-  { label: "Applied economics" },
-  { label: "BI architecture" },
-  { label: "Financial analytics" },
-  { label: "Strategic technology" },
-];
 ---
 
 <Layout
   lang="en"
   alternateUrl="/"
-  title="Tomás Rau | Economics, Business Intelligence and Financial Analytics"
-  description="Economist specialized in Business Intelligence, financial analytics, strategic technology and data-driven decision-making."
+  title="Tomás Rau | Quantitative research, capital markets and financial analytics"
+  description="Economist specialized in quantitative research, capital markets and the data architecture that underpins financial analysis."
 >
-  <section id="inicio" class="hero">
-    <VisualGrid />
-    <div class="hero-inner">
-      <div class="hero-copy">
-        <span class="eyebrow">Economics · Business Intelligence · Finance</span>
-
-        <h1 class="hero-heading">Economics, data and strategy for smarter decisions.</h1>
-
-        <p class="hero-desc">
-          I'm <strong>Tomás Rau</strong>, an economist specialized in <em>Business Intelligence</em>, financial analytics and strategic technology. I design data architectures, executive reporting and quantitative models that help organizations maximize corporate value and sharpen decision-making.
-        </p>
-
-        <div class="hero-actions">
-          <a href="#proyectos" class="btn btn-primary">View projects</a>
-          <a href="#contacto" class="btn btn-secondary">Contact</a>
-        </div>
-      </div>
-
-      <div class="hero-panel">
-        <FocusPanel
-          heading="Professional focus"
-          value="+8 years"
-          valueLabel="BI & financial analytics"
-          items={focusItems}
-        />
-      </div>
-    </div>
-  </section>
-
-  <section id="expertise" class="section">
-    <div class="section-inner">
-      <div class="section-header">
-        <span class="eyebrow">Strategic capabilities</span>
-        <h2 class="section-heading">A hybrid profile across economics, data and technology.</h2>
-        <p class="section-lead">
-          Economic reasoning, BI architecture, advanced financial analytics and structured strategic decision-making combine to translate large volumes of data into real competitive advantage.
-        </p>
-      </div>
-
-      <div class="metrics-grid">
-        <Metric
-          value="+8 years"
-          label="BI & Analytics"
-          tag="Analytical architecture"
-          description="Experience in executive reporting, automation, data modeling and advanced visualization."
-        />
-        <Metric
-          value="Finance"
-          label="Financial Analytics"
-          tag="Strategic reading"
-          description="Analysis of indicators, markets, scenarios and evaluation criteria for financial decisions."
-        />
-        <Metric
-          value="Strategy"
-          label="Tech & Business"
-          tag="Executive vision"
-          description="Design of digital solutions, transformation processes and data-driven decision systems."
-        />
-        <Metric
-          value="Data-driven"
-          label="Decision Intelligence"
-          tag="Applied insight"
-          description="Translation of complex data into narratives, models and actionable recommendations."
-        />
-      </div>
-    </div>
-  </section>
-
-  <About lang="en" />
-  <CaseStudies lang="en" />
+  <Hero lang="en" />
+  <FloatingNav lang="en" />
+  <ResearchIndex lang="en" />
+  <Method lang="en" />
+  <ISLMModel lang="en" />
   <Experience lang="en" />
   <Contact lang="en" />
 </Layout>
-
-<style>
-  .hero {
-    position: relative;
-    width: 100%;
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-  }
-
-  .hero-inner {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: var(--grid-max);
-    margin: 0 auto;
-    padding: var(--space-9) var(--page-margin);
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-8);
-    align-items: center;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-inner { grid-template-columns: 7fr 5fr; }
-  }
-
-  .hero-copy {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-  }
-
-  .hero-heading {
-    font: var(--title-xl);
-    letter-spacing: var(--ls-title-xl);
-    color: var(--text-primary);
-    margin: 0;
-    max-width: 18ch;
-  }
-
-  .hero-desc {
-    font: var(--body);
-    color: var(--text-secondary);
-    margin: 0;
-    max-width: 60ch;
-  }
-
-  .hero-desc strong {
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .hero-desc em {
-    font-style: italic;
-    color: var(--text-primary);
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-2);
-  }
-
-  .hero-panel {
-    display: none;
-    justify-content: center;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-panel { display: flex; }
-  }
-
-  .section-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    max-width: 66ch;
-  }
-
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--gutter);
-  }
-
-  @media (min-width: 640px) {
-    .metrics-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  @media (min-width: 1024px) {
-    .metrics-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-</style>

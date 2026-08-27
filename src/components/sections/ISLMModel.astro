@@ -1,0 +1,968 @@
+---
+// ISLMModel.astro — modelo IS-LM-BP (Mundell-Fleming, movilidad
+// IMPERFECTA de capitales, tipo de cambio flotante). Reemplaza a la ex
+// SensitivityModel.astro (calculadora de precio de bonos, retirada por
+// pedido explícito del usuario: "no aporta ningún valor a un usuario que
+// no sabe de economía").
+//
+// Cuarta pasada sobre esta pieza. Resumen de las anteriores: (1) IS-LM
+// cerrado sin BP recibió ocho puntos de feedback de diseño (márgenes,
+// tamaños de fuente, dominio del gráfico, sliders sin referencia,
+// equilibrio no marcado en los ejes, faltaba BP/tipo de cambio, faltaba
+// aclarar expansiva/contractiva) — todos resueltos en estilos/markup.
+// (2) Se agregó BP bajo movilidad PERFECTA de capitales (tasa local
+// atada a la mundial): matemáticamente correcto, pero el gasto público y
+// los impuestos no movían nunca ni la producción ni la tasa — se sentía
+// como sliders rotos. (3) Se pasó a movilidad imperfecta pero con BP
+// como una recta de referencia FIJA (nunca se movía) contra la que se
+// medía la distancia del cruce real de IS-LM, mostrando esa distancia
+// como tipo de cambio — y el usuario hizo la pregunta correcta: bajo un
+// tipo de cambio genuinamente flotante, ¿no debería BP desplazarse
+// también hasta que las tres curvas se crucen en un mismo punto? Sí.
+//
+// Esta versión resuelve IS, LM y BP como un sistema simultáneo (ver
+// islm.ts): el tipo de cambio ya no es un diagnóstico calculado después
+// — es la variable que hace que las tres curvas se crucen exactamente
+// en el mismo punto, siempre. BP tiene pendiente propia y SÍ se
+// desplaza con la política (a través del tipo de cambio, que entra en
+// su ecuación igual que en la de IS). La política fiscal sigue moviendo
+// la producción y la tasa, pero una parte de ese movimiento se filtra
+// por el tipo de cambio — el mecanismo real de Mundell-Fleming con
+// movilidad imperfecta, no una aproximación.
+
+import { equilibrium, isCurve, lmCurve, bpCurve, curvePath, project, xOf, yOf, PLOT, resolveLabelYs } from "../../lib/islm";
+import type { PolicyStance } from "../../lib/islm";
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const t = lang === "en"
+  ? {
+      kicker: "03 — Interactive model",
+      title: "Watch a small open economy respond when policy moves.",
+      intro: "This model shows how government spending, taxes and the money supply set output, the interest rate and the exchange rate in a small economy open to world capital. The IS curve stands for the whole goods market — consumption, investment and government spending together, not spending alone; LM stands for the money market; BP marks the combinations of output and interest rate that would keep the external sector balanced. All three have their own slope, and all three move: the exchange rate is precisely the variable that adjusts until the three curves cross at exactly the same point.",
+      chartTitle: "Goods market (IS), money market (LM) and external balance (BP)",
+      glossIs: "goods market",
+      glossLm: "money market",
+      glossBp: "external balance",
+      defIsTerm: "IS — Investment-Saving",
+      defIsBody: "Represents equilibrium in the market for goods and services.",
+      defLmTerm: "LM — Liquidity-Money",
+      defLmBody: "Represents equilibrium in the money market.",
+      defBpTerm: "BP — Balance of Payments",
+      defBpBody: "Represents equilibrium in the external sector, where the current account and the capital account net to zero.",
+      axisY: "Interest rate, %",
+      axisX: "Output (Y)",
+      outputLabel: "Output",
+      outputUnit: "arbitrary units, not a real currency",
+      rateLabel: "Interest rate",
+      fxLabel: "Exchange rate",
+      fxUnit: "index points vs. neutral, not a percentage · 0 = neutral, + depreciation, − appreciation",
+      zlbNote: "Below the zero lower bound — no real central bank has ever set a rate this negative.",
+      gLabel: "Fiscal stance — spending",
+      gHint: "Government spending. Right = more spending.",
+      tLabel: "Fiscal stance — taxes",
+      tHint: "Taxes. Further right, lower taxes — a more expansionary stance.",
+      mLabel: "Monetary stance",
+      mHint: "Money supply. Right = more money.",
+      contractive: "Contractionary",
+      neutral: "Neutral",
+      expansive: "Expansionary",
+      reset: "Reset",
+      sourceLabel: "Method",
+      sourceText: "Closed-form Mundell-Fleming (linear IS/LM/BP, imperfect capital mobility, floating exchange rate, small open economy). The three curves are solved as one simultaneous system — the exchange rate is the variable that makes them cross at exactly one point, not a diagnostic computed after the fact. Parameters are illustrative, fixed for teaching the mechanism — not estimated from data, not a forecast of any real economy. Being linear, the model has no zero lower bound: at extreme slider settings the interest rate can read below what any real central bank has ever set (post-2008 policy rates only ever reached about −0.5% to −0.9%) — that range is a property of the algebra, not a claim about how real economies behave at the limit.",
+      eqYLabel: (Y: string) => `Y* = ${Y}`,
+      eqRLabel: (r: string) => `r* = ${r}`,
+      intro0: (Y: string, r: string) =>
+        `Starting point: output of ${Y}, interest rate of ${r}%. Move any of the three controls below and watch all three curves shift together.`,
+      current: (Y: string, r: string, fx: string) => `Output ${Y}, interest rate ${r}%, exchange rate ${fx} vs. neutral.`,
+      moves: {
+        Gexp: "You raised spending (more expansionary fiscal stance). Higher demand pulls output and the interest rate up together. Because capital isn't perfectly mobile, only part of that push comes through the financial side: the higher rate draws in capital, the currency appreciates, and that appreciation makes exports less competitive — which softens the effect on output compared with a closed economy.",
+        Gcon: "You cut spending (more contractionary fiscal stance). Output and the rate fall; the currency depreciates, which partly offsets the drop in output.",
+        Texp: "You cut taxes (more expansionary fiscal stance). Same direction as spending: output rises, the rate rises, the currency appreciates a little — though the effect is smaller than an equivalent rise in spending, since part of the extra income gets saved rather than spent.",
+        Tcon: "You raised taxes (more contractionary fiscal stance). Output and the rate fall, and the currency depreciates slightly.",
+        Mexp: "You increased the money supply (more expansionary monetary stance). The interest rate falls, which encourages investment and raises output — and the lower rate also pushes capital abroad, depreciating the currency. That depreciation improves competitiveness, reinforcing the rise in output instead of softening it.",
+        Mcon: "You reduced the money supply (more contractionary monetary stance). The rate rises, output falls, the currency appreciates — and that appreciation deepens the fall a little further.",
+      },
+    }
+  : {
+      kicker: "03 — Modelo interactivo",
+      title: "Así responde una economía pequeña y abierta cuando la política actúa.",
+      intro: "Este modelo muestra cómo el gasto público, los impuestos y la cantidad de dinero determinan la producción, la tasa de interés y el tipo de cambio de una economía pequeña y abierta al capital mundial. La curva IS resume todo el mercado de bienes —consumo, inversión y gasto público juntos, no sólo este último—; la LM, el mercado de dinero; la BP, qué combinaciones de producción y tasa mantendrían equilibrado el sector externo. Las tres tienen pendiente propia y las tres se mueven: el tipo de cambio es precisamente la variable que se ajusta hasta que las tres curvas se cruzan exactamente en el mismo punto.",
+      chartTitle: "Mercado de bienes (IS), mercado de dinero (LM) y equilibrio externo (BP)",
+      glossIs: "mercado de bienes",
+      glossLm: "mercado de dinero",
+      glossBp: "equilibrio externo",
+      defIsTerm: "IS — Inversión-Ahorro",
+      defIsBody: "Representa el equilibrio en el mercado de bienes y servicios.",
+      defLmTerm: "LM — Liquidez-Dinero",
+      defLmBody: "Representa el equilibrio en el mercado monetario.",
+      defBpTerm: "BP — Balanza de Pagos",
+      defBpBody: "Representa el equilibrio en el sector exterior, donde la cuenta corriente y la cuenta de capital se igualan a cero.",
+      axisY: "Tasa de interés, %",
+      axisX: "Producto (Y)",
+      outputLabel: "Producción",
+      outputUnit: "unidades arbitrarias, no una moneda real",
+      rateLabel: "Tasa de interés",
+      fxLabel: "Tipo de cambio",
+      fxUnit: "puntos de índice contra el neutral, no un porcentaje · 0 = neutral, + depreciación, − apreciación",
+      zlbNote: "Por debajo del piso cero — ningún banco central real fijó jamás una tasa tan negativa.",
+      gLabel: "Postura fiscal — gasto",
+      gHint: "Gasto público. A la derecha, más gasto.",
+      tLabel: "Postura fiscal — impuestos",
+      tHint: "Impuestos. Más a la derecha, impuestos más bajos — postura más expansiva.",
+      mLabel: "Postura monetaria",
+      mHint: "Oferta de dinero. A la derecha, más dinero.",
+      contractive: "Contractiva",
+      neutral: "Neutral",
+      expansive: "Expansiva",
+      reset: "Restablecer",
+      sourceLabel: "Método",
+      sourceText: "Mundell-Fleming en forma cerrada (IS/LM/BP lineales, movilidad imperfecta de capitales, tipo de cambio flotante, economía pequeña y abierta). Las tres curvas se resuelven como un único sistema simultáneo — el tipo de cambio es la variable que hace que se crucen exactamente en un mismo punto, no un diagnóstico calculado después. Los parámetros son ilustrativos, fijos para enseñar el mecanismo — no están estimados sobre datos reales ni son un pronóstico de ninguna economía concreta. Al ser lineal, el modelo no tiene piso cero: en posturas extremas la tasa de interés puede leerse por debajo de lo que cualquier banco central fijó alguna vez (las tasas de política más negativas del mundo real, post-2008, llegaron a entre −0,5% y −0,9%) — ese rango es una propiedad de la álgebra, no una afirmación sobre cómo se comportan las economías reales en ese límite.",
+      eqYLabel: (Y: string) => `Y* = ${Y}`,
+      eqRLabel: (r: string) => `r* = ${r}`,
+      intro0: (Y: string, r: string) =>
+        `Punto de partida: producción de ${Y}, tasa de interés de ${r}%. Movés cualquiera de los tres controles de abajo y mirás cómo se desplazan las tres curvas juntas.`,
+      current: (Y: string, r: string, fx: string) => `Producción ${Y}, tasa de interés ${r}%, tipo de cambio ${fx} respecto del neutral.`,
+      moves: {
+        Gexp: "Subiste el gasto (postura fiscal más expansiva). La mayor demanda empuja la producción y la tasa de interés hacia arriba, juntas. Como el capital no es perfectamente móvil, sólo parte de ese impulso pasa por el lado financiero: la tasa más alta atrae capitales, el peso se aprecia, y esa apreciación le resta competitividad a las exportaciones — lo que amortigua el efecto sobre la producción respecto de lo que daría una economía cerrada.",
+        Gcon: "Bajaste el gasto (postura fiscal más contractiva). La producción y la tasa caen; el peso se deprecia, lo que compensa en parte la caída de la producción.",
+        Texp: "Bajaste los impuestos (postura fiscal más expansiva). Misma dirección que el gasto: sube la producción, sube la tasa, el peso se aprecia un poco — aunque el efecto es más chico que con una suba equivalente del gasto, porque parte del ingreso extra se ahorra en vez de gastarse.",
+        Tcon: "Subiste los impuestos (postura fiscal más contractiva). La producción y la tasa caen, y el peso se deprecia levemente.",
+        Mexp: "Aumentaste la oferta de dinero (postura monetaria más expansiva). La tasa de interés baja, lo que incentiva la inversión y sube la producción — y la tasa más baja también empuja capitales afuera, depreciando el peso. Esa depreciación mejora la competitividad y refuerza la suba de la producción en vez de amortiguarla.",
+        Mcon: "Redujiste la oferta de dinero (postura monetaria más contractiva). La tasa sube, la producción cae, el peso se aprecia — y esa apreciación profundiza un poco más la caída.",
+      },
+    };
+
+// ---- Estado inicial, calculado en build ----
+const initial: PolicyStance = { gStance: 0, tStance: 0, mStance: 0 };
+const eq = equilibrium(initial);
+const isPts = isCurve(initial);
+const lmPts = lmCurve(initial);
+const bpPts = bpCurve(initial);
+const isPath = curvePath(isPts);
+const lmPath = curvePath(lmPts);
+const bpPath = curvePath(bpPts);
+const marker = project(eq);
+
+// y1-24: deja lugar debajo de la etiqueta ("IS"/"LM"/"BP") para su glosa
+// de una o dos palabras, 15px más abajo.
+const clampY = (y: number) => Math.min(PLOT.y1 - 24, Math.max(PLOT.y0 + 10, y));
+const resolvedLabels = resolveLabelYs([
+  { key: "is", y: clampY(yOf(isPts[isPts.length - 1].r)) },
+  { key: "lm", y: clampY(yOf(lmPts[lmPts.length - 1].r)) },
+  { key: "bp", y: clampY(yOf(bpPts[bpPts.length - 1].r)) },
+]);
+const isLabelY = resolvedLabels.is;
+const lmLabelY = resolvedLabels.lm;
+const bpLabelY = resolvedLabels.bp;
+
+const rTicks = [-5, 0, 5, 10];
+const yTicks = [300, 500, 700, 900];
+
+const fmtY = (n: number) => Math.round(n).toLocaleString(lang === "en" ? "en-US" : "es-AR");
+const fmtR = (n: number) =>
+  n.toLocaleString(lang === "en" ? "en-US" : "es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(lang === "en" ? "en-US" : "es-AR");
+---
+
+<section id="modelo" class="model-section register-ink" data-islm-model>
+  <div class="model-inner">
+
+  <div class="model-corner">
+    <span class="model-kicker">{t.kicker}</span>
+    <h2 class="model-title">{t.title}</h2>
+    <p class="model-intro">{t.intro}</p>
+  </div>
+
+  <dl class="model-defs">
+    <div class="model-def">
+      <dt style={`color: var(--chart-1)`}>{t.defIsTerm}</dt>
+      <dd>{t.defIsBody}</dd>
+    </div>
+    <div class="model-def">
+      <dt style={`color: var(--chart-3)`}>{t.defLmTerm}</dt>
+      <dd>{t.defLmBody}</dd>
+    </div>
+    <div class="model-def">
+      <dt style={`color: var(--chart-2)`}>{t.defBpTerm}</dt>
+      <dd>{t.defBpBody}</dd>
+    </div>
+  </dl>
+
+  <div class="model-visual">
+    <div class="chart-plot">
+      <span class="chart-caption">{t.chartTitle}</span>
+      <svg viewBox={`0 0 ${PLOT.x1 + 190} ${PLOT.y1 + 90}`} role="img" aria-label={t.chartTitle} preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <!-- Recorta las curvas al rectángulo de trazado: en combinaciones
+               extremas de sliders una curva puede salir de la ventana de r
+               visible y, sin este clip, invadía el margen reservado a los
+               ticks y al rótulo del eje X. -->
+          <clipPath id="islm-plot-clip">
+            <rect x={PLOT.x0} y={PLOT.y0} width={PLOT.x1 - PLOT.x0} height={PLOT.y1 - PLOT.y0} />
+          </clipPath>
+        </defs>
+
+        <text x={PLOT.x0 - 150} y={(PLOT.y0 + PLOT.y1) / 2} text-anchor="middle"
+              transform={`rotate(-90, ${PLOT.x0 - 150}, ${(PLOT.y0 + PLOT.y1) / 2})`}
+              class="axis-title" data-axis-y>{t.axisY}</text>
+
+        {rTicks.map((r) => (
+          <line x1={PLOT.x0} y1={yOf(r)} x2={PLOT.x1} y2={yOf(r)}
+                stroke="var(--border)" stroke-width="1"
+                vector-effect="non-scaling-stroke" />
+        ))}
+
+        {yTicks.map((y) => (
+          <text x={xOf(y)} y={PLOT.y1 + 22} text-anchor="middle" class="tick" data-xtick data-y={y}>{y}</text>
+        ))}
+        {rTicks.map((r) => (
+          <text x={PLOT.x0 - 12} y={yOf(r) + 4} text-anchor="end" class="tick" data-ytick data-r={r}>{r}</text>
+        ))}
+
+        <line data-guide-x x1={marker.x} y1={marker.y} x2={marker.x} y2={PLOT.y1}
+              stroke="var(--accent-rule)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6" vector-effect="non-scaling-stroke" />
+        <line data-guide-y x1={PLOT.x0} y1={marker.y} x2={marker.x} y2={marker.y}
+              stroke="var(--accent-rule)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6" vector-effect="non-scaling-stroke" />
+
+        <!-- Valores del equilibrio, marcados sobre los propios ejes y
+             atados a la posición real del cruce — se mueven con él. -->
+        <text data-eq-y-label x={marker.x} y={PLOT.y1 + 60} text-anchor="middle" class="eq-label">{t.eqYLabel(fmtY(eq.Y))}</text>
+        <text data-eq-r-label x={PLOT.x0 - 12} y={marker.y + 4} text-anchor="end" class="eq-label">{t.eqRLabel(fmtR(eq.r))}</text>
+
+        <!-- BP: balanza de pagos — recta con pendiente propia (más
+             plana que LM). SÍ se desplaza con la política: su posición
+             depende del tipo de cambio de equilibrio (igual que IS), así
+             que un cambio en G, T o M la mueve tanto como a las otras
+             dos. Las tres curvas se resuelven como un sistema simultáneo
+             (ver islm.ts) y siempre se cruzan en el mismo punto — el
+             tipo de cambio es precisamente la variable que hace que eso
+             pase. En --chart-2, no --chart-4: el tono más pálido del
+             sistema la dejaba casi invisible. El punteado (en vez de
+             sólido, como IS/LM) es sólo una convención visual para
+             distinguirla, no una señal de que esté fija. -->
+        <path data-curve-bp d={bpPath} fill="none" stroke="var(--chart-2)" stroke-width="2.5"
+              stroke-dasharray="7 5" stroke-linejoin="round" vector-effect="non-scaling-stroke" clip-path="url(#islm-plot-clip)" />
+        <text data-label-bp x={PLOT.x1 + 10} y={bpLabelY} class="curve-label" fill="var(--chart-2)">BP</text>
+        <text data-gloss-bp x={PLOT.x1 + 10} y={bpLabelY + 15} class="curve-gloss" fill="var(--text-tertiary)">{t.glossBp}</text>
+
+        <!-- IS: mercado de bienes. chart-1/chart-3 (no chart-2): en el
+             tema oscuro chart-1 y chart-2 quedan demasiado cerca en
+             luminosidad para distinguir dos líneas que se cruzan a
+             simple vista; chart-3 está más separado sin gastar el
+             dorado, reservado a "el dato que sostiene la conclusión"
+             (§3.10) — acá eso es el punto de equilibrio, no una serie. -->
+        <path data-curve-is d={isPath} fill="none" stroke="var(--chart-1)" stroke-width="2.5"
+              stroke-linejoin="round" vector-effect="non-scaling-stroke" clip-path="url(#islm-plot-clip)" />
+        <text data-label-is x={PLOT.x1 + 10} y={isLabelY} class="curve-label" fill="var(--chart-1)">IS</text>
+        <text data-gloss-is x={PLOT.x1 + 10} y={isLabelY + 15} class="curve-gloss" fill="var(--text-tertiary)">{t.glossIs}</text>
+
+        <!-- LM: mercado de dinero -->
+        <path data-curve-lm d={lmPath} fill="none" stroke="var(--chart-3)" stroke-width="2.5"
+              stroke-linejoin="round" vector-effect="non-scaling-stroke" clip-path="url(#islm-plot-clip)" />
+        <text data-label-lm x={PLOT.x1 + 10} y={lmLabelY} class="curve-label" fill="var(--chart-3)">LM</text>
+        <text data-gloss-lm x={PLOT.x1 + 10} y={lmLabelY + 15} class="curve-gloss" fill="var(--text-tertiary)">{t.glossLm}</text>
+
+        <!-- equilibrio -->
+        <rect data-marker x={marker.x - 6} y={marker.y - 6} width="12" height="12" rx="2"
+              fill="var(--accent-rule)" />
+
+        <text x={PLOT.x1} y={PLOT.y1 + 40} text-anchor="end" class="axis-title" data-axis-x>{t.axisX}</text>
+      </svg>
+    </div>
+
+    <div class="model-readout">
+      <div class="readout-stat">
+        <span class="stat-label">{t.outputLabel}</span>
+        <span class="stat-value"><span data-out="Y">{fmtY(eq.Y)}</span></span>
+        <span class="stat-unit">{t.outputUnit}</span>
+      </div>
+      <div class="readout-stat">
+        <span class="stat-label">{t.rateLabel}</span>
+        <span class="stat-value"><span data-out="r">{fmtR(eq.r)}</span><span class="stat-suffix"> %</span></span>
+        <span class="stat-note" data-zlb-note hidden={eq.r >= 0}>{t.zlbNote}</span>
+      </div>
+      <div class="readout-stat readout-accent">
+        <span class="stat-label">{t.fxLabel}</span>
+        <span class="stat-value"><span data-out="fx">{fmtFx(eq.fx)}</span></span>
+        <span class="stat-unit">{t.fxUnit}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Los controles van antes que el panel de lectura, a propósito: el
+       panel cambia de alto según cuánto texto le toque mostrar (la
+       explicación larga de un control más el resumen del estado, o sólo
+       el resumen), y si fuera al revés ese cambio de alto corría a los
+       sliders bajo el dedo/cursor del usuario justo después de soltar
+       uno. Con los controles arriba, el panel crece hacia abajo sin
+       mover nada interactivo. -->
+  <div class="model-controlbar">
+    <div class="control">
+      <div class="control-label">
+        <span>{t.gLabel}</span>
+        <span class="control-value" data-stance-tag="G">{t.neutral}</span>
+      </div>
+      <input class="range" type="range" id="islm-g" name="islm-g"
+             min="-100" max="100" step="10" value={initial.gStance} data-input="G" />
+      <div class="control-scale"><span>{t.contractive}</span><span>0</span><span>{t.expansive}</span></div>
+      <span class="control-hint">{t.gHint}</span>
+    </div>
+
+    <div class="control">
+      <div class="control-label">
+        <span>{t.tLabel}</span>
+        <span class="control-value" data-stance-tag="T">{t.neutral}</span>
+      </div>
+      <input class="range" type="range" id="islm-t" name="islm-t"
+             min="-100" max="100" step="10" value={initial.tStance} data-input="T" />
+      <div class="control-scale"><span>{t.contractive}</span><span>0</span><span>{t.expansive}</span></div>
+      <span class="control-hint">{t.tHint}</span>
+    </div>
+
+    <div class="control">
+      <div class="control-label">
+        <span>{t.mLabel}</span>
+        <span class="control-value" data-stance-tag="M">{t.neutral}</span>
+      </div>
+      <input class="range" type="range" id="islm-m" name="islm-m"
+             min="-100" max="100" step="10" value={initial.mStance} data-input="M" />
+      <div class="control-scale"><span>{t.contractive}</span><span>0</span><span>{t.expansive}</span></div>
+      <span class="control-hint">{t.mHint}</span>
+    </div>
+
+    <button type="button" class="btn btn-tertiary reset-btn" data-islm-reset>{t.reset}</button>
+  </div>
+
+  <p class="model-narrative" data-narrative>{t.intro0(fmtY(eq.Y), fmtR(eq.r))}</p>
+
+  <p class="source-line model-source"><b>{t.sourceLabel}</b> · {t.sourceText}</p>
+
+  </div>
+</section>
+
+<script>
+  import { equilibrium, isCurve, lmCurve, bpCurve, curvePath, project, yOf, PLOT, resolveLabelYs } from "../../lib/islm";
+  import type { PolicyStance } from "../../lib/islm";
+
+  const root = document.querySelector("[data-islm-model]");
+  if (root) {
+    const isEn = document.documentElement.lang === "en";
+    const localeTag = isEn ? "en-US" : "es-AR";
+    const q = (sel: string) => root.querySelector(sel);
+    const inputs = {
+      G: q('[data-input="G"]') as HTMLInputElement,
+      T: q('[data-input="T"]') as HTMLInputElement,
+      M: q('[data-input="M"]') as HTMLInputElement,
+    };
+    const out = (name: string) => q(`[data-out="${name}"]`)!;
+    const curveIsEl = q("[data-curve-is]") as SVGPathElement;
+    const curveLmEl = q("[data-curve-lm]") as SVGPathElement;
+    const curveBpEl = q("[data-curve-bp]") as SVGPathElement;
+    const labelIsEl = q("[data-label-is]") as SVGTextElement;
+    const labelLmEl = q("[data-label-lm]") as SVGTextElement;
+    const labelBpEl = q("[data-label-bp]") as SVGTextElement;
+    const glossIsEl = q("[data-gloss-is]") as SVGTextElement;
+    const glossLmEl = q("[data-gloss-lm]") as SVGTextElement;
+    const glossBpEl = q("[data-gloss-bp]") as SVGTextElement;
+    const markerEl = q("[data-marker]") as SVGRectElement;
+    const guideXEl = q("[data-guide-x]") as SVGLineElement;
+    const guideYEl = q("[data-guide-y]") as SVGLineElement;
+    const eqYLabelEl = q("[data-eq-y-label]") as SVGTextElement;
+    const eqRLabelEl = q("[data-eq-r-label]") as SVGTextElement;
+    const zlbNoteEl = q("[data-zlb-note]") as HTMLElement;
+    const narrativeEl = q("[data-narrative]") as HTMLElement;
+    const stanceTags = {
+      G: q('[data-stance-tag="G"]') as HTMLElement,
+      T: q('[data-stance-tag="T"]') as HTMLElement,
+      M: q('[data-stance-tag="M"]') as HTMLElement,
+    };
+
+    const fmtY = (n: number) => Math.round(n).toLocaleString(localeTag);
+    const fmtR = (n: number) =>
+      n.toLocaleString(localeTag, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(localeTag);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const clampY = (y: number) => Math.min(PLOT.y1 - 24, Math.max(PLOT.y0 + 10, y));
+
+    const stanceLabels = isEn
+      ? { con: "Contractionary", neu: "Neutral", exp: "Expansionary" }
+      : { con: "Contractiva", neu: "Neutral", exp: "Expansiva" };
+    const eqYLabel = (Y: string) => `Y* = ${Y}`;
+    const eqRLabel = (r: string) => `r* = ${r}`;
+
+    const moves: Record<string, string> = isEn
+      ? {
+          Gexp: "You raised spending (more expansionary fiscal stance). Higher demand pulls output and the interest rate up together. Because capital isn't perfectly mobile, only part of that push comes through the financial side: the higher rate draws in capital, the currency appreciates, and that appreciation makes exports less competitive — which softens the effect on output compared with a closed economy.",
+          Gcon: "You cut spending (more contractionary fiscal stance). Output and the rate fall; the currency depreciates, which partly offsets the drop in output.",
+          Texp: "You cut taxes (more expansionary fiscal stance). Same direction as spending: output rises, the rate rises, the currency appreciates a little — though the effect is smaller than an equivalent rise in spending, since part of the extra income gets saved rather than spent.",
+          Tcon: "You raised taxes (more contractionary fiscal stance). Output and the rate fall, and the currency depreciates slightly.",
+          Mexp: "You increased the money supply (more expansionary monetary stance). The interest rate falls, which encourages investment and raises output — and the lower rate also pushes capital abroad, depreciating the currency. That depreciation improves competitiveness, reinforcing the rise in output instead of softening it.",
+          Mcon: "You reduced the money supply (more contractionary monetary stance). The rate rises, output falls, the currency appreciates — and that appreciation deepens the fall a little further.",
+        }
+      : {
+          Gexp: "Subiste el gasto (postura fiscal más expansiva). La mayor demanda empuja la producción y la tasa de interés hacia arriba, juntas. Como el capital no es perfectamente móvil, sólo parte de ese impulso pasa por el lado financiero: la tasa más alta atrae capitales, el peso se aprecia, y esa apreciación le resta competitividad a las exportaciones — lo que amortigua el efecto sobre la producción respecto de lo que daría una economía cerrada.",
+          Gcon: "Bajaste el gasto (postura fiscal más contractiva). La producción y la tasa caen; el peso se deprecia, lo que compensa en parte la caída de la producción.",
+          Texp: "Bajaste los impuestos (postura fiscal más expansiva). Misma dirección que el gasto: sube la producción, sube la tasa, el peso se aprecia un poco — aunque el efecto es más chico que con una suba equivalente del gasto, porque parte del ingreso extra se ahorra en vez de gastarse.",
+          Tcon: "Subiste los impuestos (postura fiscal más contractiva). La producción y la tasa caen, y el peso se deprecia levemente.",
+          Mexp: "Aumentaste la oferta de dinero (postura monetaria más expansiva). La tasa de interés baja, lo que incentiva la inversión y sube la producción — y la tasa más baja también empuja capitales afuera, depreciando el peso. Esa depreciación mejora la competitividad y refuerza la suba de la producción en vez de amortiguarla.",
+          Mcon: "Redujiste la oferta de dinero (postura monetaria más contractiva). La tasa sube, la producción cae, el peso se aprecia — y esa apreciación profundiza un poco más la caída.",
+        };
+    const current = (Y: string, r: string, fx: string) =>
+      isEn ? `Output ${Y}, interest rate ${r}%, exchange rate ${fx} vs. neutral.`
+           : `Producción ${Y}, tasa de interés ${r}%, tipo de cambio ${fx} respecto del neutral.`;
+
+    let last: { key: "G" | "T" | "M"; dir: "exp" | "con" } | null = null;
+    const prevValues: PolicyStance = {
+      gStance: parseFloat(inputs.G.value),
+      tStance: parseFloat(inputs.T.value),
+      mStance: parseFloat(inputs.M.value),
+    };
+    const displayed: PolicyStance = { ...prevValues };
+
+    const setStanceTag = (key: "G" | "T" | "M", value: number) => {
+      stanceTags[key].textContent = value > 0 ? stanceLabels.exp : value < 0 ? stanceLabels.con : stanceLabels.neu;
+    };
+
+    // Pinta el chart + los tres resultados para una postura de política
+    // dada. Cada cuadro intermedio de la animación llama a esto con un
+    // `displayed` que todavía no llegó al objetivo — pero sigue siendo
+    // un equilibrio real de esos valores intermedios reales (el modelo
+    // es lineal en los tres controles), no una interpolación fabricada.
+    const draw = (stance: PolicyStance) => {
+      const eq = equilibrium(stance);
+      const isPts = isCurve(stance);
+      const lmPts = lmCurve(stance);
+      const bpPts = bpCurve(stance);
+
+      curveIsEl.setAttribute("d", curvePath(isPts));
+      curveLmEl.setAttribute("d", curvePath(lmPts));
+      curveBpEl.setAttribute("d", curvePath(bpPts));
+      const resolved = resolveLabelYs([
+        { key: "is", y: clampY(yOf(isPts[isPts.length - 1].r)) },
+        { key: "lm", y: clampY(yOf(lmPts[lmPts.length - 1].r)) },
+        { key: "bp", y: clampY(yOf(bpPts[bpPts.length - 1].r)) },
+      ]);
+      labelIsEl.setAttribute("y", String(resolved.is));
+      glossIsEl.setAttribute("y", String(resolved.is + 15));
+      labelLmEl.setAttribute("y", String(resolved.lm));
+      glossLmEl.setAttribute("y", String(resolved.lm + 15));
+      labelBpEl.setAttribute("y", String(resolved.bp));
+      glossBpEl.setAttribute("y", String(resolved.bp + 15));
+
+      const pt = project(eq);
+      markerEl.setAttribute("x", String(pt.x - 6));
+      markerEl.setAttribute("y", String(pt.y - 6));
+      guideXEl.setAttribute("x1", String(pt.x));
+      guideXEl.setAttribute("y1", String(pt.y));
+      guideXEl.setAttribute("x2", String(pt.x));
+      guideYEl.setAttribute("y1", String(pt.y));
+      guideYEl.setAttribute("x2", String(pt.x));
+      guideYEl.setAttribute("y2", String(pt.y));
+      eqYLabelEl.setAttribute("x", String(pt.x));
+      eqYLabelEl.textContent = eqYLabel(fmtY(eq.Y));
+      eqRLabelEl.setAttribute("y", String(pt.y + 4));
+      eqRLabelEl.textContent = eqRLabel(fmtR(eq.r));
+
+      out("Y").textContent = fmtY(eq.Y);
+      out("r").textContent = fmtR(eq.r);
+      out("fx").textContent = fmtFx(eq.fx);
+      zlbNoteEl.hidden = eq.r >= 0;
+    };
+
+    // Panel de lectura: explica el mecanismo del último control que se
+    // tocó, en lenguaje llano. Se actualiza cuando la animación termina,
+    // no cuadro a cuadro.
+    const updateNarrative = () => {
+      const eq = equilibrium(displayed);
+      let text = last
+        ? `${moves[`${last.key}${last.dir}`]} ${current(fmtY(eq.Y), fmtR(eq.r), fmtFx(eq.fx))}`
+        : current(fmtY(eq.Y), fmtR(eq.r), fmtFx(eq.fx));
+      narrativeEl.textContent = text;
+    };
+
+    let rafId = 0;
+    const animateTo = (target: PolicyStance) => {
+      cancelAnimationFrame(rafId);
+      if (reduced) {
+        displayed.gStance = target.gStance; displayed.tStance = target.tStance; displayed.mStance = target.mStance;
+        draw(displayed);
+        updateNarrative();
+        return;
+      }
+      const from = { ...displayed };
+      const duration = 320;
+      const start = performance.now();
+      const step = (now: number) => {
+        const p = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        displayed.gStance = from.gStance + (target.gStance - from.gStance) * eased;
+        displayed.tStance = from.tStance + (target.tStance - from.tStance) * eased;
+        displayed.mStance = from.mStance + (target.mStance - from.mStance) * eased;
+        draw(displayed);
+        if (p < 1) {
+          rafId = requestAnimationFrame(step);
+        } else {
+          displayed.gStance = target.gStance; displayed.tStance = target.tStance; displayed.mStance = target.mStance;
+          draw(displayed);
+          updateNarrative();
+        }
+      };
+      rafId = requestAnimationFrame(step);
+    };
+
+    (Object.keys(inputs) as Array<"G" | "T" | "M">).forEach((key) => {
+      const stanceKey = { G: "gStance", T: "tStance", M: "mStance" } as const;
+      inputs[key].addEventListener("input", () => {
+        const value = parseFloat(inputs[key].value);
+        const prevKey = stanceKey[key];
+        if (value !== prevValues[prevKey]) {
+          last = { key, dir: value > prevValues[prevKey] ? "exp" : "con" };
+          prevValues[prevKey] = value;
+        }
+        setStanceTag(key, value);
+        animateTo({ ...prevValues });
+      });
+    });
+
+    root.querySelector("[data-islm-reset]")?.addEventListener("click", () => {
+      inputs.G.value = "0"; inputs.T.value = "0"; inputs.M.value = "0";
+      prevValues.gStance = 0; prevValues.tStance = 0; prevValues.mStance = 0;
+      setStanceTag("G", 0); setStanceTag("T", 0); setStanceTag("M", 0);
+      last = null;
+      animateTo({ ...prevValues });
+    });
+
+    // Primer paint del cliente: reconcilia con el estado ya renderizado
+    // en el servidor (sin animar) y deja la oración de apertura
+    // (`intro0`, ya en el HTML) intacta hasta la primera interacción.
+    draw(displayed);
+  }
+</script>
+
+<style>
+  /* Respeta el sistema de márgenes del resto del sitio — antes vivía a
+     sangre completa ("sin --grid-max, sin --page-margin") y el usuario
+     lo marcó como inconsistente con el resto de la página. */
+  .model-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-7) 0;
+  }
+
+  .model-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: 0 var(--page-margin);
+    width: 100%;
+  }
+
+  .model-corner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    max-width: 72ch;
+  }
+
+  .model-kicker {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .model-title {
+    font: var(--title-m);
+    letter-spacing: var(--ls-title-m);
+    color: var(--text-primary);
+    margin: 0;
+    max-width: 30ch;
+  }
+
+  .model-intro {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 72ch;
+  }
+
+  /* ---- glosario IS/LM/BP: se lee antes del gráfico, no después ---- */
+
+  .model-defs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-5);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  @media (max-width: 719px) {
+    .model-defs { grid-template-columns: 1fr; gap: var(--space-4); }
+  }
+
+  .model-def {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .model-def dt {
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    font-weight: 600;
+  }
+
+  .model-def dd {
+    font: var(--source);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* ---- la pieza: chart + lectura de resultado ---- */
+
+  .model-visual {
+    margin-top: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 900px) {
+    .model-visual { flex-direction: row; align-items: stretch; gap: var(--space-7); }
+  }
+
+  .chart-plot {
+    position: relative;
+    width: 100%;
+    min-height: 36svh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media (min-width: 900px) {
+    .chart-plot { flex: 1 1 64%; min-height: 0; }
+  }
+
+  .chart-caption {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-3);
+  }
+
+  .chart-plot svg {
+    display: block;
+    width: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* MOBILE — el gráfico entra entero, sin arrastrar.
+     ------------------------------------------------------------------
+     Versión anterior: `min-width: 780px` + `overflow-x: auto`, con el
+     argumento de "el mismo trato que una tabla ancha". Medido en un
+     viewport real de 390px, eso daba un contenedor de 350px con un SVG
+     de 780px — 430px de scroll horizontal SIN ninguna señal de que se
+     podía arrastrar, y con el punto de equilibrio (el dato que la pieza
+     existe para mostrar) fuera de pantalla en la carga. El visitante de
+     mobile veía media curva y ningún resultado: es la "pérdida de
+     funcionalidad" que reportó el usuario, no una molestia estética.
+
+     Ahora el SVG se ajusta al ancho real y la legibilidad se recupera
+     por el otro lado: los tamaños de fuente están en unidades del
+     viewBox, así que se suben en la misma proporción en que el SVG se
+     achica (~0.31 a 390px). No se toca ninguna geometría de trazado —
+     la matemática y las posiciones son idénticas a desktop. */
+  @media (max-width: 899px) {
+    .chart-plot {
+      /* Sin min-height: el alto lo define el propio SVG por su relación
+         de aspecto. El valor fijo anterior (36svh) dejaba una franja
+         muerta debajo del gráfico en mobile, verificada en captura. */
+      min-height: 0;
+    }
+
+    .chart-plot svg {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .tick { font-size: 34px; }
+    .axis-title { font-size: 30px; }
+    .eq-label { font-size: 30px; }
+    .curve-label { font-size: 44px; }
+
+    /* El rótulo del eje X vive 18 unidades debajo de los ticks, holgura
+       calculada para su tamaño de desktop (20). A 30 el texto crece lo
+       suficiente como para que "PRODUCTO (Y)" se monte sobre el tick
+       "900", que cae justo dentro de su tramo horizontal — verificado
+       en captura. Se baja a la fila libre que queda entre la de la
+       cifra de equilibrio y el borde del viewBox, en vez de achicar el
+       rótulo de nuevo hasta volverlo ilegible.
+       (transform en unidades de usuario del SVG, no píxeles de
+       pantalla: la geometría inline del markup no se toca, así que
+       desktop queda idéntico.) */
+    [data-axis-x] { transform: translate(0, 38px); }
+
+    /* La glosa de cada curva ("mercado de bienes", etc.) vive en el
+       margen derecho del viewBox, que a esta escala son ~59px reales:
+       no entra sin pisar la curva. No se pierde información — el bloque
+       de definiciones IS/LM/BP quedó JUSTO ARRIBA del gráfico y dice
+       exactamente lo mismo con más detalle. */
+    .curve-gloss { display: none; }
+  }
+
+  /* Tamaños en unidades del viewBox del SVG, no píxeles reales: el
+     gráfico se escala hacia abajo para caber en el contenedor (~0.6-0.7x
+     en los anchos típicos de esta sección), así que un font-size "normal"
+     terminaba renderizando por debajo de 10px reales — la queja de
+     "fuentes muy chicas" del usuario. Estos valores están calibrados
+     para dar ~14-20px reales después de esa reducción, verificado con
+     captura de pantalla, no adivinado. */
+  .tick {
+    font-family: var(--font-data);
+    font-size: 22px;
+    fill: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Rótulo de eje anclado dentro del propio SVG, junto al eje real — no
+     como elemento HTML aparte flotando en otra fila (el usuario lo
+     reportó "en cualquier lado"). El eje Y va rotado y centrado sobre el
+     alto del área de trazado, pegado al eje que describe, en vez de un
+     texto horizontal suelto arriba del gráfico. */
+  .axis-title {
+    font-family: var(--font-ui);
+    font-size: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--text-tertiary);
+  }
+
+  /* Valor del equilibrio marcado sobre el eje — distinto de un tick
+     normal: dorado, un poco más grande, se mueve con el cruce real. */
+  .eq-label {
+    font-family: var(--font-data);
+    font-size: 21px;
+    font-weight: 600;
+    fill: var(--accent-rule);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .curve-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 28px;
+    dominant-baseline: middle;
+  }
+
+  .curve-gloss {
+    font-family: var(--font-ui);
+    font-size: 20px;
+    dominant-baseline: middle;
+  }
+
+  /* Lectura de resultado: tres cifras — el modelo tiene tres salidas
+     (producción, tasa, tipo de cambio), no una sola "hero number". */
+  .model-readout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  @media (min-width: 900px) {
+    .model-readout {
+      flex: 0 0 32%;
+      grid-template-columns: 1fr;
+      gap: var(--space-5);
+      align-content: center;
+      padding-top: 0;
+      border-top: none;
+      border-left: var(--hairline) solid var(--border);
+      padding-left: var(--space-6);
+    }
+  }
+
+  .readout-stat:first-child { grid-column: 1 / -1; }
+
+  .readout-stat {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .stat-label {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .stat-value {
+    font-family: var(--font-data);
+    font-size: clamp(30px, 3.6vw, 48px);
+    line-height: 0.95;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .readout-accent .stat-value { color: var(--accent-rule); }
+
+  .stat-suffix { font-variant-numeric: normal; }
+
+  .stat-unit {
+    display: block;
+    font: var(--source);
+    font-size: 14px;
+    color: var(--text-tertiary);
+    max-width: 32ch;
+  }
+
+  /* Aparece sólo cuando la tasa cruza cero — el modelo es lineal y no
+     tiene piso, así que el visitante necesita el aviso justo cuando la
+     lectura entra en un terreno sin precedente real, no como letra
+     chica siempre presente. Sin color de alerta nuevo: mismo tono que
+     stat-unit, itálica para diferenciarla de una unidad de medida. */
+  .stat-note {
+    display: block;
+    font: var(--source);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--text-tertiary);
+    max-width: 32ch;
+    margin-top: var(--space-1);
+  }
+
+  .stat-note[hidden] { display: none; }
+
+  /* ---- panel de lectura en lenguaje llano ---- */
+
+  .model-narrative {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    width: 100%;
+    margin: var(--space-5) 0 0;
+    padding: var(--space-5);
+    background: var(--surface);
+    border-left: var(--rule) solid var(--accent-rule);
+    min-height: 1.5em;
+  }
+
+  /* ---- barra de controles ---- */
+
+  .model-controlbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-6);
+    margin-top: var(--space-6);
+    padding: var(--space-5) 0;
+    border-top: var(--rule) solid var(--accent-rule);
+  }
+
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 220px;
+    flex: 1 1 220px;
+  }
+
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-2);
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    color: var(--text-secondary);
+  }
+
+  .control-value {
+    font: var(--data-s);
+    color: var(--accent-rule);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .control-scale {
+    display: flex;
+    justify-content: space-between;
+    font: var(--source);
+    font-size: 14px;
+    color: var(--text-tertiary);
+  }
+
+  .control-hint {
+    font: var(--source);
+    font-size: 14px;
+    color: var(--text-tertiary);
+  }
+
+  .reset-btn { margin-left: auto; align-self: flex-start; }
+
+  .model-source {
+    width: 100%;
+    margin: var(--space-5) 0 0;
+  }
+
+  /* ============================================================
+     MOBILE — sólo por debajo de 640px. Nada de este bloque afecta
+     laptop/desktop.
+     ============================================================ */
+  @media (max-width: 639px) {
+    /* Una columna, no dos. En dos columnas la fila la estira el
+       stat con la leyenda más larga (el tipo de cambio, cinco
+       renglones de unidad) y el de al lado queda con un hueco
+       vacío del mismo alto — verificado en captura a 390px. */
+    .model-readout {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+
+    /* La leyenda de unidad ya no compite por media pantalla:
+       puede usar el ancho completo de la columna. */
+    .stat-unit,
+    .stat-note { max-width: none; }
+
+    /* Los tres controles apilados a ancho completo. `min-width:
+       220px` con `flex: 1 1 220px` funcionaba en desktop (tres en
+       fila) pero en 390px - 40px de margen deja 350px: entraba uno
+       solo por fila igual, con el reparto de sobras del flex
+       metiendo saltos irregulares entre ellos. */
+    .control {
+      min-width: 0;
+      flex: 1 1 100%;
+    }
+
+    .model-controlbar { gap: var(--space-5); }
+
+    /* A ancho completo y con área táctil real: `margin-left: auto`
+       lo mandaba al extremo derecho de la barra, donde el botón
+       flotante de WhatsApp lo pisaba.
+       Con borde, además: a ancho completo y sin fondo (es un botón
+       terciario) quedaba como una palabra suelta y centrada en medio
+       de un vacío, sin leerse como control. El borde es el mismo
+       tratamiento que ya usa .btn-secondary — vocabulario existente,
+       no una variante nueva. */
+    .reset-btn {
+      margin-left: 0;
+      align-self: stretch;
+      width: 100%;
+      border-color: var(--border-strong);
+    }
+
+    /* El pulgar del slider necesita área táctil de dedo, no de
+       puntero. 44px es el mínimo de las guías de accesibilidad
+       táctil; el track sigue viéndose fino. */
+    .model-controlbar .range { padding-block: 11px; }
+  }
+</style>

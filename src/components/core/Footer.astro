@@ -1,178 +1,235 @@
 ---
-// Footer.astro - Pie de página plano, sin blur/gradiente, con divisor de nodo (§3.11).
-import logoBlack from "../../assets/media/logos/logo_black_cropped.png";
-import logoWhite from "../../assets/media/logos/logo_white_cropped.png";
-import isotypeBlack from "../../assets/media/logos/isotype_black_cropped.png";
-import isotypeWhite from "../../assets/media/logos/isotype_white_cropped.png";
+// Footer.astro — pie del sitio, dirección "panel técnico" (elegida
+// explícitamente por el usuario entre dos opciones — la otra era un cierre
+// editorial silencioso, tipo colofón de revista).
+//
+// Historial de esta pieza, para no repetir los mismos dos pasos en falso:
+// 1er intento — sólo cambiar puntuación/tipografía sobre el mismo
+//    esqueleto flexbox de siempre (identidad izquierda, links derecha).
+//    El usuario lo señaló como indistinguible del footer viejo.
+// 2do intento — sumar `.register-invert` (banda de color siempre contraria
+//    al tema, mismo mecanismo que usaba la consola del viejo mapa del
+//    sitio). Es una mejora real pero seguía siendo "el mismo layout con
+//    otro fondo" — el usuario lo rechazó explícitamente por eso.
+// 3ero (éste) — la pieza que faltaba es ESTRUCTURA, no color: el
+// contenido ahora vive dentro de un panel real con borde, barra de título
+// (mismo patrón `<header>` + punto + label que cada panel de
+// BootTerminal.astro) y tres columnas separadas por líneas verticales, no
+// bloques flexbox sueltos. `.register-invert` se mantiene — la banda de
+// color le da atmósfera, el panel con grilla le da estructura; ninguna de
+// las dos cosas sola alcanzaba.
+import logoOnLight from "../../assets/media/logos/logo_black_cropped.png";
+import logoOnDark from "../../assets/media/logos/logo_white_cropped.png";
 
 interface Props {
   lang?: "es" | "en";
 }
 const { lang = "es" } = Astro.props;
 
-const copy = {
-  es: {
-    ariaHome: "Volver al inicio",
-    tag: "Economía · BI · Finanzas · Tecnología estratégica",
-    desc: "Rigurosidad cuantitativa, analítica de datos y visión financiera corporativa aplicadas a decisiones estratégicas de alto impacto.",
-    navHeading: "Navegación",
-    ariaNav: "Navegación del pie de página",
-    home: "Inicio",
-    projects: "Proyectos",
-    contact: "Contacto",
-    connectHeading: "Conectar",
-    copyright: "Todos los derechos reservados.",
-  },
-  en: {
-    ariaHome: "Back to home",
-    tag: "Economics · BI · Finance · Strategic technology",
-    desc: "Quantitative rigor, data analytics and corporate financial vision applied to high-impact strategic decisions.",
-    navHeading: "Navigation",
-    ariaNav: "Footer navigation",
-    home: "Home",
-    projects: "Projects",
-    contact: "Contact",
-    connectHeading: "Connect",
-    copyright: "All rights reserved.",
-  },
-} as const;
+const t = lang === "en"
+  ? {
+      ariaHome: "Back to home",
+      titlebar: "TOMASRAU.AR",
+      tag: "Economics · Capital markets · Quantitative research",
+      desc: "Quantitative rigor, data architecture and financial judgement applied to decisions that carry consequence.",
+      navHeading: "Sections",
+      ariaNav: "Footer navigation",
+      nav: [
+        { id: "research", label: "Research" },
+        { id: "metodo", label: "Method" },
+        { id: "modelo", label: "Model" },
+        { id: "trayectoria", label: "Trajectory" },
+        { id: "contacto", label: "Contact" },
+      ],
+      channelsHeading: "Elsewhere",
+      copyright: "All rights reserved.",
+    }
+  : {
+      ariaHome: "Volver al inicio",
+      titlebar: "TOMASRAU.AR",
+      tag: "Economía · Mercados de capitales · Research cuantitativo",
+      desc: "Rigor cuantitativo, arquitectura de datos y criterio financiero aplicados a decisiones que tienen consecuencia.",
+      navHeading: "Secciones",
+      ariaNav: "Navegación del pie de página",
+      nav: [
+        { id: "research", label: "Research" },
+        { id: "metodo", label: "Método" },
+        { id: "modelo", label: "Modelo" },
+        { id: "trayectoria", label: "Trayectoria" },
+        { id: "contacto", label: "Contacto" },
+      ],
+      channelsHeading: "En otros lados",
+      copyright: "Todos los derechos reservados.",
+    };
 
-const t = copy[lang];
+// Contacto como dato real (kicker + valor), no sólo el nombre del canal —
+// mismo patrón que cualquier campo de un panel del sitio (BootTerminal, el
+// panel de riesgo del modelo).
+const channels = [
+  { kicker: "EMAIL", value: "tomasrau@lorenz.ar", href: "mailto:tomasrau@lorenz.ar", external: false },
+  { kicker: "LINKEDIN", value: "tomasezequielrau", href: "https://www.linkedin.com/in/tomasezequielrau", external: true },
+  { kicker: "GITHUB", value: "tomasrau", href: "https://github.com/tomasrau", external: true },
+  { kicker: "INSTAGRAM", value: "tommyrau_", href: "https://www.instagram.com/tommyrau_/", external: true },
+];
+
 const currentYear = new Date().getFullYear();
 ---
 
-<footer class="site-footer">
-  <div class="node-divider" aria-hidden="true">
-    <span class="node-dot"></span>
-    <span class="node-line"></span>
-  </div>
+<footer class="site-footer register-invert">
+  <div class="footer-frame">
 
-  <div class="footer-inner">
+    <header class="footer-titlebar">
+      <span class="footer-dot" aria-hidden="true"></span>
+      <span class="footer-titlebar-label">{t.titlebar}</span>
+    </header>
 
-    <div class="footer-top">
-      <div class="footer-identity">
-        <a href="#inicio" class="brand" aria-label={t.ariaHome}>
-          <span class="brand-lockup" aria-hidden="true">
-            <img class="brand-logo brand-logo-dark" src={logoWhite.src} alt="" width={logoWhite.width} height={logoWhite.height} loading="lazy" decoding="async" />
-            <img class="brand-logo brand-logo-light" src={logoBlack.src} alt="" width={logoBlack.width} height={logoBlack.height} loading="lazy" decoding="async" />
+    <div class="footer-grid">
+      <div class="footer-col footer-col-identity">
+        <a href="#inicio" class="brand-mark-link" aria-label={t.ariaHome}>
+          <span class="brand-mark" aria-hidden="true">
+            <img class="brand-ink brand-ink-on-light" src={logoOnLight.src} alt="" width={logoOnLight.width} height={logoOnLight.height} loading="lazy" decoding="async" />
+            <img class="brand-ink brand-ink-on-dark" src={logoOnDark.src} alt="" width={logoOnDark.width} height={logoOnDark.height} loading="lazy" decoding="async" />
           </span>
         </a>
         <span class="brand-tag">{t.tag}</span>
         <p class="footer-desc">{t.desc}</p>
       </div>
 
-      <div class="footer-links">
-        <div class="link-group">
-          <span class="link-heading">{t.navHeading}</span>
-          <nav class="link-list" aria-label={t.ariaNav}>
-            <a href="#inicio" class="footer-link">{t.home}</a>
-            <a href="#expertise" class="footer-link">Expertise</a>
-            <a href="#proyectos" class="footer-link">{t.projects}</a>
-            <a href="#contacto" class="footer-link">{t.contact}</a>
-          </nav>
-        </div>
+      <div class="footer-col footer-col-nav">
+        <span class="footer-col-heading">{t.navHeading}</span>
+        <nav class="footer-nav-list" aria-label={t.ariaNav}>
+          {t.nav.map((item) => (
+            <a href={`#${item.id}`} class="footer-nav-link">{item.label}</a>
+          ))}
+        </nav>
+      </div>
 
-        <div class="link-group">
-          <span class="link-heading">{t.connectHeading}</span>
-          <div class="link-list">
-            <a href="https://www.linkedin.com/in/tomasezequielrau" target="_blank" rel="noopener noreferrer" class="footer-link">LinkedIn</a>
-            <a href="https://github.com/tomasrau" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
-            <a href="mailto:tomasrau@lorenz.ar" class="footer-link">Email</a>
-          </div>
+      <div class="footer-col footer-col-contact">
+        <span class="footer-col-heading">{t.channelsHeading}</span>
+        <div class="channel-list">
+          {channels.map((ch) => (
+            <a
+              href={ch.href}
+              class="channel"
+              target={ch.external ? "_blank" : undefined}
+              rel={ch.external ? "noopener noreferrer" : undefined}
+            >
+              <span class="channel-kicker">{ch.kicker}</span>
+              <span class="channel-value">{ch.value}</span>
+            </a>
+          ))}
         </div>
       </div>
     </div>
 
-    <div class="footer-rule"></div>
-
     <div class="footer-bottom">
       <span class="copyright">&copy; {currentYear} Tomás Rau. {t.copyright}</span>
-      <span class="signature">
-        <span class="signature-mark" aria-hidden="true">
-          <img class="brand-logo brand-logo-dark" src={isotypeWhite.src} alt="" width={isotypeWhite.width} height={isotypeWhite.height} loading="lazy" decoding="async" />
-          <img class="brand-logo brand-logo-light" src={isotypeBlack.src} alt="" width={isotypeBlack.width} height={isotypeBlack.height} loading="lazy" decoding="async" />
-        </span>
-        tomasrau.ar · Quantitative Architecture
-      </span>
     </div>
 
   </div>
 </footer>
 
 <style>
+  /* La BANDA (register-invert) da atmósfera de color; el PANEL de acá
+     adentro da estructura. Margen alrededor del panel a propósito: dentro
+     de la banda, no a sangre completa — se lee como un instrumento
+     flotando en su propio registro, el mismo efecto que el mapa del sitio
+     retirado lograba con su consola, pero sin el grafo. */
   .site-footer {
     width: 100%;
     margin-top: auto;
-    background: var(--bg);
-    position: relative;
+    padding: var(--space-7) var(--page-margin);
   }
 
-  .node-divider {
+  .footer-frame {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    border: var(--hairline) solid var(--border-strong);
+    /* --surface-raised, no --surface: medido tras la revisión, la
+       diferencia bg↔surface dentro de .register-invert es de apenas ~3%
+       de luminancia — a simple vista un solo campo de color, el panel se
+       distinguía sólo por el borde. --surface-raised da un salto real. */
+    background: var(--surface-raised);
+  }
+
+  /* ---- barra de título: mismo patrón que cada <header class="term-head">
+     de BootTerminal.astro (punto + label mono), no un elemento nuevo ---- */
+
+  .footer-titlebar {
     display: flex;
     align-items: center;
-    max-width: var(--grid-max);
-    margin: 0 auto;
-    padding: 0 var(--page-margin);
+    gap: var(--space-2);
+    padding: 9px var(--space-4);
+    border-bottom: var(--hairline) solid var(--border);
+    font-family: var(--font-data);
+    font-size: 10px;
+    letter-spacing: 0.12em;
   }
 
-  .node-dot {
-    width: var(--node-dot);
-    height: var(--node-dot);
-    background: var(--text-secondary);
+  /* Pulso sostenido, no decorativo: es la misma señal de "instrumento
+     activo" que ya usaba el punto del extinto mapa del sitio — acá vive
+     local al componente porque aquel keyframe global se borró junto con
+     el grafo. */
+  @keyframes footer-dot-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.82); }
+  }
+
+  .footer-dot {
+    width: 6px;
+    height: 6px;
     flex-shrink: 0;
+    background: var(--accent-rule);
+    animation: footer-dot-pulse 2.2s var(--ease-in-out) infinite;
   }
 
-  .node-line {
-    height: var(--hairline);
-    width: 100%;
-    background: var(--border);
+  @media (prefers-reduced-motion: reduce) {
+    .footer-dot { animation: none; }
   }
 
-  .footer-inner {
-    max-width: var(--grid-max);
-    margin: 0 auto;
-    padding: var(--space-6) var(--page-margin) var(--space-6);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
+  .footer-titlebar-label {
+    color: var(--text-secondary);
+    text-transform: uppercase;
   }
 
-  .footer-top {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: var(--space-5);
+  /* ---- grilla de tres columnas reales, separadas por línea vertical —
+     no bloques flexbox flotando con espacio entre ellos ---- */
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
-  @media (min-width: 1024px) {
-    .footer-top { flex-direction: row; align-items: flex-start; }
+  @media (min-width: 900px) {
+    .footer-grid { grid-template-columns: 1.3fr 1fr 1fr; }
   }
 
-  .footer-identity {
+  .footer-col {
+    padding: var(--space-6) var(--space-5);
+    border-bottom: var(--hairline) solid var(--border);
+    min-width: 0;
+  }
+
+  @media (min-width: 900px) {
+    .footer-col {
+      border-bottom: 0;
+      border-right: var(--hairline) solid var(--border);
+    }
+    .footer-col:last-child { border-right: 0; }
+  }
+
+  .footer-col-identity {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    max-width: 28rem;
   }
 
-  .brand-lockup {
+  .brand-mark {
     position: relative;
     display: block;
-    height: 34px;
-    width: 178px;
+    height: 30px;
+    width: 158px;
   }
-
-  .brand-logo {
-    position: absolute;
-    inset: 0;
-    height: 100%;
-    width: 100%;
-    object-fit: contain;
-    object-position: left;
-  }
-
-  :root:not([data-theme="dark"]) .brand-logo-dark { opacity: 0; }
-  [data-theme="dark"] .brand-logo-light { opacity: 0; }
 
   .brand-tag {
     font: var(--label);
@@ -184,78 +241,79 @@ const currentYear = new Date().getFullYear();
   .footer-desc {
     font: var(--body-s);
     color: var(--text-secondary);
-    margin: var(--space-1) 0 0;
+    margin: var(--space-2) 0 0;
     max-width: 40ch;
   }
 
-  .footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-6) var(--space-9);
-  }
-
-  .link-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
-  .link-heading {
+  .footer-col-heading {
+    display: block;
     font: var(--label);
     letter-spacing: var(--ls-label);
     text-transform: uppercase;
     color: var(--text-tertiary);
+    margin-bottom: var(--space-4);
   }
 
-  .link-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .footer-link {
-    font: var(--ui-s);
-    color: var(--text-secondary);
-    text-decoration: none;
-  }
-
-  .footer-link:hover { color: var(--accent); }
-
-  .footer-rule {
-    height: var(--hairline);
-    background: var(--border);
-    width: 100%;
-  }
-
-  .footer-bottom {
+  .footer-nav-list {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
   }
 
-  @media (min-width: 768px) {
-    .footer-bottom { flex-direction: row; align-items: center; justify-content: space-between; }
+  .footer-nav-link {
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-in-out);
+  }
+  .footer-nav-link:hover { color: var(--accent); }
+  .footer-nav-link:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* ---- canales de contacto: kicker + valor real, no sólo el nombre del
+     canal ---- */
+
+  .channel-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .channel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-decoration: none;
+  }
+
+  .channel-kicker {
+    font-family: var(--font-data);
+    font-size: 9px;
+    letter-spacing: 0.13em;
+    color: var(--text-tertiary);
+  }
+
+  .channel-value {
+    font-family: var(--font-data);
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    transition: color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .channel:hover .channel-value { color: var(--accent); }
+  .channel:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* ---- barra inferior ---- */
+
+  .footer-bottom {
+    padding: var(--space-3) var(--space-4);
+    border-top: var(--hairline) solid var(--border-strong);
   }
 
   .copyright {
-    font: var(--ui-s);
-    color: var(--text-tertiary);
-  }
-
-  .signature {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
     font: var(--source);
     letter-spacing: var(--ls-source);
     color: var(--text-tertiary);
-  }
-
-  .signature-mark {
-    position: relative;
-    display: block;
-    height: 16px;
-    width: 16px;
-    flex-shrink: 0;
   }
 </style>

@@ -1,0 +1,442 @@
+---
+// FloatingNav.astro — navbar flotante de anclas a sección, reemplaza al
+// grafo de NavHub.astro (retirado: "no está bien logrado" — feedback
+// directo del usuario, no se itera sobre él, se saca del todo).
+//
+// Píldora horizontal anclada abajo al centro, sin radio de contenedor pero
+// sí --radius-2 porque esto es chrome/control flotante, igual que las dos
+// píldoras de Header.astro. Sólo vive en las páginas que tienen estas seis
+// secciones (los dos index de la landing) — no es chrome global como
+// Header, así que no se monta desde Layout.astro.
+//
+// A diferencia de las píldoras del Header, ÉSTA sí cambia de paleta: tiene
+// que contrastar contra la sección que tiene detrás en cada momento, no
+// sólo contra el tema del sitio (las secciones alternan .register-paper/
+// .register-ink, y el resultado en pantalla no es un simple claro/oscuro
+// por tema — ver el comentario largo en el script sobre las cuatro
+// combinaciones tema×registro).
+//
+// Tres piezas de estado, todas atadas a scroll/tema reales, ninguna
+// decorativa:
+// - Línea de progreso: fracción de la página ya scrolleada (0→1), scrub
+//   directo sin easing — igual que ReadingProgress.astro.
+// - Ocultar/mostrar: oculta mientras se baja (y durante el Hero, donde
+//   todavía no hay nada a qué "volver"), reaparece al subir.
+// - Contraste: la sección activa se detecta vía IntersectionObserver sobre
+//   una franja angosta cerca del centro del viewport (misma detección que
+//   resalta el link activo — no es motion, es un estado instantáneo, como
+//   .lang-option.is-current en Header) y decide si la píldora va clara u
+//   oscura; un MutationObserver sobre [data-theme] la recalcula si el tema
+//   cambia sin cruzar de sección.
+
+interface Props {
+  lang?: "es" | "en";
+  // Vacío (default) = anclas "#id", para usar EN la landing donde viven
+  // las secciones. Las páginas de nota ([slug].astro) no tienen esas
+  // secciones en su propio DOM — ahí hay que pasar "/" o "/en/" para que
+  // el link navegue de vuelta a la landing y salte a la sección desde ahí.
+  homeHref?: string;
+}
+const { lang = "es", homeHref = "" } = Astro.props;
+const es = lang !== "en";
+
+const links = es
+  ? [
+      { id: "research", label: "research" },
+      { id: "metodo", label: "método" },
+      { id: "modelo", label: "modelo" },
+      { id: "trayectoria", label: "trayectoria" },
+      { id: "contacto", label: "contacto" },
+    ]
+  : [
+      { id: "research", label: "research" },
+      { id: "metodo", label: "method" },
+      { id: "modelo", label: "model" },
+      { id: "trayectoria", label: "trajectory" },
+      { id: "contacto", label: "contact" },
+    ];
+
+const ariaLabel = es ? "Navegación de secciones" : "Section navigation";
+---
+
+<nav class="floatnav" id="floatNav" aria-label={ariaLabel}>
+  <ul class="floatnav-list">
+    {links.map((l) => (
+      <li>
+        <a href={`${homeHref}#${l.id}`} class="floatnav-link" data-floatnav-link data-target={l.id}>{l.label}</a>
+      </li>
+    ))}
+  </ul>
+  <span class="floatnav-track" aria-hidden="true"><span class="floatnav-fill" id="floatNavFill"></span></span>
+</nav>
+
+<style>
+  .floatnav {
+    position: fixed;
+    left: 50%;
+    bottom: var(--space-4);
+    z-index: 60;
+    transform: translate(-50%, 0);
+    max-width: calc(100vw - var(--space-5) * 2);
+
+    /* Paleta local de la píldora, deliberadamente DESACOPLADA de --theme:
+       el pedido es contraste contra lo que se ve DETRÁS, no contra el
+       nombre del tema — una sección .register-ink en tema CLARO es tan
+       oscura en pantalla como cualquier sección en tema oscuro, y ahí la
+       píldora tiene que seguir siendo clara igual (el intento anterior,
+       que sólo tomaba el registro de la sección vía var(), fallaba
+       exactamente en ese cruce). El script decide, sección por sección y
+       en cada cambio de tema, si lo que hay detrás es claro u oscuro en
+       pantalla, y alterna un solo modificador (.on-light-bg) que pisa
+       estos tokens con valores fijos — no var()s que dependan del tema. */
+    --pill-bg:     #FFFFFF;
+    --pill-border: #DDE2DF;
+    --pill-text:   #132420;
+    --pill-mute:   #5C6B66;
+    --pill-accent: #75590C;
+
+    background: var(--pill-bg);
+    border: var(--hairline) solid var(--pill-border);
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-float);
+    overflow: hidden;
+    opacity: 1;
+    visibility: visible;
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out),
+                background-color var(--dur-fast) var(--ease-in-out),
+                border-color var(--dur-fast) var(--ease-in-out),
+                visibility 0s linear 0s;
+  }
+
+  @media (min-width: 900px) {
+    .floatnav { bottom: var(--space-5); }
+  }
+
+  /* Único caso donde lo que hay detrás es realmente claro en pantalla:
+     tema claro + sección .register-paper. En los otros tres (tema oscuro
+     con cualquier registro, o tema claro sobre .register-ink) el fondo
+     real es oscuro y la píldora se queda en su paleta clara de arriba. */
+  .floatnav.on-light-bg {
+    --pill-bg:     #132420;
+    --pill-border: #3A544C;
+    --pill-text:   #E6EBE8;
+    --pill-mute:   #7A8C86;
+    --pill-accent: #C9A227;
+  }
+
+  /* Sale hacia abajo del viewport, no se desvanece en el lugar: confirma
+     que se "guardó" para más adelante, no que desapareció sin motivo. Sólo
+     la agrega el script cuando prefers-reduced-motion no está activo. */
+  .floatnav.is-hidden {
+    transform: translate(-50%, calc(100% + var(--space-5)));
+    opacity: 0;
+    visibility: hidden;
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out),
+                visibility 0s linear var(--dur-base);
+  }
+
+  .floatnav-list {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 11px var(--space-5);
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .floatnav-list::-webkit-scrollbar { display: none; }
+
+  .floatnav-list li {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .floatnav-list li:not(:last-child)::after {
+    content: "·";
+    margin: 0 10px;
+    color: var(--pill-mute);
+  }
+
+  .floatnav-link {
+    font-family: var(--font-data);
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: var(--pill-mute);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-in-out);
+  }
+  .floatnav-link:hover { color: var(--pill-text); }
+  .floatnav-link:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+  /* --pill-accent es siempre la variante tinta/segura del dorado para SU
+     propio fondo (#75590C sobre píldora clara, #C9A227 sobre píldora
+     oscura) — nunca --accent-rule crudo como color de texto, la trampa ya
+     documentada en CLAUDE.md, ahora resuelta por fondo real y no por tema. */
+  .floatnav-link.is-active { color: var(--pill-accent); }
+
+  /* MOBILE — dos filas, no scroll horizontal escondido.
+     ------------------------------------------------------------------
+     Cinco anclas no entran en una fila de 390px por más que se apriete:
+     medido, 419px de contenido contra 340px útiles. Scrolleaba en
+     horizontal sin ninguna señal, y lo que quedaba afuera era
+     justamente "contacto" — la única conversión del sitio. Una función
+     escondida detrás de un gesto que nadie adivina no es una función.
+
+     Se resuelve dejando que envuelva a dos filas: entran las cinco,
+     todas visibles y tocables, sin gradiente de fade (prohibido por el
+     sistema) ni afordancia inventada. Los separadores "·" se retiran
+     acá porque con wrap caerían sueltos al final o al principio de una
+     fila; el espaciado hace el mismo trabajo cuando hay dos renglones.
+     En desktop no cambia nada: siguen en una fila con sus "·". */
+  @media (max-width: 639px) {
+    /* Ancho explícito: la píldora es un elemento fixed que se
+       dimensiona por su contenido (shrink-to-fit). Con flex-wrap y sin
+       ancho, el algoritmo la colapsa al ítem más angosto y envolvía a
+       CINCO filas (168px de alto, una columna vertical) en vez de dos
+       — medido, no supuesto. Dándole el ancho disponible envuelve
+       donde corresponde. */
+    .floatnav { width: calc(100vw - var(--space-5) * 2); }
+
+    .floatnav-list {
+      flex-wrap: wrap;
+      justify-content: center;
+      overflow-x: visible;
+      padding: var(--space-2) var(--space-4);
+      row-gap: 2px;
+      column-gap: var(--space-4);
+    }
+
+    .floatnav-list li:not(:last-child)::after { content: none; margin: 0; }
+
+    /* Padding vertical para llegar a un target táctil real: los links
+       medían 21px de alto, apretados uno contra otro — riesgo concreto
+       de tocar "modelo" queriendo "método". */
+    .floatnav-link {
+      font-size: 13px;
+      padding: 7px 2px;
+    }
+  }
+
+  .floatnav-track {
+    display: block;
+    height: 2px;
+    background: var(--pill-border);
+  }
+
+  .floatnav-fill {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: var(--accent-rule);
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+
+  /* Colchón al final del documento — piso de seguridad sin JS. El valor
+     real y ajustado se calcula en el script a partir del alto real de la
+     píldora y del umbral de revelado (ver más abajo); esto es sólo el
+     fallback si el script no corriera.
+
+     Va sobre .site-footer (Footer.astro), NO sobre <body>: paddear el
+     body deja un tramo de fondo de PÁGINA (claro) después de la banda
+     oscura del footer — un rectángulo huérfano sin sentido visual
+     ("el footer debe cerrar la página", feedback directo del usuario). El
+     colchón tiene que quedar DENTRO de la banda del footer, extendiendo su
+     propio fondo, no después de ella. `padding-bottom` puntual (no el
+     shorthand `padding`) para no pisar el resto del padding que ya fija
+     Footer.astro. */
+  /* Selector con especificidad de sobra a propósito (elemento + dos
+     clases): .site-footer ya trae su propio padding-bottom vía shorthand
+     en Footer.astro con especificidad de clase+atributo-de-scope de
+     Astro — un solo `.site-footer` acá podía perder ese empate según el
+     orden de carga entre componentes, el mismo problema de cascada ya
+     resuelto antes esta sesión con `html[data-theme]` en NavHub. */
+  :global(footer.site-footer.register-invert) {
+    padding-bottom: calc(var(--space-7) + var(--space-9));
+  }
+</style>
+
+<script>
+  import gsap from "gsap";
+  import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  const nav = document.getElementById("floatNav");
+  const fill = document.getElementById("floatNavFill");
+  const hero = document.getElementById("inicio");
+
+  if (nav && fill) {
+    const mm = gsap.matchMedia();
+
+    /* Revelar recién a ~56px de subida sostenida, no en el primer tick en
+       que ScrollTrigger.direction cambia de signo: con momentum scrolling
+       (trackpad) el frenado real tiene micro-correcciones hacia arriba de
+       1-2px, y reaccionar a esas hacía que la píldora apareciera de forma
+       errática, aterrizando encima de lo que se estaba leyendo (hallazgo
+       del crítico: tapaba una card de Research y los bullets de Contacto).
+       Bajar sigue ocultando al instante — ocultar nunca tapa nada. */
+    const UP_REVEAL_PX = 56;
+
+    /* Colchón al final del documento, calculado (no adivinado): alto de la
+       píldora + su offset al piso del viewport + el umbral de revelado +
+       margen — así nunca tapa contenido real al llegar al final y subir un
+       poco. `visibility: hidden` conserva el layout, así que medir
+       offsetHeight es válido esté oculta o no.
+
+       Va sobre el <footer>, NO sobre <body>: paddear el body deja un tramo
+       de fondo de PÁGINA (claro) después de la banda oscura del footer —
+       un rectángulo huérfano sin sentido visual, "el footer debe cerrar la
+       página" (feedback directo del usuario). El colchón tiene que quedar
+       DENTRO de la banda del footer, extendiendo su propio fondo. Si no
+       hay <footer> en la página (no debería pasar, pero por las dudas),
+       cae de nuevo sobre <body>. */
+    const navBottomOffset = parseFloat(getComputedStyle(nav).bottom) || 24;
+    const cushion = Math.ceil(nav.offsetHeight + navBottomOffset + UP_REVEAL_PX + 24);
+    const cushionTarget = document.querySelector<HTMLElement>("footer.site-footer") ?? document.body;
+    cushionTarget.style.paddingBottom = `${cushion}px`;
+
+    mm.add(
+      {
+        reduced: "(prefers-reduced-motion: reduce)",
+        full: "(prefers-reduced-motion: no-preference)",
+      },
+      (context: any) => {
+        const { reduced } = context.conditions as { reduced: boolean };
+        let hideY: number | null = null;
+
+        const update = (self: any) => {
+          // Con reduced-motion, misma convención que ReadingProgress.astro:
+          // se pinta al 100% y no anima — no hay scrub que confirmar.
+          gsap.set(fill, { scaleX: reduced ? 1 : self.progress });
+
+          const y = self.scroll();
+          const pastHero = !hero || y > hero.offsetHeight * 0.6;
+
+          if (!pastHero) {
+            nav.classList.add("is-hidden");
+            hideY = y;
+            return;
+          }
+
+          // Sin motion: visible en cuanto se deja atrás el Hero, sin el
+          // vaivén de ocultar/mostrar por dirección (esa alternancia ES el
+          // motion que la preferencia pide evitar).
+          if (reduced) {
+            nav.classList.remove("is-hidden");
+            return;
+          }
+
+          if (self.direction === 1) {
+            // Se reancla en CADA tick de bajada, no sólo en la transición
+            // visible→oculto — si no, tras el primer ocultamiento (al
+            // dejar el Hero) quedaba clavado ahí para siempre y el umbral
+            // de más abajo nunca se cumplía por más que se subiera.
+            hideY = y;
+            nav.classList.add("is-hidden");
+          } else if (self.direction === -1 && hideY !== null && hideY - y >= UP_REVEAL_PX) {
+            nav.classList.remove("is-hidden");
+          }
+        };
+
+        const st = ScrollTrigger.create({
+          trigger: document.body,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: !reduced,
+          onUpdate: update,
+          onRefresh: update,
+        });
+
+        return () => st.kill();
+      }
+    );
+
+    // Estado activo: instantáneo, no es una animación — no depende de
+    // prefers-reduced-motion (igual que .lang-option.is-current).
+    const navLinks = Array.from(nav.querySelectorAll<HTMLAnchorElement>("[data-floatnav-link]"));
+    const sections = navLinks
+      .map((a) => document.getElementById(a.dataset.target ?? ""))
+      .filter((el): el is HTMLElement => Boolean(el));
+
+    /* Contraste real contra lo que hay DETRÁS, no contra el nombre del
+       tema. Las cuatro combinaciones posibles de tema × registro:
+         - tema claro  + .register-paper → sección CLARA  → píldora oscura
+         - tema claro  + .register-ink   → sección oscura → píldora clara
+         - tema oscuro + .register-paper → sección oscura → píldora clara
+         - tema oscuro + .register-ink   → sección oscura → píldora clara
+       Sólo la primera combinación tiene una sección realmente clara en
+       pantalla — las otras tres son oscuras aunque el tema no sea
+       "oscuro". Un primer intento asumía que .register-ink ya alcanzaba
+       para decidir esto (tomando sus propios tokens vía var()), pero esos
+       tokens siguen atados a --theme y en tema oscuro seguían dando un
+       fondo oscuro sobre fondo oscuro — el bug que señaló el usuario. Acá
+       se decide con valores fijos (ver --pill-* arriba), no var()s. */
+    const isDarkTheme = () => document.documentElement.dataset.theme === "dark";
+    /* Arranca en <body>, no en null: en las páginas de nota ([slug].astro)
+       no existen las secciones que el observer más abajo busca (research,
+       metodo, etc. no están en ese DOM), así que nunca se dispararía un
+       primer "entry.isIntersecting" y la píldora se hubiera quedado
+       pegada al estado por defecto sin importar el fondo real. <body>
+       nunca lleva .register-ink, así que esto evalúa correctamente "no es
+       ink" — que es la verdad ahí: la nota entera es .register-paper. */
+    let activeSection: Element = document.body;
+
+    const updateContrast = () => {
+      const isInk = activeSection.classList.contains("register-ink");
+      const sectionIsLight = !isDarkTheme() && !isInk;
+      nav.classList.toggle("on-light-bg", sectionIsLight);
+    };
+    updateContrast();
+
+    /* En mobile la lista no entra entera y scrollea en horizontal (ver
+       el bloque @media del CSS). Traer el link activo a la vista
+       convierte ese scroll oculto en algo visible: la píldora se
+       reacomoda sola mientras se avanza, y el visitante entiende que
+       hay más anclas de las que ve. En desktop entran todas y no hay
+       nada que desplazar — `scrollWidth <= clientWidth` hace que esto
+       no haga nada, sin necesidad de una media query en JS. */
+    const list = nav.querySelector<HTMLElement>(".floatnav-list");
+    const revealActive = (link: HTMLAnchorElement) => {
+      if (!list || list.scrollWidth <= list.clientWidth) return;
+      const l = link.getBoundingClientRect();
+      const c = list.getBoundingClientRect();
+      if (l.left >= c.left && l.right <= c.right) return;
+      const delta = l.left - c.left - (c.width - l.width) / 2;
+      list.scrollBy({
+        left: delta,
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      });
+    };
+
+    if ("IntersectionObserver" in window && sections.length) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const link = navLinks.find((a) => a.dataset.target === entry.target.id);
+            if (link) link.classList.toggle("is-active", entry.isIntersecting);
+            if (entry.isIntersecting) {
+              activeSection = entry.target;
+              updateContrast();
+              if (link) revealActive(link);
+            }
+          });
+        },
+        { rootMargin: "-45% 0px -45% 0px" }
+      );
+      sections.forEach((s) => io.observe(s));
+    }
+
+    // El conmutador de tema cambia data-theme en <html> sin recargar: si
+    // se toca parado en una sección, el contraste tiene que recalcularse
+    // ahí mismo, no recién al cruzar a la próxima.
+    new MutationObserver(updateContrast).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+  }
+</script>

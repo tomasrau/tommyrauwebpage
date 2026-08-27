@@ -1,0 +1,223 @@
+---
+// ResearchIndex.astro — §3.6: el índice es una LISTA, no una galería.
+// Ahora lee de la content collection `research` (src/content/research/)
+// en vez de un array hardcodeado — cada entrada linkea a su propia
+// página (/research/{routeSlug}/, /en/research/{routeSlug}/).
+
+import { getCollection } from "astro:content";
+
+interface Props {
+  lang?: "es" | "en";
+}
+const { lang = "es" } = Astro.props;
+
+const allEntries = await getCollection("research", (e) => e.data.lang === lang);
+const entries = allEntries.sort((a, b) => b.data.date.localeCompare(a.data.date));
+
+const basePath = lang === "en" ? "/en/research" : "/research";
+
+const t = lang === "en"
+  ? {
+      kicker: "Research",
+      title: "Notes on rates, macro and market structure.",
+      lead: "Short, self-contained pieces. Each states its question, its method and the data it stands on — so the reasoning can be audited, not just the conclusion.",
+      empty: "No notes published yet. The first one will state its question, its method and the data it stands on, like any other.",
+      readTime: "min read",
+    }
+  : {
+      kicker: "Research",
+      title: "Notas sobre tasas, macro y estructura de mercado.",
+      lead: "Piezas breves y autocontenidas. Cada una declara su pregunta, su método y los datos sobre los que se apoya — para que se pueda auditar el razonamiento, no sólo la conclusión.",
+      empty: "Todavía no hay notas publicadas. La primera va a declarar su pregunta, su método y los datos en los que se apoya, como cualquier otra.",
+      readTime: "min de lectura",
+    };
+---
+
+<section id="research" class="section register-ink">
+  <div class="chapter-body">
+    <div class="research-inner" data-reveal>
+    <div class="research-head">
+      <span class="eyebrow">{t.kicker}</span>
+      <h2 class="research-title">{t.title}</h2>
+      <p class="research-lead">{t.lead}</p>
+    </div>
+
+    {entries.length === 0 && <p class="research-empty">{t.empty}</p>}
+
+    <!-- Las entradas van todas con el mismo tratamiento — antes la primera
+         se "promovía" a una tarjeta destacada (jerarquía tipo portada de
+         boletín), pero con contenido real esa diferencia se leía como una
+         inconsistencia de diseño, no como una decisión (feedback directo
+         del usuario). El orden es por fecha descendente (más reciente
+         primero); `featured` ya no decide el orden. -->
+    {entries.length > 0 && (
+      <ol class="research-list">
+        {entries.map((entry, i) => (
+          <li>
+            <a
+              class="entry"
+              href={`${basePath}/${entry.data.routeSlug}/`}
+            >
+              <span class="entry-num">{String(i + 1).padStart(2, "0")}</span>
+
+              <div class="entry-body">
+                <h3 class="entry-title">
+                  <span class="entry-node" aria-hidden="true"></span>
+                  {entry.data.title}
+                </h3>
+                <p class="entry-summary">{entry.data.summary}</p>
+                <div class="entry-tags">
+                  {entry.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+                </div>
+              </div>
+
+              <div class="entry-meta">
+                <span class="entry-date">{entry.data.date}</span>
+                <span class="entry-read">{entry.data.readMinutes} {t.readTime}</span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ol>
+    )}
+    </div>
+  </div>
+</section>
+
+<style>
+  .research-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-8) var(--page-margin) 0;
+  }
+
+
+  .research-head { margin-bottom: var(--space-6); max-width: var(--col-read); }
+
+  /* Estado honesto cuando todavía no hay notas — nunca contenido de
+     ejemplo disfrazado de real. Mismo criterio que el placeholder de
+     MediaFrame: decir con claridad qué falta, no simular que ya está. */
+  .research-empty {
+    font: var(--body-s);
+    color: var(--text-tertiary);
+    max-width: 52ch;
+    padding: var(--space-5) 0;
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .research-title {
+    font: var(--title-l);
+    letter-spacing: var(--ls-title-l);
+    color: var(--text-primary);
+    margin: var(--space-3) 0 0;
+    max-width: 20ch;
+    text-wrap: balance;
+  }
+
+  .research-lead {
+    font: var(--lead);
+    color: var(--text-secondary);
+    margin: var(--space-4) 0 var(--space-5);
+    max-width: 52ch;
+  }
+
+  .research-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .entry {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-5) 0;
+    text-decoration: none;
+    color: inherit;
+    transition: background-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  li {
+    border-bottom: var(--hairline) solid var(--border);
+  }
+
+  @media (min-width: 900px) {
+    .entry {
+      grid-template-columns: 64px 1fr 150px;
+      gap: var(--space-5);
+      align-items: baseline;
+      padding: var(--space-5) var(--space-4);
+    }
+  }
+
+  .entry:hover { background: var(--surface); }
+
+  .entry-num {
+    font: var(--data-s);
+    color: var(--text-tertiary);
+  }
+
+  .entry-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .entry-title {
+    position: relative;
+    font: var(--title-m);
+    letter-spacing: var(--ls-title-m);
+    color: var(--text-primary);
+    margin: 0;
+    max-width: 34ch;
+    text-wrap: balance;
+  }
+
+  /* Nodo que aparece al hacer hover, a la izquierda del título (§3.6) */
+  .entry-node {
+    position: absolute;
+    left: calc(var(--space-4) * -1);
+    top: 0.62em;
+    width: var(--node-dot);
+    height: var(--node-dot);
+    background: var(--accent-rule);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-in-out);
+  }
+
+  .entry:hover .entry-node { opacity: 1; }
+
+  .entry-summary {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  .entry-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .entry-meta {
+    display: flex;
+    gap: var(--space-4);
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    color: var(--text-tertiary);
+  }
+
+  @media (min-width: 900px) {
+    .entry-meta {
+      flex-direction: column;
+      gap: var(--space-1);
+      text-align: right;
+      align-items: flex-end;
+    }
+  }
+
+  .entry-read { font: var(--data-s); color: var(--text-tertiary); }
+</style>

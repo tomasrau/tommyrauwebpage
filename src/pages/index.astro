@@ -1,193 +1,25 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import VisualGrid from "../components/core/VisualGrid.astro";
-import FocusPanel from "../components/ui/FocusPanel.astro";
-import Metric from "../components/ui/Metric.astro";
-import About from "../components/sections/About.astro";
-import CaseStudies from "../components/sections/CaseStudies.astro";
+import Hero from "../components/sections/Hero.astro";
+import FloatingNav from "../components/core/FloatingNav.astro";
+import ResearchIndex from "../components/sections/ResearchIndex.astro";
+import Method from "../components/sections/Method.astro";
+import ISLMModel from "../components/sections/ISLMModel.astro";
 import Experience from "../components/sections/Experience.astro";
 import Contact from "../components/sections/Contact.astro";
-
-const focusItems = [
-  { label: "Economía aplicada" },
-  { label: "Arquitectura BI" },
-  { label: "Analítica financiera" },
-  { label: "Estrategia tecnológica" },
-];
 ---
 
 <Layout
   lang="es"
   alternateUrl="/en/"
-  title="Tomás Rau | Economía, Business Intelligence y Analítica Financiera"
-  description="Economista especializado en Business Intelligence, analítica financiera, estrategia tecnológica y toma de decisiones basada en datos."
+  title="Tomás Rau | Research cuantitativo, mercados de capitales y analítica financiera"
+  description="Economista especializado en research cuantitativo, mercados de capitales y la arquitectura de datos que sostiene el análisis financiero."
 >
-  <section id="inicio" class="hero">
-    <VisualGrid />
-    <div class="hero-inner">
-      <div class="hero-copy">
-        <span class="eyebrow">Economía · Business Intelligence · Finanzas</span>
-
-        <h1 class="hero-heading">Economía, datos y estrategia para decisiones más inteligentes.</h1>
-
-        <p class="hero-desc">
-          Soy <strong>Tomás Rau</strong>, economista especializado en <em>Business Intelligence</em>, analítica financiera y tecnología estratégica. Diseño arquitecturas de datos, reportería avanzada y modelos cuantitativos para maximizar el valor corporativo y refinar la toma de decisiones.
-        </p>
-
-        <div class="hero-actions">
-          <a href="#proyectos" class="btn btn-primary">Ver proyectos</a>
-          <a href="#contacto" class="btn btn-secondary">Contactar</a>
-        </div>
-      </div>
-
-      <div class="hero-panel">
-        <FocusPanel
-          heading="Foco profesional"
-          value="+8 años"
-          valueLabel="BI & analítica financiera"
-          items={focusItems}
-        />
-      </div>
-    </div>
-  </section>
-
-  <section id="expertise" class="section">
-    <div class="section-inner">
-      <div class="section-header">
-        <span class="eyebrow">Capacidades estratégicas</span>
-        <h2 class="section-heading">Un perfil híbrido entre economía, datos y tecnología.</h2>
-        <p class="section-lead">
-          La integración entre razonamiento económico, arquitectura de BI, analítica financiera avanzada y decisión estratégica estructurada permite traducir grandes volúmenes de datos en ventajas competitivas reales.
-        </p>
-      </div>
-
-      <div class="metrics-grid">
-        <Metric
-          value="+8 años"
-          label="BI & Analytics"
-          tag="Arquitectura analítica"
-          description="Experiencia en reporting ejecutivo, automatización, modelos de datos y visualización avanzada."
-        />
-        <Metric
-          value="Finanzas"
-          label="Financial Analytics"
-          tag="Lectura estratégica"
-          description="Análisis de indicadores, mercados, escenarios y criterios de evaluación para decisiones financieras."
-        />
-        <Metric
-          value="Estrategia"
-          label="Tech & Business"
-          tag="Visión ejecutiva"
-          description="Diseño de soluciones digitales, procesos de transformación y sistemas de decisión basados en datos."
-        />
-        <Metric
-          value="Data-driven"
-          label="Decision Intelligence"
-          tag="Insight aplicado"
-          description="Traducción de datos complejos en narrativas, modelos y recomendaciones accionables."
-        />
-      </div>
-    </div>
-  </section>
-
-  <About />
-  <CaseStudies />
-  <Experience />
-  <Contact />
+  <Hero lang="es" />
+  <FloatingNav lang="es" />
+  <ResearchIndex lang="es" />
+  <Method lang="es" />
+  <ISLMModel lang="es" />
+  <Experience lang="es" />
+  <Contact lang="es" />
 </Layout>
-
-<style>
-  .hero {
-    position: relative;
-    width: 100%;
-    min-height: 100svh;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-  }
-
-  .hero-inner {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: var(--grid-max);
-    margin: 0 auto;
-    padding: var(--space-9) var(--page-margin);
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-8);
-    align-items: center;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-inner { grid-template-columns: 7fr 5fr; }
-  }
-
-  .hero-copy {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-  }
-
-  .hero-heading {
-    font: var(--title-xl);
-    letter-spacing: var(--ls-title-xl);
-    color: var(--text-primary);
-    margin: 0;
-    max-width: 18ch;
-  }
-
-  .hero-desc {
-    font: var(--body);
-    color: var(--text-secondary);
-    margin: 0;
-    max-width: 60ch;
-  }
-
-  .hero-desc strong {
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  .hero-desc em {
-    font-style: italic;
-    color: var(--text-primary);
-  }
-
-  .hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-2);
-  }
-
-  .hero-panel {
-    display: none;
-    justify-content: center;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-panel { display: flex; }
-  }
-
-  .section-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    max-width: 66ch;
-  }
-
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--gutter);
-  }
-
-  @media (min-width: 640px) {
-    .metrics-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  @media (min-width: 1024px) {
-    .metrics-grid { grid-template-columns: repeat(4, 1fr); }
-  }
-</style>
