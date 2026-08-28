@@ -27,9 +27,10 @@ const research = defineCollection({
     title: z.string(),
     summary: z.string(),
     tags: z.array(z.string()),
-    // Freeform a propósito: hoy son notas de ejemplo ("Borrador"/"Draft"),
-    // no hay fecha real todavía. El día que haya una nota real, este campo
-    // pasa a llevar la fecha de publicación como string legible.
+    // String freeform, no z.date(): las notas reales llevan fecha ISO
+    // ("2026-08-24") y se renderizan tal cual, pero el campo quedó
+    // abierto a propósito para poder poner "Borrador"/"Draft" en una
+    // entrada sin publicar sin tener que inventar una fecha falsa.
     date: z.string(),
     readMinutes: z.number(),
     featured: z.boolean().default(false),

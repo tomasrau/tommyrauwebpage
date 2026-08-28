@@ -14,17 +14,21 @@ source /Users/tomasrau/miniconda3/etc/profile.d/conda.sh && conda activate tommy
 
 Verificado el 2026-08-23 dentro del entorno: `node v22.22.2`, `npm 10.9.7` (`package.json` exige `node >=22.12.0`). Scripts disponibles: `dev`, `build`, `preview`, `astro`.
 
-**El conteo de páginas del build varía con el contenido, no es un número fijo a memorizar.** Llegó a 16 cuando `research`/`work` tenían entradas de ejemplo; al día de hoy (2026-08-24), con la sección Trabajo retirada entera y las notas de ejemplo de Research eliminadas (ver "Fase actual" abajo), el build produce sólo 2 páginas (`/` y `/en/`) — es el número correcto para el estado actual, no una regresión. Va a volver a crecer cuando se agreguen notas de Research reales.
+**El conteo de páginas del build varía con el contenido, no es un número fijo a memorizar.** Al 2026-08-27 el build produce **10 páginas**: `/`, `/en/` y una por cada nota de Research en cada idioma (4 notas × 2 idiomas). Llegó a estar en 2 cuando la colección quedó vacía tras la limpieza de placeholders, y a 16 cuando existía también la sección Trabajo. Cambia con el contenido — no es una métrica a vigilar.
 
 ## Git y deploy — `main` es la branch de producción
 
 `.github/workflows/deploy.yml` despliega a GitHub Pages **con `on: push: branches: [main]`** (más `workflow_dispatch` manual). O sea: **el commit local no despliega nada — el `push` sí.** Es la distinción que gobierna todo lo de abajo, y conviene no confundirla porque cambia qué es riesgoso y qué no.
 
-**Decisión del usuario (2026-08-23): no publicar hasta tener un MVP con la estructura cerrada.** Se sigue iterando el diseño sobre el working tree; recién cuando la estructura esté clara se publica. Reglas que se derivan de eso:
+**EL SITIO YA ESTÁ PUBLICADO (2026-08-27).** El rediseño completo se commiteó y pusheó en `2fedf4c`, y el workflow lo desplegó a `tomasrau.ar`. Esto **deroga la regla anterior** ("no publicar hasta tener un MVP con la estructura cerrada", 2026-08-23), que ya no aplica — si se lee en una conversación vieja, está vencida.
 
-- **Nunca `git push` sin pedirlo explícitamente.** Un push a `main` es un deploy a `tomasrau.ar` — es la acción irreversible de este repo, y hoy el sitio no está listo para mostrarse.
-- **Commitear localmente sí es seguro** y no publica nada. Si el usuario quiere checkpoints del trabajo de diseño sin publicar, esa es la vía: commits en local (o en una branch aparte), sin push.
-- **Hoy hay mucho trabajo sin commitear sobre `6f78f2f`** — todo el rediseño (Hero, FloatingNav, BootTerminal, MediaFrame, ReadingProgress, Footer, content collections, páginas `[slug]`, la limpieza de placeholders y el retiro de la sección Trabajo). Es una decisión consciente del usuario, no un olvido: no commitear por iniciativa propia, pero tenerlo presente como riesgo real de pérdida de trabajo si algo se rompe, y ofrecerlo cuando una tanda de cambios quede estable.
+Lo que cambia ahora que hay algo en producción:
+
+- **Sigue vigente: nunca `git push` sin que el usuario lo pida explícitamente.** La razón cambió pero no desapareció. Antes era "el sitio no está listo para mostrarse"; ahora es que cada push **reemplaza un sitio en vivo** que ya recibe visitas y consultas por formulario. Un push roto no queda en borrador, rompe lo que está publicado.
+- **Commitear localmente sigue siendo seguro** y no publica nada.
+- **Antes de pushear, correr `npm run build`.** El deploy no tiene red de seguridad: si el build falla en CI, la publicación queda a mitad de camino.
+
+Historial de commits relevante: `6f78f2f` (migración al sistema de marca) → `2fedf4c` (rediseño completo: Hero editorial, modelo IS-LM-BP, Research con contenido real, formulario conectado, responsividad mobile).
 
 ## Gestión de costo — prioridad del proceso, no sólo del código
 
@@ -53,16 +57,16 @@ Para cualquier tarea de diseño o implementación visual (hero, sección, págin
 
 ## Stack de animación e interacción — instalado y a disposición (2026-08-17)
 
-Antes de este stack, el sitio no tenía una sola librería de animación: todo el movimiento (`.reveal`, `.draw-in`, parallax, conteo animado) es CSS + un `IntersectionObserver`/`requestAnimationFrame` artesanal en `layouts/Layout.astro` y en el script de `SensitivityModel.astro`. Eso sigue siendo válido y no se reescribe retroactivamente sin necesidad, pero para el rediseño completo que sigue, estas herramientas están instaladas (`package.json`) y evaluadas contra el sistema de marca — **usarlas es la vía esperada, no opcional, para lo que el `IntersectionObserver` a mano no puede resolver con calidad** (orquestación de timelines, scroll scrubbing, pinning, texto que se parte en palabras/caracteres):
+El movimiento del sitio es hoy una mezcla deliberada: CSS + un `IntersectionObserver`/`requestAnimationFrame` artesanal en `layouts/Layout.astro` para `.reveal`/`[data-parallax]` y el conteo animado, más GSAP donde la orquestación lo justifica (el barrido del hero, `ReadingProgress`, la barra de progreso de `FloatingNav`). Lo artesanal sigue siendo válido y no se reescribe retroactivamente sin necesidad, pero **usar el stack instalado es la vía esperada, no opcional, para lo que el observer a mano no resuelve con calidad** (timelines, scroll scrubbing, pinning, texto partido en palabras):
 
-- **`gsap`** (incluye `ScrollTrigger`, `SplitText`, `DrawSVGPlugin` y el resto de los plugins que antes eran de pago — Webflow adquirió GreenSock en 2024 y en mayo de 2025 liberó todo el ecosistema, incluso para uso comercial). Es el motor de referencia de prácticamente todos los sitios premiados que el usuario trajo como inspiración. Reemplaza al observer artesanal cuando la orquestación lo justifique: `ScrollTrigger` para scrubbing/pinning atado a la posición de scroll, `SplitText` para revelar titulares palabra por palabra o carácter por carácter (el recurso tipográfico real que falta hoy), `DrawSVGPlugin` para que el trazo del gráfico de `Method.astro` se dibuje con control real de timing en vez del `stroke-dashoffset` manual actual.
+- **`gsap`** (incluye `ScrollTrigger`, `SplitText`, `DrawSVGPlugin` y el resto de los plugins que antes eran de pago — Webflow adquirió GreenSock en 2024 y en mayo de 2025 liberó todo el ecosistema, incluso para uso comercial). Ya está en uso real: `ScrollTrigger` con `pin` + `scrub` para el barrido del hero en desktop y mobile, `SplitText` para el revelado del titular palabra por palabra. `DrawSVGPlugin` sigue disponible pero **sin uso hoy** — el gráfico de `Method.astro` que iba a aprovecharlo se retiró.
 - **`lenis`** — scroll suave con inercia (envuelve el scroll nativo, no lo reemplaza: `position: sticky`, anchors y accesibilidad siguen funcionando). Es el "feel" presente en la mayoría de las referencias (abtc.com, icomat.co.uk, species-in-pieces.com). Se sincroniza al ticker de GSAP (`gsap.ticker.add`), no con su propio rAF, para no duplicar el loop de render.
-- **`@fontsource-variable/newsreader`, `@fontsource-variable/instrument-sans`, `@fontsource/spline-sans-mono`** — versiones self-hosted de las tres tipografías del sistema, ya en `package.json`. Cierra el pendiente que estaba anotado más abajo. **El `<link>` a Google Fonts en `layouts/Layout.astro` (línea ~90) todavía no se reemplazó por el import local** — eso es código y no se tocó en esta pasada, que fue sólo de investigación + instalación.
+- **`@fontsource-variable/newsreader`, `@fontsource-variable/instrument-sans`, `@fontsource/spline-sans-mono`** — versiones self-hosted de las tres tipografías del sistema. **Ya cableadas**: `layouts/Layout.astro` las importa en el frontmatter y no queda ningún `<link>` a Google Fonts en el proyecto (verificado 2026-08-27).
 
 **Evaluado y descartado explícitamente** (para que no se reintente sin una razón concreta y nueva):
 - **Three.js / cualquier motor WebGL** — el grafo del isotipo es estrictamente 2D, con trazos ortogonales/45°, y el sistema prohíbe iconografía 3D y gradientes. Una escena WebGL necesitaría romper esas reglas para no leerse como decorativa; no hay contenido hoy que justifique una tercera dimensión real.
 - **Alpine.js o cualquier framework de UI reactivo** — el sitio es contenido mayormente estático con JS vanilla puntual (command palette, sliders del modelo). Sumar un runtime de framework no se justifica por lo que hay que construir; sería peso sin beneficio.
-- **D3 u otra librería de charting** para el gráfico de `SensitivityModel.astro`/`Method.astro` — el sistema de diseño exige sólo segmentos rectos (nunca Bézier) y que cada vértice sea un valor efectivamente calculado, no interpolado por la librería. El SVG artesanal actual ya cumple eso mejor que una librería de charting genérica, que además tendría que forzarse para no suavizar curvas.
+- **D3 u otra librería de charting** para el gráfico del modelo interactivo — el sistema de diseño exige sólo segmentos rectos (nunca Bézier) y que cada vértice sea un valor efectivamente calculado, no interpolado por la librería. El SVG artesanal de `ISLMModel.astro` ya cumple eso mejor que una librería de charting genérica, que además tendría que forzarse para no suavizar curvas.
 
 **Reglas de uso, no negociables, para cuando se implemente con este stack:**
 - `prefers-reduced-motion` se sigue respetando sin excepción — con GSAP, vía `gsap.matchMedia()` (revierte automáticamente todas las animaciones/ScrollTriggers creados bajo esa media query cuando deja de matchear), no un chequeo disperso por componente.
@@ -74,8 +78,8 @@ Antes de este stack, el sitio no tenía una sola librería de animación: todo e
 ### Segunda pasada: gráficos interactivos, look-and-feel de terceros, otras librerías de interacción
 
 - **`fuse.js`** — instalado. Fuzzy search liviano y sin dependencias para el filtro de texto de `CommandPalette.astro` (hoy coincidencia literal). Paquete presente, **todavía no cableado** en el componente — eso es código, queda para el rediseño.
-- **Librerías de gráficos financieros (`lightweight-charts` de TradingView, `uPlot`) — evaluadas, no instaladas.** `lightweight-charts` es la más pensada para este dominio, pero su licencia Apache 2.0 exige atribución visible a TradingView en la página — un widget con logo ajeno choca con el propósito de `SensitivityModel.astro`, que existe para mostrar modelado propio, no un widget de mercado. `uPlot` no tiene esa traba y es igual de liviano. Ambas quedan como opción concreta el día que haya que graficar una serie de mercado real (no el modelo interactivo, que sigue mejor servido por el SVG artesanal) — no antes, no especulativamente.
-- **D3 modular (`d3-shape`/`d3-scale`, no el bundle completo) — evaluado, no instalado.** Corrección respecto a la primera pasada: D3 no fuerza curvas Bézier, su generador de línea por defecto (`curveLinear`) es recto. Sigue sin instalarse porque no hay tarea que lo necesite hoy — el SVG a mano de `Method.astro`/`SensitivityModel.astro` ya cumple la restricción de vértices calculados. Candidato legítimo si aparece una serie de datos nueva y más compleja que reemplace el dato ilustrativo actual.
+- **Librerías de gráficos financieros (`lightweight-charts` de TradingView, `uPlot`) — evaluadas, no instaladas.** `lightweight-charts` es la más pensada para este dominio, pero su licencia Apache 2.0 exige atribución visible a TradingView en la página — un widget con logo ajeno choca con el propósito de `ISLMModel.astro`, que existe para mostrar modelado propio, no un widget de mercado. `uPlot` no tiene esa traba y es igual de liviano. Ambas quedan como opción concreta el día que haya que graficar una serie de mercado real (no el modelo interactivo, que sigue mejor servido por el SVG artesanal) — no antes, no especulativamente.
+- **D3 modular (`d3-shape`/`d3-scale`, no el bundle completo) — evaluado, no instalado.** Corrección respecto a la primera pasada: D3 no fuerza curvas Bézier, su generador de línea por defecto (`curveLinear`) es recto. Sigue sin instalarse porque no hay tarea que lo necesite hoy — el SVG a mano de `ISLMModel.astro` ya cumple la restricción de vértices calculados. Candidato legítimo si aparece una serie de datos real y más compleja que graficar.
 - **Alpine.js — evaluado, no instalado.** Es más liviano de lo que se asumió en la primera pasada (~15kb, sin build step, declarativo vía atributos), no un framework de UI pesado tipo React/Vue. Se activaría si `ResearchIndex.astro` necesita filtrado/orden en vivo — hoy no hay esa tarea, y el JS vanilla existente (command palette, sliders) ya resuelve lo que hace falta.
 - **Floating UI (o equivalente de posicionamiento) — descartado.** En 2026, CSS Anchor Positioning + el atributo `popover` nativo (soporte baseline) cubren tooltips/popovers/dropdowns con foco y accesibilidad manejados por el navegador, sin JS. No hace falta una librería para esto.
 - **Plotly.js — evaluado, descartado.** Ni siquiera el bundle recortado (`plotly.js-basic-dist`, bar/pie/scatter) baja de ~1MB minificado (~3.5MB el completo) — desproporcionado para dos o tres gráficos en un sitio estático que ya cuida performance. Además trae chrome propio por defecto (mode bar, tooltips, leyendas) pensado para notebooks/dashboards de datos, que hay que desarmar por completo para no chocar con el sistema de marca. No fuerza curvas Bézier (las líneas son rectas salvo que se pida `shape: 'spline'`), pero eso no alcanza para justificar el peso frente a `uPlot`/D3 modular/el SVG artesanal actual, todos órdenes de magnitud más livianos.
@@ -167,16 +171,16 @@ Dos gotchas de verificación, no de producto:
 - Una captura `page.screenshot({ fullPage: true })` vía CDP renderiza toda la altura de la página sin scrollear de verdad — cualquier `[data-reveal]` fuera del viewport inicial queda con `opacity: 0` en la captura aunque en un uso real (con scroll real) se vea perfecto. Para verificar contenido con reveal, scrollear a cada sección con `scrollIntoView` y esperar antes de capturar, no confiar en un solo `fullPage`.
 - Después de agregar una importación de cliente nueva (ej. `fuse.js` en un `<script>` de componente) a mitad de sesión con el dev server ya corriendo, el optimizador de dependencias de Vite puede seguir sirviendo el bundle anterior (`504 Outdated Optimize Dep` en la consola del navegador) aunque el archivo fuente ya esté actualizado — el síntoma es que el cambio "no aparece" pese a que el código está bien. Se resuelve reiniciando el dev server con `rm -rf node_modules/.vite` antes de levantar de nuevo.
 
-## Estructura del sitio (estado real al 2026-08-24)
+## Estructura del sitio (estado real al 2026-08-27)
 
 `ChapterOpener.astro`, `ChapterRail.astro`, `NodeField.astro`, `Thread.astro` **y también `NavHub.astro`** (el grafo del mapa del sitio, sobre Cytoscape.js) **y `Work.astro`** (la sección Trabajo entera, con su content collection `work` y sus páginas `/trabajo/{slug}/`) ya no existen — se borraron. `NavHub` se reemplazó por `core/FloatingNav.astro` (ver abajo); `Work` se retiró sin reemplazo, a pedido explícito del usuario ("no está bien logrado" fue el motivo del grafo; Work se sacó como parte de una limpieza más amplia hacia contenido real, ver "Fase actual" abajo). La landing (`/`, `/en/`) sigue siendo scroll largo de una página, pero cada nota de Research tiene su propia URL, generada desde una content collection real (`src/content.config.ts`, hoy sólo `research`). Todas las secciones/páginas reciben `lang` — **no se duplica markup por idioma**.
 
 | Sección | Componente | Registro | Qué la distingue de las demás |
 |---|---|---|---|
-| Hero | `sections/Hero.astro` | paper | Composición partida real (molde: aventuradentalarts.com): columna izquierda fija de identidad + columna derecha a sangre completa con el retrato real tratado en duotono (filtro SVG `feComponentTransfer`, mapeo por luminancia). El titular cruza la costura entre columnas en dos bloques —romana e itálica—, cada uno con su propio mecanismo de contraste (`mix-blend-mode` resultó no confiable acá). Sin trama de fondo, sin eyebrow, sin par de botones |
-| Research | `sections/ResearchIndex.astro` | ink | Lee de la colección `research`; primera entrada (`featured: true`) **promovida**; cada entrada linkea a `/research/{routeSlug}/`. **Hoy vacía** (0 entradas, se retiraron las de ejemplo) — muestra un estado honesto (`.research-empty`), no una lista rota |
+| Hero | `sections/Hero.astro` | paper | Composición partida real (molde: aventuradentalarts.com): columna izquierda fija de identidad + columna derecha a sangre completa con el retrato real tratado en duotono (filtro SVG `feComponentTransfer`, mapeo por luminancia). El titular cruza la costura entre columnas en dos bloques —romana e itálica—, cada uno con su propio mecanismo de contraste (`mix-blend-mode` resultó no confiable acá). Sin trama de fondo, sin eyebrow, sin botones. Barrido cinemático al scroll en desktop **y en mobile** (ver abajo) |
+| Research | `sections/ResearchIndex.astro` | ink | Lee de la colección `research`; primera entrada (`featured: true`) **promovida**; cada entrada linkea a `/research/{routeSlug}/`. **Hoy con 4 notas reales** × 2 idiomas. El estado vacío (`.research-empty`) sigue en el código, condicional a `entries.length` — no se borró, sólo dejó de mostrarse |
 | Método | `sections/Method.astro` | paper | Título integrado al tope de la columna de lectura (sin bloque de header separado). **Ya no lleva gráfico** — el gráfico ilustrativo (§3.10) se retiró entero junto con el resto de los placeholders; sólo el texto real de método queda |
-| Modelo | `sections/SensitivityModel.astro` | ink | Sangre completa, sin `--grid-max`/`--page-margin`. Cifra dorada de hasta 128px con conteo animado (ver abajo) |
+| Modelo | `sections/ISLMModel.astro` | ink | Modelo IS-LM-BP interactivo (Mundell-Fleming), la pieza firma del sitio — ver sección propia abajo |
 | Trayectoria | `sections/Experience.astro` | **paper** (era ink) | Se cambió de registro al retirar Trabajo (paper), que antes separaba a ésta de Modelo (ink) — sin ese separador quedaban dos secciones oscuras adyacentes sin transición visual. Header en dos columnas (título + bajada) que ecoa la grilla de la lista de abajo, no un bloque apilado |
 | Contacto | `sections/Contact.astro` | paper | Apertura sparse: eyebrow + frase en `--pullquote` (itálica), sin título grande — Formulario de calificación, §3.1 un solo primario |
 
@@ -190,6 +194,7 @@ Piezas transversales, todas montadas desde `layouts/Layout.astro` salvo donde se
 - **`core/MediaFrame.astro`** — contenedor de foto/video con los tres tratamientos de §8 cableados (ver abajo). Lo monta la sección que lo usa, no el Layout.
 - **`core/ReadingProgress.astro`** — barra de progreso de lectura de las páginas `[slug]` (ver abajo). Entra por `<slot name="thread">`.
 - **`core/Header.astro`** / **`core/Footer.astro`** — `Header` ya no tiene link `[mapa]` (destino retirado); `Footer` se rediseñó como "panel técnico" (ver abajo).
+- **`core/WhatsAppButton.astro`** — botón flotante abajo a la derecha, sitewide desde el Layout. Cuadrado con `--radius-2` y **monocromo** (`currentColor`), no el círculo verde de WhatsApp: ese círculo es el patrón de plugin genérico que este proyecto viene evitando, y el sistema de marca no admite ese color. El número vive duplicado acá y en `Contact.astro` — si cambia, hay que tocar los dos.
 - La capa de movimiento en `layouts/Layout.astro`: Lenis sincronizado al ticker de GSAP para el scroll global (expuesto en `window.__lenis`), más el `IntersectionObserver`/parallax vanilla para `[data-reveal]`/`[data-parallax]`. Las tres tipografías se importan self-hosted desde `@fontsource*` en el frontmatter del Layout.
 
 **Vestigio a no confundir:** el slot de `Layout.astro` sigue llamándose `name="thread"` aunque el hilo ya no exista — hoy lo ocupa `ReadingProgress` en las páginas `[slug]`. Es sólo un nombre heredado, no queda código del hilo.
@@ -262,41 +267,49 @@ El footer original era genérico (identidad + dos columnas de links + copyright,
 - **Navegación con separador "·"** — mismo lenguaje que `FloatingNav.astro` para la misma lista de anclas. Un primer intento usaba corchetes (`[research]`, eco del link `[mapa]` que tenía `Header.astro` antes de que se retirara el grafo del mapa del sitio), pero el crítico lo marcó como un tercer sistema de navegación en conflicto: el `[mapa]` que lo justificaba ya no existe, y el visitante SÍ tiene fresca en pantalla la píldora flotante con su propia puntuación. Se resolvió a favor del vocabulario que sigue vivo, no del retirado.
 - **Canales de contacto como pares kicker/valor** (`EMAIL` / `tomasrau@lorenz.ar`, mono, kicker chico arriba) — mismo patrón que ya usan los paneles de datos del sitio (BootTerminal, el panel de riesgo del modelo), en vez de sólo el nombre del canal como link plano.
 
-### Conteo animado en resultados calculados
+### La pieza firma: `sections/ISLMModel.astro` + `src/lib/islm.ts`
 
-En `SensitivityModel.astro`, los cuatro resultados calculados (precio, duración, convexidad, precio a +100pb) interpolan del valor viejo al nuevo en ~260ms (`--dur-slow`, ease-out cúbico) en vez de saltar — el movimiento confirma que la conclusión cambió (§2.9), no decora. Los tres ecos de los supuestos (lo que el usuario está moviendo con el slider) **no** interpolan, siguen al dial en directo — animarlos se sentiría desconectado de la manipulación directa. Respeta `prefers-reduced-motion` (salta directo al valor final).
+**Reemplazó a `SensitivityModel.astro`** (calculadora de precio de bonos, con su `src/lib/bond.ts`), retirada a pedido explícito del usuario: *"no aporta ningún valor a un usuario que no sabe de economía"*. Ambos archivos ya no existen — si aparecen mencionados en un comentario, es historia, no código vivo.
 
-El gráfico de `Method.astro` respeta la gramática del isotipo: **sólo segmentos ortogonales** (las tasas son funciones escalonadas, así que la restricción coincide con la semántica), vértices como nodos cuadrados, serie de contexto en `--chart-4` punteada, y línea de fuente obligatoria.
+Modelo IS-LM-BP (Mundell-Fleming) con **movilidad imperfecta de capitales** y **tipo de cambio flotante**, matemática propia en `src/lib/islm.ts` sin dependencias. El módulo se importa **tanto desde el frontmatter como desde el script de cliente**, así el primer paint ya sale calculado y no hay destello.
 
-### La pieza firma: `SensitivityModel.astro`
+**Lo no obvio, y lo que costó cuatro pasadas llegar a esto:**
 
-Modelo de precio y sensibilidad de un bono, con matemática real en `src/lib/bond.ts` (sin dependencias). El módulo se importa **tanto desde el frontmatter como desde el script de cliente**, así el primer paint ya sale calculado y no hay destello.
+1. **Las tres curvas se resuelven como un sistema simultáneo, no en secuencia.** Una versión anterior tenía BP como una recta de referencia FIJA contra la cual se medía la distancia del cruce IS-LM, y esa distancia se mostraba como tipo de cambio. El usuario hizo la pregunta correcta: bajo tipo de cambio genuinamente flotante, ¿no debería BP desplazarse también hasta que las tres se crucen en un punto? Sí. **El tipo de cambio es la variable que hace que las tres se crucen, no un diagnóstico calculado después.** `solveCore()` lo resuelve en forma cerrada (sustituir LM en IS y en BP da dos rectas `Y = intercepto + pendiente·e`; igualarlas despeja `e`). Si tocás las fórmulas, el invariante a revalidar es: evaluar la ecuación de BP en el `Y` y el `e` resueltos tiene que dar exactamente el mismo `r` que LM.
+2. **Cuidado con el temporal dead zone al bootstrapear.** `NEUTRAL_E` se calcula llamando a `solveCore()`, que a su vez no puede depender de `NEUTRAL_E` — por eso `solveCore()` está separada de `equilibrium()` (que sólo le agrega `fx`). El orden de declaración de los `const` de módulo importa; ya rompió una vez con `ReferenceError`.
+3. **La amplitud de los sliders es una decisión de legibilidad, no de calibración económica.** Con `AMPLITUDE.G = 20` la curva IS se movía ~50 unidades sobre un dominio de 500 y parecía congelada al lado de LM. Está en 70 para que el desplazamiento se vea; la relación G > T (por el ahorro de parte del ingreso extra) se mantiene y es la que describe el texto.
+4. **El modelo es lineal y no tiene piso cero.** En posturas extremas la tasa puede leerse en −7%, que no existe en el mundo real. Hay un aviso estático en la nota de método y otro **dinámico** que aparece sólo cuando `r < 0`. No sacar ninguno de los dos: sin ellos, el widget sugiere que tasas profundamente negativas son un resultado normal de política.
+5. **El tipo de cambio se muestra en puntos de índice, no en porcentaje** (`fxScale = 20` sobre el desvío del neutral). La leyenda tiene que decirlo explícitamente — al lado de una tasa en `%`, un `+156` se lee como porcentaje si nadie aclara.
 
-Está validado contra seis identidades analíticas independientes (paridad cuando cupón = tasa ⇒ precio 100; duración de un cupón cero = plazo; asimetría de convexidad; la duración modificada aproxima un movimiento de 1 pb; descuento y premio). **Si tocás las fórmulas, revalidá contra esas identidades.**
-
-La curva depende sólo de plazo y cupón, no de la tasa vigente — la tasa mueve el marcador. Sirve como chequeo rápido de que el render no se rompió.
+Movimiento: los tres resultados interpolan del valor viejo al nuevo (~320ms, ease-out cúbico) en vez de saltar — confirma que la conclusión cambió (§2.9), no decora. Respeta `prefers-reduced-motion` saltando al valor final. La curva no usa Bézier: es una polilínea donde **cada vértice es un valor efectivamente calculado**.
 
 ## Fase actual del proyecto y contenido pendiente
 
-**Actualizado 2026-08-24 — la fase avanzó.** Hasta el 2026-08-23 el proyecto estaba en fase de estructura visual, y la regla era no tocar los placeholders ("no son un descuido, se trabaja sobre el contenido de ejemplo que ya está"). El usuario pidió explícitamente pasar a "un terreno más real y concreto": **se retiraron todos los placeholders del sitio, excepto el video pendiente del hero** (`hero-loop.mp4` — sigue faltando el archivo, `MediaFrame` sigue mostrando su placeholder honesto ahí, eso no cambió). No volver a la regla vieja de "no tocar placeholders" sin que el usuario lo pida de nuevo — la fase cambió, no es un estado transitorio de esta sesión.
+**Actualizado 2026-08-27 — el sitio está publicado y con contenido real.** La fase de "estructura visual sobre placeholders" terminó hace tiempo: todos los placeholders genéricos se retiraron, Research tiene notas reales, el formulario está conectado y el sitio está en vivo. No volver a la regla vieja de "no tocar placeholders" — está vencida.
 
-Qué se retiró en esta pasada:
+Qué se retiró en su momento (contexto histórico, no restaurar sin pedido explícito):
 
-- **Sección Trabajo entera.** `Work.astro`, la content collection `work` (`src/content/work/*.md`, 4 casos × 2 idiomas), las páginas `/trabajo/{slug}/` y `/en/trabajo/{slug}/`. No es "contenido reemplazado por real" — es una sección que el usuario decidió que no debía existir, punto. Si vuelve una sección de casos de trabajo en el futuro, es una decisión nueva, no restaurar lo retirado.
-- **Las notas de ejemplo de Research.** `src/content/research/*.md` (3 notas × 2 idiomas, «Entradas de ejemplo», `date: "Borrador"`) — borradas. La colección queda vacía a propósito; `ResearchIndex.astro` muestra un estado honesto (`.research-empty`) mientras no haya notas reales. Cuando se agregue la primera nota real, ese estado deja de mostrarse solo (es condicional a `entries.length`).
-- **El gráfico ilustrativo de `Method.astro`** (§3.10, serie de tasas ficticia con tag "ILUSTRATIVO"). Se sacó entero — geometría SVG, leyenda, línea de fuente, los textos de traducción que sólo usaba el gráfico. El texto real de método (los tres párrafos + notas de trabajo del margen) **no era placeholder y se mantuvo intacto**.
+- **Sección Trabajo entera.** `Work.astro`, la content collection `work`, las páginas `/trabajo/{slug}/`. No fue "contenido reemplazado por real" — es una sección que el usuario decidió que no debía existir. Si vuelve, es una decisión nueva.
+- **El gráfico ilustrativo de `Method.astro`** (§3.10, serie de tasas ficticia con tag "ILUSTRATIVO"). El texto real de método **no era placeholder y se mantuvo intacto**.
 
-Qué sigue pendiente, deliberadamente sin tocar (no es lo mismo que "placeholder genérico" — son recursos/integraciones reales que faltan, no contenido de relleno):
+### Qué está conectado de verdad
 
-- `public/media/hero-loop.mp4` — video del hero. Único placeholder que sigue en pie, por instrucción explícita del usuario ("excepto la foto del hero" — el retrato ya está real; el video todavía no).
-- `BootTerminal.astro` — todas las cotizaciones, métricas de riesgo y salidas de modelo del boot son ilustrativas, de instrumentos públicos genéricos, **a propósito y para siempre** — es contenido de ambientación de una pantalla de carga, no una promesa de dato real pendiente de reemplazo (a diferencia de Research/Method arriba). No se tocó ni debería tocarse por esto.
-- `Contact.astro` — `FORMSPREE_ENDPOINT` está en `null`. Crear la cuenta en formspree.io y pegar el endpoint; hasta entonces el formulario se renderiza deshabilitado con un aviso visible, a propósito. No es contenido de ejemplo, es una integración real sin configurar.
+- **`Contact.astro` → Formspree.** `FORMSPREE_ENDPOINT` apunta a `https://formspree.io/f/xoeqadwv`. El envío va por `fetch` con `Accept: application/json` (el modo AJAX que Formspree documenta), no por POST nativo — un submit nativo sacaría al visitante del sitio hacia la pantalla de agradecimiento genérica de Formspree. El resultado se muestra inline en el propio panel. **Está en producción y recibe consultas reales.**
+- **Research.** 4 notas × 2 idiomas con fechas reales (2022–2026), no borradores. El schema de `content.config.ts` todavía tiene un comentario que dice que las fechas son `"Borrador"` — ese comentario quedó viejo, el campo es freeform y hoy lleva fechas ISO.
+
+### Lo que sigue faltando
+
+- **`public/media/hero-loop.mp4`** — el video del hero. El `<video>` está cableado y se activa solo cuando el archivo exista en esa ruta; mientras tanto se ve el retrato real. **El cartel de "VIDEO PENDIENTE" se retiró** a pedido del usuario (2026-08-26), así que hoy la ausencia no se anuncia en pantalla.
+- **`src/content/learning/`** — carpeta nueva con `documento_maestro_webinar_economia_finanzas_inversiones.md` (1367 líneas, diseño de un webinar de economía/finanzas personales/inversiones). **NO es una content collection**: `content.config.ts` sólo define `research`, así que Astro ignora esa carpeta en silencio (verificado: el build no emite warning y sigue dando 10 páginas). Es material del usuario, todavía sin destino en el sitio. Si se quiere publicar, hay que definir la colección y las páginas — no va a aparecer solo.
+- **`BootTerminal.astro`** — cotizaciones, métricas de riesgo y salidas de modelo son ilustrativas, de instrumentos públicos genéricos, **a propósito y para siempre**. Es ambientación de una pantalla de carga, no una promesa de dato real pendiente. No "arreglarlo".
 
 **Sigue vigente, sin cambios:** no inventar cifras de track record, retornos ni credenciales, ni siquiera como relleno visual.
 
 ### Desvío autorizado: movimiento y escala
 
-El §2.9 restringe el movimiento a «confirmar una acción; no decora», y la escala tipográfica topea en `--title-xl` (52px). **El usuario autorizó apartarse de ambas cosas** para que el sitio tenga el flujo de lectura y la presencia de sus referencias (abtc.com, icomat.co.uk, shopify.com/editions, species-in-pieces.com). El razonamiento: el documento está pensado para papel, informe y PDF; una pantalla necesita traducción, no transcripción.
+El §2.9 restringe el movimiento a «confirmar una acción; no decora», y la escala tipográfica del doc topea en `--title-xl` (52px). **El usuario autorizó apartarse de ambas cosas** para que el sitio tenga el flujo de lectura y la presencia de sus referencias (abtc.com, icomat.co.uk, shopify.com/editions, species-in-pieces.com). El razonamiento: el documento está pensado para papel, informe y PDF; una pantalla necesita traducción, no transcripción.
+
+**Además, toda la escala tipográfica se subió ~10% respecto del doc de marca** (pedido explícito, 2026-08-26: *"agranda todas las fuentes de toda la web un poco más"*). `--title-xl` está en 57px, `--body` en 22px, y así con el resto — incluidos los overrides de mobile. El `line-height` va en ratio, no en px, así que escaló solo. Los tokens de ritmo vertical (`--line`, `--flow-*`) **no** se tocaron: el pedido fue de tamaño de fuente, y recalcular el grid vertical entero es un cambio de otro alcance. En la misma pasada `--grid-max` pasó de 1120px a **1320px**, porque en pantallas de 1440px+ quedaba demasiado margen ocioso. `--col-read` sigue en 680px: la columna de lectura está acotada por legibilidad, no por ancho de viewport.
 
 Lo que se habilitó, y sus límites:
 
@@ -307,13 +320,42 @@ Lo que se habilitó, y sus límites:
 
 Lo que **no** se relajó: sigue sin haber gradientes, glassmorphism, sombras fuera de flotantes, radio en contenedores, ni curvas Bézier. Y el racionamiento del dorado se mantiene estricto — **un acento por capítulo**, verificado programáticamente. Los *kickers* y numerales de capítulo son deliberadamente neutros: si fueran dorados, el acento aparecería siete veces y dejaría de señalar nada (§2.2).
 
+### Responsividad mobile (2026-08-27) — restricción dura: desktop no se toca
+
+El usuario pidió optimizar mobile con una condición explícita: **no modificar absolutamente nada de cómo se ve en laptop/desktop.** Todo lo de esta pasada vive dentro de media queries móviles o detrás de un `matchMedia` en JS. Si tocás algo de acá, la verificación obligatoria incluye comprobar que desktop quedó idéntico — no alcanza con mirar mobile.
+
+**Chrome flotante que se guarda al bajar.** Las dos píldoras del Header y el botón de WhatsApp son `position: fixed` y en mobile ocupan una fracción enorme del ancho: tapaban la palabra "Economista" del hero por completo y renglones enteros de prosa en Método/Modelo/Contacto. El controlador vive en `layouts/Layout.astro` y pone la clase `chrome-tucked` en `<html>`; **las reglas correspondientes van en `global.css`, no en un `<style>` de componente** — es la trampa de scoping de Astro ya documentada arriba para `[data-theme]`: un selector que dependa de una clase en `<html>` escrito en un componente nunca matchea. Reusa el vocabulario de `FloatingNav` (guardar al bajar, revelar al subir con umbral), no inventa un mecanismo nuevo. Con `prefers-reduced-motion` el chrome queda fijo y visible: ahí el solapamiento se resuelve por padding, no por movimiento.
+
+**El gráfico del modelo entra entero.** Antes tenía `min-width: 780px` con `overflow-x: auto` — en un contenedor real de 350px eso son 430px de scroll horizontal **sin ninguna señal de que se podía arrastrar**, con el punto de equilibrio fuera de pantalla al cargar. Ahora el SVG se ajusta al ancho y la legibilidad se recupera subiendo los tamaños de fuente **en unidades del viewBox** (se escalan en la misma proporción en que el SVG se achica). No se toca ninguna geometría de trazado. La glosa de cada curva se oculta en mobile porque no entra en el margen derecho — no se pierde información, el bloque de definiciones IS/LM/BP está justo arriba.
+
+**`FloatingNav` envuelve a dos filas.** Cinco anclas no entran en una fila de 390px (medido: 419px de contenido contra 340px útiles) y lo que quedaba afuera era *"contacto"*, la única conversión del sitio. Se resolvió con `flex-wrap` y ancho explícito — **la píldora es `fixed` y se dimensiona por contenido, así que sin ancho explícito el wrap la colapsaba a cinco filas verticales**, no a dos. Los separadores `·` se retiran en mobile porque con wrap caerían sueltos al final de una fila.
+
+**Áreas táctiles.** Sliders del modelo y conmutador de tema a 44px, detrás de `@media (pointer: coarse)` además del ancho: lo que justifica el target es el dedo, no la ventana angosta.
+
+**Colchón de ancla.** `global.css` ya tenía `scroll-margin-top: 84px` sobre `.section`/`.hero`, pero **la sección del modelo no lleva la clase `.section`** (es `.model-section`) y quedaba fuera: al tocar su ancla, el título aterrizaba debajo del logo. Cubierto con `section[id]` en mobile, reusando el mismo 84px.
+
+### El barrido del hero — dos traducciones del mismo mecanismo
+
+En ambos casos es lo mismo: un `clip-path` animado sobre un panel absoluto que cubre la grilla entera. Lo que cambia es la orientación de la costura.
+
+- **Desktop:** costura **vertical**. El recorte se abre por izquierda desde el 36% (el ancho de la columna de identidad) hasta 0. La foto no se va: gana la pantalla y tapa la columna de texto.
+- **Mobile:** costura **horizontal**. Las zonas están apiladas, no hay columna al costado que tapar, así que el recorte se abre **por arriba**, desde donde termina el bloque de identidad.
+
+Tres cosas que no son obvias y ya costaron una corrección cada una:
+
+1. **La costura de mobile se mide, no se hardcodea.** Depende del alto real del texto, que cambia con el idioma (77,1% en español, 73,2% en inglés — la bajada en inglés ocupa una línea menos). Y hay que medir el **borde inferior del contenido**, no la caja de `.hero-id`: en modo cinemático el ítem de grid se estira a los 100svh y su altura siempre da 100%, con lo que la banda de foto terminaba cortando el párrafo a media frase.
+2. **El titular hay que desvanecerlo explícitamente.** Termina pintándose por encima del panel y del velo de cierre, en tinta oscura sobre la foto oscura. Desktop ya lo hacía; mobile también tiene que hacerlo.
+3. **El pin en mobile necesita `ScrollTrigger.config({ ignoreMobileResize: true })` + `100svh`.** La barra de direcciones del navegador aparece y desaparece al scrollear, cambia el alto del viewport a mitad del recorrido y ScrollTrigger recalcula, produciendo un salto. `svh` dimensiona contra el viewport más chico, así que cuando la barra se esconde sobra espacio en vez de faltar.
+
+Todo el modo cinemático de mobile está detrás de la clase `is-cinematic`, **que agrega el script sólo si hay JS y `prefers-reduced-motion` lo permite**. Sin JS o con la preferencia activa, el hero mobile vuelve al apilado normal — no hay forma de que el efecto deje contenido escondido.
+
 ### Registros de capítulo, no hairlines
 
 Las secciones **no** se separan con un borde de 1px. Alternan `.register-paper` / `.register-ink` a sangre completa (definidos en `global.css`). Ambos derivan de los tokens del tema, de modo que el conmutador cambia visiblemente toda la página — el hero ya **no** está fijo en oscuro. La relación se invierte entre modos, que es lo que el §2.1 prescribe: en claro la tinta es una banda petróleo profunda; en oscuro es una banda más clara.
 
-### Nota de cumplimiento: la curva precio–rendimiento
+### Nota de cumplimiento: las curvas del modelo
 
-La prohibición de Bézier (§2.3) apunta a la interpolación suavizada que **fabrica valores intermedios** entre datos escasos. La curva de `SensitivityModel.astro` es una polilínea de segmentos rectos (`L`) donde **cada vértice es un valor efectivamente calculado** por la fórmula de valuación. No inventa nada, así que cumple el espíritu de la regla.
+La prohibición de Bézier (§2.3) apunta a la interpolación suavizada que **fabrica valores intermedios** entre datos escasos. Las curvas IS/LM/BP de `ISLMModel.astro` son polilíneas de segmentos rectos (`L`) donde **cada vértice es un valor efectivamente calculado** por las ecuaciones del modelo. No inventan nada, así que cumplen el espíritu de la regla.
 
 ### Adaptaciones de layout
 
@@ -336,5 +378,6 @@ El layout de dos columnas del §2.7 (lectura 680px + márgenes 268px) **sí se u
 
 - ~~Self-hosting de las tres tipografías variables~~ — **hecho.** `layouts/Layout.astro` importa `@fontsource-variable/newsreader/standard(-italic).css`, `@fontsource-variable/instrument-sans/standard.css` y `@fontsource/spline-sans-mono/{400,500}.css`; ya no hay `<link>` a Google Fonts.
 - No existen `isotipo-positivo.svg`/`isotipo-negativo.svg` en el repo; se usan los PNG recortados existentes en `src/assets/media/logos/`. Si en algún momento se generan versiones SVG, reemplazar ahí.
-- Una segunda herramienta de cálculo interactivo (más allá de `SensitivityModel`) — deliberadamente no se construyó una para no sumar una feature especulativa sin un caso concreto. Es el paso natural siguiente si aparece un cálculo real que valga la pena exponer.
+- Una segunda herramienta de cálculo interactivo (más allá de `ISLMModel`) — deliberadamente no se construyó una para no sumar una feature especulativa sin un caso concreto. Es el paso natural siguiente si aparece un cálculo real que valga la pena exponer.
+- **Darle destino al material de `src/content/learning/`** (ver "Fase actual"): hoy es un `.md` suelto que Astro ignora. Publicarlo implica definir una colección nueva y sus páginas — no está empezado y es una decisión de producto, no una tarea pendiente de implementación.
 - **Fase 2 diferida, no iniciada:** cuentas de usuario / estado guardado entre visitas. Requiere elegir proveedor de backend/auth (Supabase, Firebase u otro) — deja de ser un sitio 100% estático. Decisión de infraestructura que el usuario todavía no tomó; no asumir un proveedor sin preguntar.
