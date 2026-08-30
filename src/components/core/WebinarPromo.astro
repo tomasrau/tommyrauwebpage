@@ -58,9 +58,18 @@ const STORAGE_KEY = "promo-webinar-2026-09";
 
 <script>
   const promo = document.querySelector<HTMLElement>("[data-promo]");
-  const hero = document.getElementById("inicio");
+  /* Se observa la sección SIGUIENTE al hero, no el hero.
+     ------------------------------------------------------------------
+     En mobile el hero corre con `pin: true` de ScrollTrigger, que lo
+     pasa a position:fixed mientras dura el barrido. Un
+     IntersectionObserver sobre un elemento fijo lo reporta siempre
+     visible, así que el aviso no aparecía nunca — verificado en un
+     viewport de 390px, funcionaba en desktop y fallaba en mobile.
+     Que aparezca la sección de abajo significa lo mismo ("ya pasó la
+     portada") y no depende de si el hero está pinneado. */
+  const disparador = document.getElementById("research") ?? document.getElementById("inicio");
 
-  if (promo && hero) {
+  if (promo && disparador) {
     const key = promo.dataset.key ?? "promo-webinar";
     const target = new Date(promo.dataset.target ?? "").getTime();
     const root = document.documentElement;
@@ -97,21 +106,38 @@ const STORAGE_KEY = "promo-webinar-2026-09";
     const eventoPasado = Number.isFinite(target) && Date.now() > target;
 
     if (!yaCerrado() && !eventoPasado) {
-      const io = new IntersectionObserver(
-        ([entry]) => {
-          // Se dispara cuando el hero YA no está en pantalla: el
-          // visitante pasó de largo la portada y está leyendo el sitio.
-          if (entry.isIntersecting) return;
-          promo.hidden = false;
-          requestAnimationFrame(() => {
-            promo.classList.add("is-in");
-            root.classList.add("promo-open");
-          });
-          io.disconnect();
-        },
-        { threshold: 0 },
-      );
-      io.observe(hero);
+      /* Comprobación por scroll, NO IntersectionObserver.
+         --------------------------------------------------------------
+         Un IO sobre la sección de abajo dispara su callback inicial
+         apenas empieza a observar, y en ese momento el layout todavía no
+         está asentado: el hero aún no tomó su alto de 100svh (se lo da
+         la clase que agrega GSAP), así que la sección siguiente entra en
+         el viewport y el aviso aparecía SIN que el visitante hubiera
+         scrolleado. Verificado en desktop.
+
+         Con dos condiciones explícitas no hay ambigüedad: que se haya
+         scrolleado de verdad, y que la portada haya quedado atrás. */
+      const MIN_SCROLL = 240;
+
+      const puedeMostrar = () =>
+        window.scrollY > MIN_SCROLL &&
+        disparador.getBoundingClientRect().top < window.innerHeight * 0.75;
+
+      const mostrar = () => {
+        promo.hidden = false;
+        requestAnimationFrame(() => {
+          promo.classList.add("is-in");
+          root.classList.add("promo-open");
+        });
+      };
+
+      const alScrollear = () => {
+        if (!puedeMostrar()) return;
+        window.removeEventListener("scroll", alScrollear);
+        mostrar();
+      };
+
+      window.addEventListener("scroll", alScrollear, { passive: true });
     }
 
     promo.querySelector("[data-promo-close]")?.addEventListener("click", cerrar);

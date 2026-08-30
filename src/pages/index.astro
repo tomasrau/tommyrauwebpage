@@ -7,6 +7,10 @@ import Method from "../components/sections/Method.astro";
 import ISLMModel from "../components/sections/ISLMModel.astro";
 import Experience from "../components/sections/Experience.astro";
 import Contact from "../components/sections/Contact.astro";
+// Sólo en la home en español: la landing del webinar existe únicamente en
+// castellano, así que en /en/ ofrecería en inglés algo que después se lee
+// en otro idioma.
+import WebinarPromo from "../components/core/WebinarPromo.astro";
 ---
 
 <Layout
@@ -22,4 +26,6 @@ import Contact from "../components/sections/Contact.astro";
   <ISLMModel lang="es" />
   <Experience lang="es" />
   <Contact lang="es" />
+
+  <WebinarPromo />
 </Layout>
