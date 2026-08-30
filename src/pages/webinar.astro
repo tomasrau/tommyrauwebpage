@@ -1,0 +1,3028 @@
+---
+// webinar.astro — landing de conversión del webinar de economía,
+// finanzas personales e inversiones.
+//
+// Fuente de TODO el contenido: src/content/learning/
+// documento_maestro_webinar_economia_finanzas_inversiones.md
+// No hay una sola afirmación acá que no salga de ese documento o de
+// datos ya verificados del sitio (credenciales, canales de contacto).
+//
+// ---------------------------------------------------------------
+// POR QUÉ ESTA LANDING NO SE PARECE A UNA LANDING DE CURSO FINANCIERO
+// ---------------------------------------------------------------
+// El §49 del documento es explícito sobre qué NO se vende: rentabilidad,
+// riqueza rápida, independencia financiera garantizada, señales, secretos
+// de mercado. Eso descarta de entrada el repertorio habitual de una
+// landing de infoproducto financiero (cuenta regresiva de urgencia
+// fabricada, "quedan 3 lugares", testimonios genéricos, capturas de
+// rendimientos). No es una limitación: es el diferenciador del §51 —
+// esto no empieza por activos, empieza por contexto y estructura.
+//
+// La conversión se construye entonces sobre lo que sí es verdad y sí es
+// específico: el temario con minutos reales, los seis entregables
+// concretos, una sección de "para quién NO es" que filtra en vez de
+// prometer, las credenciales verificables, el disclaimer al frente (en
+// finanzas, aclarar los límites genera más confianza que ocultarlos) y
+// —lo que ninguna competencia puede copiar— el modelo IS-LM-BP
+// interactivo que ya vive en este sitio y que el propio documento
+// (§11, §12) propone como herramienta pedagógica del módulo 1.
+//
+// ---------------------------------------------------------------
+// DATOS PENDIENTES
+// ---------------------------------------------------------------
+// Los valores en `null` son datos comerciales reales que el usuario
+// tiene pero todavía no pasó. Mientras valgan null, la página degrada a
+// un estado honesto (registro de interés en vez de compra, sin precio
+// inventado, sin métrica de audiencia fabricada) — el mismo patrón que
+// Contact.astro usó mientras FORMSPREE_ENDPOINT estuvo sin configurar.
+// NUNCA reemplazar un null por un valor plausible "de ejemplo": en una
+// página de venta eso es una afirmación falsa, no un placeholder.
+import Layout from "../layouts/Layout.astro";
+
+const WEBINAR = {
+  // Verificado con `date`: el 24/09/2026 cae jueves. Si la fecha cambia,
+  // revalidar el día de la semana — un jueves que no es jueves es el tipo
+  // de error que destruye la confianza en una página de venta.
+  fecha: "Jueves 24 de septiembre de 2026",
+  hora: "19:00 h (Argentina)",
+  duracion: "3 horas",
+  modalidad: "Online, en vivo",
+  precio: "$24.999",
+  // Sólo dígitos, para el botón de copiar del panel de transferencia:
+  // lo que se pega en el campo "importe" de un homebanking no lleva
+  // símbolo ni separador de miles.
+  precioNumero: "24999",
+  // Nombre corto, para el zócalo y la cuenta regresiva — el título largo
+  // de la página no entra en una barra de una línea.
+  nombreCorto: "Economía & Finanzas: Ordenar e Invertir",
+  // Capacidad real del encuentro. Es un dato del negocio, no un recurso
+  // de urgencia: se muestra como el número fijo que es. NUNCA convertirlo
+  // en un "quedan X" que baje solo con el tiempo — ese contador es falso
+  // salvo que exista una fuente real de inscriptos, y es justo el patrón
+  // que el §49 del documento descarta.
+  cupos: 30,
+  // Instante de inicio con offset EXPLÍCITO de Argentina (UTC-3, sin
+  // horario de verano). Sin el offset, el navegador lo interpretaría en
+  // la zona del visitante y la cuenta regresiva daría distinto según
+  // desde dónde se mire.
+  inicioISO: "2026-09-24T19:00:00-03:00",
+  checkoutUrl: "https://mpago.li/2PgbSNu",
+  // Datos bancarios para quien paga por transferencia.
+  //
+  // CBU verificado con el algoritmo estándar: 22 dígitos, ambos dígitos
+  // verificadores correctos, código de banco 007 = Banco de Galicia,
+  // consistente con la cuenta declarada. Si alguna vez cambia, revalidar
+  // antes de publicar — un dígito mal es plata que se pierde.
+  //
+  // NO se publica el DNI ni el número de cuenta interno, aunque el
+  // usuario los haya pasado: para transferir alcanza con alias o CBU, y
+  // exponer un DNI en una página pública e indexable es un riesgo de
+  // identidad sin ninguna contrapartida. Ver nota al usuario.
+  transferencia: {
+    alias: "TOMAS.RAU.GALICIA",
+    cbu: "0070313830004018137432",
+    titular: "Tomás Rau",
+    banco: "Banco Galicia • Caja de ahorro en pesos",
+  },
+  // Métrica de audiencia real de Instagram. Si es null, no se muestra
+  // ninguna cifra — no se estima ni se redondea.
+  instagramFollowers: null as string | null,
+  instagramUser: "tommyrau_",
+  instagramUrl: "https://www.instagram.com/tommyrau_/",
+};
+
+// Endpoint PROPIO de este webinar, distinto del de Contact.astro: separa
+// las inscripciones de las consultas generales en la bandeja de Formspree.
+const FORMSPREE_WEBINAR = "https://formspree.io/f/xeaqqjqq";
+
+// ---------------------------------------------------------------
+// TALLY — el formulario de comprobante
+// ---------------------------------------------------------------
+// El plan gratuito de Formspree NO acepta adjuntos, así que el
+// comprobante de transferencia no puede viajar por ahí. Tally sí los
+// permite en su plan gratuito y, a diferencia de Google Forms, no exige
+// que quien responde inicie sesión — un login obligatorio justo después
+// de que la persona ya transfirió es donde más caro sale perderla.
+//
+// Poner acá SÓLO el id del formulario (la parte final de la URL que da
+// Tally, ej. "wQEoLR" en https://tally.so/r/wQEoLR). Los parámetros del
+// embed los arma la página para no depender de que se copie bien la
+// query string.
+//
+// Mientras valga null, el bloque cae a un formulario nativo SIN adjunto
+// (que sí funciona en el plan gratuito) más los canales reales para
+// mandar el comprobante. Nunca se muestra un campo de archivo que el
+// backend va a rechazar.
+const TALLY_FORM_ID: string | null = "Y5l7qq";
+
+const tallyEmbedUrl = TALLY_FORM_ID
+  ? `https://tally.so/embed/${TALLY_FORM_ID}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`
+  : null;
+
+// Mensaje precargado para mandar el comprobante por WhatsApp — es el
+// canal de menor fricción en mobile y sirve de respaldo aunque el
+// formulario esté embebido.
+const waComprobante = `https://wa.me/5491168659656?text=${encodeURIComponent(
+  "Hola Tomás, transferí la inscripción al webinar del 24/09 y te mando el comprobante.",
+)}`;
+
+const hayDatosTransferencia =
+  WEBINAR.transferencia.alias !== null || WEBINAR.transferencia.cbu !== null;
+
+import portrait from "../assets/media/photos/retrato-tomas-rau.jpg";
+
+const ventaAbierta = WEBINAR.checkoutUrl !== null;
+const ctaLabel = ventaAbierta ? "Reservar mi lugar" : "Avisame cuando abra la inscripción";
+// Con la venta abierta el CTA principal no va directo a Mercado Pago:
+// va al bloque de inscripción, donde el visitante elige medio de pago.
+// Mandarlo a un checkout sin haberle mostrado que existe transferencia
+// pierde a todo el que no quiere pagar con tarjeta.
+const ctaHref = "#registro";
+
+// §2.2 del documento — la secuencia. NO son "niveles": un nivel sugiere
+// jerarquía o dificultad creciente, y acá lo que hay es un ENCADENAMIENTO
+// — cada tramo sólo tiene sentido si el anterior ya está resuelto. Por
+// eso se presenta como flujo y se despliega en orden: el visitante
+// experimenta la secuencia en vez de leerla enumerada.
+const flujo = [
+  {
+    n: "01",
+    verbo: "Entender",
+    pregunta: "¿Qué está ocurriendo en la economía y por qué?",
+    cuerpo:
+      "El contexto no es un decorado: define qué decisiones son razonables y cuáles no. Antes de mover capital hay que poder leer qué está pasando con la inflación, la tasa, el tipo de cambio y la actividad económica, y entender por qué mecanismo una cosa afecta a la otra.",
+    desbloquea: "Con eso de base, se puede mirar hacia adentro.",
+  },
+  {
+    n: "02",
+    verbo: "Administrar",
+    pregunta: "¿Cómo organizo mis recursos dentro de ese contexto?",
+    cuerpo:
+      "Acá aparece tu restricción real: cuánto gano, cuánto gasto, cuánto queda y con qué liquidez. Sin esta capa, cualquier decisión de inversión es una apuesta sobre un resultado que no conocés.",
+    desbloquea: "Recién con el presupuesto en claro aparece la capacidad de invertir.",
+  },
+  {
+    n: "03",
+    verbo: "Invertir",
+    pregunta: "¿Cómo asigno parte de esos recursos según mis objetivos y mi tolerancia al riesgo?",
+    cuerpo:
+      "Ya me escucharon muchas veces: objetivos, plazos y riesgo primero; instrumentos después. Ese orden es lo que separa una decisión de una recomendación copiada, y es la razón por la que este tramo va en tercer lugar y no primero.",
+    desbloquea: "",
+  },
+];
+
+// §6 del documento — la arquitectura con los minutos reales. La
+// especificidad ES el argumento de venta: un temario con tiempos
+// asignados demuestra que el webinar está diseñado, no improvisado.
+const programa = [
+  {
+    num: "00",
+    min: "10 min",
+    mins: 10,
+    titulo: "Apertura",
+    detalle: "Los tres tramos de una misma pregunta y cómo se encadenan entre sí.",
+    puntos: [],
+  },
+  {
+    num: "01",
+    min: "40–45 min",
+    mins: 45,
+    titulo: "Economía: entender el contexto",
+    detalle:
+      "Qué estudia la economía y por qué usa modelos que simplifican la realidad a propósito. Cómo operan las políticas monetarias y fiscales a través de mecanismos, no de efectos mágicos.",
+    puntos: [
+      "Por qué un modelo sirve para analizar relaciones, no para adivinar el futuro.",
+      "Modelo simplificado IS-LM-BP [OA-DA] aplicado a casos argentinos reales: subas de tasa, expansión fiscal, contracción monetaria, ajustes.",
+      "Los indicadores macro que importan: PBI, inflación [IPC], tipo de cambio, reservas, tasa, actividad, empleo.",
+      "Cómo leerlos en conjunto, de manera interdependiente, en vez de aislados uno por uno.",
+    ],
+  },
+  {
+    num: "02",
+    min: "40–45 min",
+    mins: 45,
+    titulo: "Finanzas personales: ordenar la estructura",
+    detalle:
+      "El presupuesto como herramienta de decisión de flujos previa, no como planilla de control. Presupuesto de base cero y por qué cada peso debe tener un destino asignado.",
+    puntos: [
+      "Framework de flujo personal en pasos estructurados, de ingresos a construcción patrimonial.",
+      "Gasto, ahorro, liquidez e inversión: cuatro cosas distintas que se confunden.",
+      "El fondo de emergencia: cuánto, dónde y por qué va antes que invertir.",
+      "La inversión como categoría presupuestaria, no como 'lo que sobra' [si es que sobra] a fin de mes.",
+    ],
+  },
+  {
+    num: "03",
+    min: "45–50 min",
+    mins: 50,
+    titulo: "Inversiones: decidir con criterio",
+    detalle:
+      "El orden correcto de una decisión de inversión. Primero objetivos, plazos y tolerancia al riesgo; después, los instrumentos.",
+    puntos: [
+      "Las familias de instrumentos: liquidez, renta fija, renta variable, fondos, activos reales.",
+      "La relación entre rentabilidad esperada, riesgo y liquidez.",
+      "Qué hace y qué no hace la diversificación.",
+      "Los errores más frecuentes, y cómo se evitan desde este sistema 'contexto-presupuesto-inversiones'.",
+    ],
+  },
+  {
+    num: "04",
+    min: "20–30 min",
+    mins: 30,
+    titulo: "Síntesis y preguntas",
+    detalle: "Integración de los tres módulos y espacio abierto de consultas y networking.",
+    puntos: [],
+  },
+];
+
+const totalMin = programa.reduce((a, m) => a + m.mins, 0);
+// Sólo los bloques con temario desagregado son "módulo" — apertura y
+// síntesis no lo son. Se calcula, no se escribe a mano: si cambia el
+// programa, la cifra del epígrafe acompaña.
+const minModulo = programa.filter((m) => m.puntos.length).reduce((a, m) => a + m.mins, 0);
+
+// §46 — los entregables. Un listado concreto convierte mucho más que
+// una promesa abstracta, y estos existen como parte del diseño del
+// webinar, no son un bonus inventado para esta página.
+const entregables = [
+  { t: "PDF de la presentación", d: "Todo el contenido para releer sin tomar notas a las apuradas." },
+  { t: "Plantilla de presupuesto", d: "El framework de de presupuesto listo para completar con tus números." },
+  { t: "Hoja de indicadores", d: "Qué mide cada indicador macro, cómo se lee y con qué otros se cruza." },
+  { t: "Mapa de instrumentos", d: "Las familias de activos, con su perfil de riesgo, liquidez y horizonte de inversión." },
+  { t: "Checklist previo a invertir", d: "Las nueve preguntas que conviene responder antes de arriesgar capital." },
+  { t: "Bibliografía y recursos", d: "Por dónde seguir después, sin depender de recomendaciones de redes." },
+];
+
+// §5 — objetivos de aprendizaje, redactados como capacidades concretas.
+const vasAPoder = [
+  "Interpretar una noticia económica separando el dato del titular.",
+  "Explicar casos como 'por qué una suba de tasas afecta al crédito, al dólar y a la actividad'.",
+  "Construir un control de presupuesto personal para decidir antes de gastar/invertir.",
+  "Calcular cuánto necesitás de fondo de emergencia antes de pensar en invertir.",
+  "Definir objetivos, plazos y tolerancia al riesgo antes de mirar un instrumento financiero.",
+  "Reconocer qué estás comprando cuando comprás un bono, una acción o un fondo.",
+];
+
+// §3 y §49 — la calificación. Decir para quién NO es aumenta la
+// conversión de quien sí encaja y reduce reembolsos y frustración.
+const siEsParaVos = [
+  "Seguís noticias económicas de manera aislada, pero sentís que te falta el mecanismo que las conecta.",
+  "Querés ordenar tus finanzas personales y no sabés por dónde empezar.",
+  "Te interesa invertir pero no querés hacerlo copiando recomendaciones en redes sociales.",
+  "Ya invertís un poco y te falta el marco que le dé estructura a esas decisiones de inversión.",
+];
+
+const noEsParaVos = [
+  "Buscás recomendaciones de compra o venta de activos financierospuntuales.",
+  "Esperás una promesa de rentabilidad o una estrategia para hacerte rico rápidamente.",
+  "Querés señales de trading o análisis técnico de corto plazo.",
+  "Ya sos un inversor profesional y entendés profundamente de economía o finanzas: el nivel es introductorio.",
+];
+
+const faq = [
+  {
+    q: "¿Necesito saber algo de economía o finanzas?",
+    a: "No. El nivel es introductorio y no se presupone formación previa en economía, finanzas, contabilidad ni mercados. Si reconocés palabras como inflación, dólar o tasa de interés pero no tenés claro cómo se relacionan entre sí, ese es exactamente el punto de partida.",
+  },
+  {
+    q: "¿Esto es asesoramiento financiero?",
+    a: "No. El contenido tiene fines educativos. No constituye asesoramiento financiero personalizado ni una recomendación de compra o venta de instrumentos. Toda inversión implica riesgos y debe evaluarse según la situación, los objetivos y el perfil de cada persona.",
+  },
+  {
+    q: "¿Me van a decir en qué invertir?",
+    a: "No, y es deliberado. El webinar no da recetas del tipo «si pasa X, comprá Y». Lo que se enseña es el criterio previo: cómo definir objetivo, plazo y tolerancia al riesgo, y cómo reconocer qué hace cada familia de instrumentos. Eso es lo que te permite decidir sin depender de que alguien te diga qué hacer.",
+  },
+  {
+    q: "¿Por qué empezar por economía y no directamente por inversiones?",
+    a: "Porque es el error más común de la educación financiera: arrancar por instrumentos sin haber trabajado antes presupuesto, liquidez, objetivos y contexto. Las decisiones de inversión no ocurren aisladas — dependen del entorno económico y de tu propia estructura financiera. Por eso la secuencia es economía, después presupuesto, después inversión.",
+  },
+  {
+    q: "¿Queda grabado?",
+    a: "Sí. Recibís el PDF de la presentación junto con el resto de los materiales, y la grabación queda disponible para que puedas volver sobre los módulos.",
+  },
+  {
+    q: "¿Cómo puedo pagar?",
+    a: "Con Mercado Pago (tarjeta de crédito, débito o dinero en cuenta), donde la inscripción se confirma al instante; o por transferencia bancaria, subiendo el comprobante en el formulario del final de esta página. En ese caso te confirmo el lugar por mail dentro de las 24 horas.",
+  },
+];
+---
+
+<Layout
+  lang="es"
+  {/* Sin selector de idioma: esta landing existe sólo en español (el
+      público es de Instagram Argentina) y no hay una versión en inglés a
+      la que apuntar. Antes el botón "en" recargaba esta misma página —
+      un control que no hacía nada. */}
+  showLang={false}
+  title="Webinar • Economía, finanzas personales e introducción a las inversiones"
+  description="Tres horas para entender el contexto económico, ordenar tus finanzas y empezar a pensar tus inversiones con criterio. Dictado por Tomás Rau, economista."
+>
+  <!-- ============================================================
+       BARRA DE CTA PERSISTENTE
+       ------------------------------------------------------------
+       El hallazgo más caro de la revisión: entre el hero y el cierre
+       había SIETE secciones sin ninguna vía de conversión a mano. El
+       único elemento realmente persistente de la página (la píldora
+       fija del Header) no lleva ningún botón, así que el visitante que
+       se convencía en el medio tenía que ir a buscar el CTA.
+
+       Aparece recién al dejar el hero y se retira al llegar al bloque
+       de registro (ahí el formulario ya está en pantalla y la barra
+       sería un duplicado que tapa el propio formulario). Es un
+       elemento flotante genuino, así que --shadow-float es la sombra
+       correcta y --radius-2 aplica por ser un control.
+       ============================================================ -->
+  <!-- ============================================================
+       CUENTA REGRESIVA FLOTANTE
+       ------------------------------------------------------------
+       Urgencia legítima: cuenta hacia una fecha real y fija. No se
+       reinicia al vencer ni se "renueva" por visitante — cuando la
+       fecha pasa, lo dice, no vuelve a empezar. Ese reinicio es el
+       patrón oscuro de las landings evergreen y acá está descartado.
+
+       Se guarda junto al resto del chrome (misma clase .chrome-tucked
+       del sitio) para no tapar contenido mientras se lee.
+       ============================================================ -->
+  <aside class="wb-count" data-countdown data-target={WEBINAR.inicioISO} hidden>
+    <span class="wb-count-k">Empieza en</span>
+    <div class="wb-count-grid">
+      <span class="wb-count-cell"><b data-cd="d">—</b><i>días</i></span>
+      <span class="wb-count-cell"><b data-cd="h">—</b><i>hs</i></span>
+      <span class="wb-count-cell"><b data-cd="m">—</b><i>min</i></span>
+      <span class="wb-count-cell"><b data-cd="s">—</b><i>seg</i></span>
+    </div>
+  </aside>
+
+  <div class="wb-sticky" data-wb-sticky hidden>
+    <div class="wb-sticky-inner">
+      <div class="wb-sticky-text">
+        <span class="wb-sticky-t">{WEBINAR.nombreCorto}</span>
+        <span class="wb-sticky-d">
+          {WEBINAR.fecha ?? "Fecha a confirmar"} • {WEBINAR.duracion}
+          {WEBINAR.precio && <span class="wb-num">• {WEBINAR.precio}</span>}
+        </span>
+      </div>
+
+      <span class="wb-cupos" title={`El encuentro es para ${WEBINAR.cupos} personas`}>
+        <span class="wb-cupos-n">{WEBINAR.cupos}</span>
+        {/* "cupos en total", no "disponibles": el cupo total es un hecho
+            fijo y verificable; decir "disponibles" afirma un remanente
+            que deja de ser cierto apenas se inscribe alguien, y no hay
+            forma de mantenerlo al día desde una página estática. */}
+        <span class="wb-cupos-l">cupos<br />en total</span>
+      </span>
+      <a href={ctaHref} class="btn btn-primary wb-sticky-cta">{ctaLabel}</a>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HERO
+       Registro paper. Composición partida asimétrica: la promesa a la
+       izquierda, la ficha de datos duros a la derecha. No es el hero
+       centrado eyebrow+H1+párrafo+dos botones que el checklist de
+       web-design-craft marca como patrón #1 de "hecho por un LLM".
+       ============================================================ -->
+  <section class="wb-hero register-paper">
+    <div class="wb-hero-inner">
+      <div class="wb-hero-grid">
+      <div class="wb-hero-main">
+        <span class="wb-eyebrow">Webinar en vivo • {WEBINAR.duracion}</span>
+
+        <h1 class="wb-title">
+          Entender la economía,<br />
+          ordenar tus finanzas,<br />
+          <em>invertir con criterio.</em>
+        </h1>
+
+        <p class="wb-lead">
+          En tres horas vas a construir un mapa para entender el contexto económico,
+          organizar tus finanzas personales y empezar a pensar tus inversiones desde un método
+          más racional. Este orden es el que separa una decisión informada de un consejo copiado de redes.
+        </p>
+
+        <div class="wb-hero-cta">
+          <a href={ctaHref} class="btn btn-primary wb-cta">{ctaLabel}</a>
+          <span class="wb-cta-note">
+            {ventaAbierta
+              ? "Con Mercado Pago o por transferencia. Incluye los materiales del webinar y la grabación."
+              : "Dejás tu mail y te aviso apenas se abra la inscripción."}
+          </span>
+        </div>
+      </div>
+
+      <!-- Ficha de datos duros. Los pares kicker/valor son el mismo
+           patrón que ya usan los paneles de datos del sitio (footer,
+           BootTerminal), no un vocabulario nuevo. Cada dato que falta
+           se declara como pendiente en vez de inventarse. -->
+      <aside class="wb-facts">
+        <div class="wb-fact">
+          <span class="wb-fact-k">Fecha</span>
+          <span class="wb-fact-v">{WEBINAR.fecha ?? "A confirmar"}</span>
+        </div>
+        <div class="wb-fact">
+          <span class="wb-fact-k">Horario</span>
+          <span class="wb-fact-v">{WEBINAR.hora ?? "A confirmar"}</span>
+        </div>
+        <div class="wb-fact">
+          <span class="wb-fact-k">Duración</span>
+          <span class="wb-fact-v">{WEBINAR.duracion}</span>
+        </div>
+        <div class="wb-fact">
+          <span class="wb-fact-k">Modalidad</span>
+          <span class="wb-fact-v">{WEBINAR.modalidad}</span>
+        </div>
+        <div class="wb-fact">
+          <span class="wb-fact-k">Nivel</span>
+          <span class="wb-fact-v">Introductorio</span>
+        </div>
+        {WEBINAR.precio && (
+          <div class="wb-fact wb-fact-price">
+            <span class="wb-fact-k">Inversión</span>
+            <span class="wb-fact-v">{WEBINAR.precio}</span>
+          </div>
+        )}
+      </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BANDA DE CIFRAS
+       ------------------------------------------------------------
+       El sistema es monocromo, pero el dorado es color de MARCA de uso
+       libre (§2.2), no un acento racionado: puede sostener fondos de
+       bloque enteros. Esta banda usa --accent-substrate a sangre
+       completa y numerales a escala arquitectónica — el desvío de
+       escala ya autorizado en el proyecto.
+
+       Las cuatro cifras son reales y verificables contra el programa de
+       más abajo: no hay ninguna métrica inventada de alumnos ni de
+       resultados. Es densidad de dato, que es de donde esta marca saca
+       su impacto visual.
+       ============================================================ -->
+  <section class="wb-band">
+    {/* Dos capas a propósito: el div exterior centra y aporta el margen
+        de página (para que el borde IZQUIERDO coincida con el de todas
+        las secciones), y la grilla interior lleva el tope de ancho (para
+        que el borde DERECHO también coincida). Con una sola capa no se
+        pueden fijar los dos bordes: reducir el ancho del contenedor
+        centrado corre el margen izquierdo hacia adentro. */}
+    <div class="wb-band-inner">
+      <ul class="wb-band-grid">
+      <li><span class="wb-band-n">3</span><span class="wb-band-l">horas en vivo</span></li>
+      <li><span class="wb-band-n">3</span><span class="wb-band-l">módulos encadenados</span></li>
+      <li><span class="wb-band-n">6</span><span class="wb-band-l">materiales descargables</span></li>
+        <li><span class="wb-band-n">0</span><span class="wb-band-l">conocimientos previos</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DIFERENCIADOR (§51)
+       Registro ink. El argumento más fuerte del documento y el que
+       más separa esto del contenido financiero de redes.
+       ============================================================ -->
+  <section class="wb-diff register-ink">
+    <div class="wb-narrow">
+      <span class="wb-eyebrow">Por qué es distinto</span>
+      <p class="wb-pull">
+        Casi todo el contenido financiero de redes empieza por el activo.
+        Acá empezamos por el contexto económico y por tu estructura financiera.
+      </p>
+      <p class="wb-body">
+        Empezar por instrumentos sin haber trabajado antes el presupuesto, la liquidez,
+        y los objetivos y horizonte de inversión es el error más frecuente de la educación financiera.
+        Esto reproduce que la gente nombre o enumere activos y que no pueda discernir cuál le sirve;
+        entonces terminan dependiendo de que alguien les diga qué comprar.
+      </p>
+      <p class="wb-body">
+        Acá la secuencia es otra de manera deliberada:
+      </p>
+
+      <!-- La secuencia, desplegable en orden. Gramática del isotipo:
+           nodos cuadrados unidos por un trazo ortogonal, sin curvas ni
+           iconos genéricos.
+
+           Sin JS (o antes de que corra) los tres tramos quedan abiertos:
+           el contenido nunca depende del script. El bloqueo secuencial
+           lo agrega el JS y es progresivo, no un requisito. -->
+      <ol class="wb-flow" data-flow>
+        {flujo.map((f, i) => (
+          <li class="wb-step" data-step={i}>
+            <span class="wb-step-rail" aria-hidden="true">
+              <span class="wb-step-node"></span>
+            </span>
+
+            <div class="wb-step-main">
+              <h3 class="wb-step-h">
+                <button
+                  type="button"
+                  class="wb-step-btn"
+                  data-step-btn
+                  aria-expanded={i === 0 ? "true" : "false"}
+                  aria-controls={`flow-panel-${i}`}
+                >
+                  <span class="wb-step-n">{f.n}</span>
+                  <span class="wb-step-verbo">{f.verbo}</span>
+                  <span class="wb-step-mark" aria-hidden="true"></span>
+                </button>
+              </h3>
+
+              <div class="wb-step-panel" id={`flow-panel-${i}`} data-step-panel>
+                <div class="wb-step-panel-inner">
+                  <p class="wb-step-q">{f.pregunta}</p>
+                  <p class="wb-step-body">{f.cuerpo}</p>
+                  {f.desbloquea && (
+                    <Fragment>
+                      <p class="wb-step-note">{f.desbloquea}</p>
+                      <button type="button" class="wb-step-next" data-step-next>
+                        Ver el siguiente tramo
+                        <span class="wb-step-next-arrow" aria-hidden="true">→</span>
+                      </button>
+                    </Fragment>
+                  )}
+                </div>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PROGRAMA (§6)
+       Registro paper. La especificidad es el argumento: minutos
+       asignados por módulo demuestran diseño, no improvisación.
+       ============================================================ -->
+  <section class="wb-prog register-paper" id="programa">
+    <div class="wb-wide">
+      <div class="wb-head">
+        <span class="wb-eyebrow">Programa</span>
+        <h2 class="wb-h2">Tres horas, tres módulos, una secuencia.</h2>
+      </div>
+
+      <!-- Reparto real del tiempo. Rompe a propósito el molde de
+           "lista con numeral" que venían repitiendo las secciones
+           anteriores: acá el argumento es la PROPORCIÓN — se ve de un
+           vistazo que el peso está en los tres módulos y no en la
+           apertura, y que inversiones se lleva el tramo más largo.
+           Los anchos salen de los minutos declarados abajo, no de
+           valores elegidos para que quede lindo. -->
+      <div class="wb-time" aria-hidden="true">
+        {programa.map((m) => (
+          <div
+            class={`wb-time-seg${m.puntos.length ? " is-core" : ""}`}
+            style={`flex-grow:${m.mins}`}
+          >
+            <span class="wb-time-n">{m.num}</span>
+            <span class="wb-time-m">{m.mins}′</span>
+          </div>
+        ))}
+      </div>
+      <p class="wb-time-cap">
+        Reparto real del tiempo • {totalMin} minutos, de los cuales {minModulo} son de contenido de duro.
+      </p>
+
+      <ol class="wb-modules">
+        {programa.map((m) => (
+          <li class="wb-module">
+            <div class="wb-module-meta">
+              <span class="wb-module-n">{m.num}</span>
+              <span class="wb-module-min">{m.min}</span>
+            </div>
+            <div class="wb-module-body">
+              <h3 class="wb-module-t">{m.titulo}</h3>
+              <p class="wb-module-d">{m.detalle}</p>
+              {m.puntos.length > 0 && (
+                <ul class="wb-points">
+                  {m.puntos.map((p) => <li>{p}</li>)}
+                </ul>
+              )}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PRUEBA REAL — el modelo interactivo
+       Registro ink. Esto es lo que ninguna landing de curso puede
+       copiar: la herramienta del módulo 1 está publicada y andando.
+       El documento (§11, §12) propone IS-LM y menciona la extensión
+       Mundell-Fleming; el sitio ya tiene ese modelo construido.
+       ============================================================ -->
+  <section class="wb-proof register-ink">
+    <div class="wb-narrow">
+      <span class="wb-eyebrow">No es una promesa, está publicado</span>
+      <h2 class="wb-h2">El modelo del módulo 1, funcionando.</h2>
+      <p class="wb-body">
+        En el módulo de economía trabajamos con IS-LM para ver cómo la política
+        monetaria y fiscal se transmiten a la producción y a la tasa de interés.
+        Ese modelo no es solamente una presentación: está construido y publicado en mi web personal, 
+        con la extensión a economía abierta que usamos para pensar el caso
+        argentino.
+      </p>
+      <p class="wb-body">
+        Movés el gasto público, los impuestos o la cantidad de dinero y ves cómo se desplaza cada variable de manera conjunta. 
+        Podés probarlo ahora, para estudiar el mecanismo antes del webinar, o después de la clase para repasar lo aprendido.
+      </p>
+      <!-- Pestaña nueva a propósito: es el único link de la página que
+           lleva fuera del funnel, y justo apunta al argumento más fuerte.
+           Si se abre en la misma pestaña, el visitante se va a explorar la
+           home y no tiene camino de vuelta a inscribirse. -->
+      <a href="/#modelo" target="_blank" rel="noopener" class="wb-inline-link">
+        <span class="wb-arrow" aria-hidden="true">→</span>
+        Abrir el modelo interactivo
+      </a>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUÉ TE LLEVÁS (§46) + QUÉ VAS A PODER HACER (§5)
+       ============================================================ -->
+  <section class="wb-take register-paper">
+    <div class="wb-wide">
+      <div class="wb-head">
+        <span class="wb-eyebrow">Qué te llevás</span>
+        <h2 class="wb-h2">Seis materiales para usar después del webinar.</h2>
+      </div>
+
+      <ul class="wb-deliver">
+        {entregables.map((e, i) => (
+          <li class="wb-deliver-item">
+            <span class="wb-deliver-n">{String(i + 1).padStart(2, "0")}</span>
+            <div>
+              <h3 class="wb-deliver-t">{e.t}</h3>
+              <p class="wb-deliver-d">{e.d}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div class="wb-able">
+        <h3 class="wb-able-t">Al terminar vas a poder</h3>
+        <ul class="node-list wb-able-list">
+          {vasAPoder.map((v) => <li>{v}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       QUIÉN DICTA — credenciales reales, verificables en el sitio.
+       Va ANTES de la calificación, no después: para tráfico frío de
+       Instagram que todavía no conoce a Tomás, pedirle que se
+       autocalifique ("¿esto es para mí?") antes de saber quién lo
+       dicta invierte el orden natural de confianza → filtro.
+       Registro paper, con el retrato real en duotono — el mismo
+       tratamiento §8 que usa el hero del sitio, no una foto suelta.
+       ============================================================ -->
+  <section class="wb-who register-ink">
+    <div class="wb-wide">
+      <div class="wb-who-grid">
+        <div class="wb-who-text">
+          <span class="wb-eyebrow">Quién lo dicta</span>
+          <h2 class="wb-who-name">Tomás Rau</h2>
+          <p class="wb-who-role">
+            Economista • Mg. en Dirección Estratégica y Tecnológica •
+            Especialista en Finanzas Cuantitativas
+          </p>
+
+          <p class="wb-who-lead">
+            Trabajo en la frontera entre cuatro áreas de conocimiento que rara vez se cruzan:
+            teoría macroeconómica y econometría, business intelligence,
+            analítica financiera aplicada a carteras y mercados de capitales, y
+            la ingeniería de datos que hace que todo eso viva en un sistema productivo y automatizado, en
+            lugar de quedar olvidado en un informe circunstancial.
+          </p>
+
+          <p class="wb-body">
+            Este recorrido tiene un orden natural, y no es casual: cada etapa sobrevive
+            porque la anterior chocó con un límite. El método econométrico sin
+            infraestructura de datos no llega a una decisión [análisis predictivo]. Un warehouse de datos
+            confiable todavía no te dice qué hacer [análisis prescriptivo]. Y un análisis que vive en un
+            notebook no sobrevive a una organización [automatización].
+          </p>
+
+          <p class="wb-body">
+            Lo que enseño en este webinar es la capa que conecta las dos puntas: el criterio
+            para leer el contexto, ordenar la estructura y decidir con
+            fundamento. La misma forma de razonar que uso profesionalmente, pero sin
+            el desarrollo matemático que lo precede.
+          </p>
+
+          <div class="wb-who-links">
+            <a href="https://www.linkedin.com/in/tomasezequielrau" target="_blank"
+               rel="noopener noreferrer" class="wb-social">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.71h.05c.53-.95 1.83-1.96 3.77-1.96 4.03 0 4.78 2.5 4.78 5.76V21h-4v-5.7c0-1.36-.03-3.11-2-3.11-2 0-2.3 1.48-2.3 3.01V21h-4V9Z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+
+            <a href={WEBINAR.instagramUrl} target="_blank" rel="noopener noreferrer" class="wb-social">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none" />
+              </svg>
+              <span>
+                @{WEBINAR.instagramUser}
+                {WEBINAR.instagramFollowers && ` • ${WEBINAR.instagramFollowers}`}
+              </span>
+            </a>
+
+            <a href="/#trayectoria" target="_blank" rel="noopener" class="wb-social">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke-linecap="square" />
+              </svg>
+              <span>Trayectoria completa</span>
+            </a>
+          </div>
+        </div>
+
+        <figure class="wb-who-photo">
+          <!-- Duotono real §8: feColorMatrix reduce a luminancia y
+               feComponentTransfer remapea por canal a los tokens de
+               marca. Mismo filtro que Hero.astro — id propio para no
+               colisionar si ambas piezas conviven en una página. -->
+          <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+            <filter id="wb-duotone" color-interpolation-filters="sRGB">
+              <feColorMatrix type="matrix" values="0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 1 0" />
+              <feComponentTransfer>
+                <feFuncR type="table" tableValues="0.0392 0.9294" />
+                <feFuncG type="table" tableValues="0.0745 0.9412" />
+                <feFuncB type="table" tableValues="0.0627 0.9333" />
+              </feComponentTransfer>
+            </filter>
+          </svg>
+          <img
+            src={portrait.src}
+            width={portrait.width}
+            height={portrait.height}
+            alt="Retrato de Tomás Rau"
+            loading="lazy"
+            decoding="async"
+          />
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CALIFICACIÓN (§3 + §49)
+       Registro ink. Decir para quién NO es filtra, y filtrar
+       convierte mejor que prometer a todos.
+       ============================================================ -->
+  <section class="wb-fit register-paper">
+    <div class="wb-wide">
+      <div class="wb-head">
+        <span class="wb-eyebrow">Lo que debés saber antes de anotarte</span>
+        <h2 class="wb-h2">Esto no es para cualquiera, y está bien que así sea.</h2>
+      </div>
+
+      <div class="wb-fit-cols">
+        <div class="wb-fit-col">
+          <h3 class="wb-fit-t wb-fit-yes">Es para vos si</h3>
+          <ul class="wb-fit-list">
+            {siEsParaVos.map((x) => <li>{x}</li>)}
+          </ul>
+        </div>
+        <div class="wb-fit-col">
+          <h3 class="wb-fit-t wb-fit-no">No es para vos si</h3>
+          <ul class="wb-fit-list wb-fit-list-no">
+            {noEsParaVos.map((x) => <li>{x}</li>)}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       BANDA DE CONVERSIÓN
+       ------------------------------------------------------------
+       Resuelve dos cosas a la vez, y por eso está acá y no es relleno:
+
+       1) Paridad de registros. La alternancia paper/ink se rompía justo
+          antes del cierre (calificación y registro quedaban las dos en
+          paper). El cierre NO puede pasar a ink: el formulario de Tally
+          embebido pinta su propio texto oscuro y sobre banda oscura
+          quedaría ilegible. Una banda dorada entre medio corta la
+          adyacencia sin tocar la legibilidad del formulario.
+
+       2) Conversión. Es el último recordatorio de los datos duros justo
+          antes del formulario, en el punto donde el visitante ya leyó
+          todo y tiene que decidir.
+       ============================================================ -->
+  <section class="wb-cband">
+    <div class="wb-cband-inner">
+      <div class="wb-cband-row">
+      <div class="wb-cband-text">
+        <p class="wb-cband-t">{WEBINAR.fecha} • {WEBINAR.hora}</p>
+        <p class="wb-cband-d">
+          {WEBINAR.duracion} • {WEBINAR.modalidad} • Incluye materiales
+          y la grabación
+        </p>
+      </div>
+      <a href="#registro" class="wb-cband-cta">
+        {ctaLabel} <span class="wb-num">• {WEBINAR.precio}</span>
+      </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       CIERRE + REGISTRO
+       ============================================================ -->
+  <section class="wb-close register-paper" id="registro">
+    <div class="wb-narrow">
+      <span class="wb-eyebrow">{ventaAbierta ? "Inscripción" : "Lista de espera"}</span>
+      <h2 class="wb-h2">
+        {ventaAbierta ? "Reservá tu lugar." : "Dejame tu mail y te aviso."}
+      </h2>
+
+      {/* El valor va acá arriba, antes de las opciones, y no dentro de
+          una de ellas: aplica igual se pague por Mercado Pago o por
+          transferencia. Antes sólo aparecía en el botón de Mercado
+          Pago, así que quien elegía transferir se quedaba sin monto de
+          referencia — con datos bancarios a la vista y sin saber cuánto
+          mandar. Eso no es un detalle de diseño: es plata mal
+          transferida. */}
+      <div class="wb-price">
+        <span class="wb-price-k">Valor del webinar</span>
+        <span class="wb-price-v">{WEBINAR.precio}</span>
+        <span class="wb-price-d">Pago único • Incluye los materiales y la grabación</span>
+      </div>
+
+      <!-- Dos vías de pago, presentadas a la par. Mercado Pago primero
+           porque es la de menor fricción (confirma sola), pero la de
+           transferencia no queda escondida en letra chica: en Argentina
+           una parte grande del público prefiere transferir, y esconder
+           esa opción es perder esas ventas. -->
+      <div class="wb-pay">
+        <div class="wb-pay-opt">
+          <span class="wb-pay-n">Opción 1</span>
+          <h3 class="wb-pay-t">Mercado Pago</h3>
+          <p class="wb-pay-d">
+            Tarjeta de crédito, cuotas, débito o dinero en cuenta. La inscripción queda
+            confirmada al instante y recibís el acceso por mail.
+          </p>
+          <a href={WEBINAR.checkoutUrl!} target="_blank" rel="noopener"
+             class="btn btn-primary wb-pay-cta">Pagar con Mercado Pago</a>
+        </div>
+
+        <div class="wb-pay-opt">
+          <span class="wb-pay-n">Opción 2</span>
+          <h3 class="wb-pay-t">Transferencia bancaria</h3>
+
+          {hayDatosTransferencia ? (
+            <dl class="wb-bank">
+              {/* Alias primero: son 17 caracteres pronunciables contra 22
+                  dígitos, y es lo que la mayoría usa. El botón de copiar
+                  no es un adorno — en mobile nadie transcribe un CBU a
+                  mano sin equivocarse, y un dígito mal es plata perdida. */}
+              <div class="wb-bank-row">
+                <dt>Alias</dt>
+                <dd>
+                  <span class="wb-bank-v">{WEBINAR.transferencia.alias}</span>
+                  <button type="button" class="wb-copy" data-copy={WEBINAR.transferencia.alias}>
+                    Copiar
+                  </button>
+                </dd>
+              </div>
+              <div class="wb-bank-row">
+                <dt>CBU</dt>
+                <dd>
+                  <span class="wb-bank-v">{WEBINAR.transferencia.cbu}</span>
+                  <button type="button" class="wb-copy" data-copy={WEBINAR.transferencia.cbu}>
+                    Copiar
+                  </button>
+                </dd>
+              </div>
+              <div class="wb-bank-row">
+                <dt>Importe</dt>
+                <dd>
+                  <span class="wb-bank-v">{WEBINAR.precio}</span>
+                  <button type="button" class="wb-copy" data-copy={WEBINAR.precioNumero}>
+                    Copiar
+                  </button>
+                </dd>
+              </div>
+              <div class="wb-bank-row">
+                <dt>Titular</dt>
+                <dd><span class="wb-bank-v">{WEBINAR.transferencia.titular}</span></dd>
+              </div>
+              <div class="wb-bank-row">
+                <dt>Banco</dt>
+                <dd><span class="wb-bank-v">{WEBINAR.transferencia.banco}</span></dd>
+              </div>
+            </dl>
+          ) : (
+            <p class="wb-pay-d">
+              Escribime y te paso los datos para transferir. Después subís el
+              comprobante en el formulario de acá abajo y te confirmamos el lugar.
+            </p>
+          )}
+
+          <p class="wb-pay-d">
+            Una vez transferido, <b>subí el comprobante</b> en el formulario de abajo.
+            Te confirmamos la inscripción por mail o whatsapp dentro de las 24 horas.
+          </p>
+        </div>
+      </div>
+
+      <!-- Formulario de comprobante. Endpoint propio del webinar, para
+           que las inscripciones no se mezclen con las consultas
+           generales de Contact.astro. -->
+      <div class="wb-upload" id="comprobante">
+        <h3 class="wb-upload-t">Si ya transferiste, enviá el comprobante</h3>
+        <p class="wb-upload-d">
+          {tallyEmbedUrl
+            ? "Si pagaste por transferencia, este es el paso siguiente para confirmar tu lugar: se abre acá mismo, sin salir de la página."
+            : "Completá tus datos para registrar la inscripción. Es el paso que confirma tu lugar."}
+        </p>
+
+        {tallyEmbedUrl ? (
+          /* El formulario ya NO vive en el cuerpo de la página: lo abre
+             este botón en un diálogo. Embebido acá abajo, un formulario
+             de ~1400px de alto empujaba el resto del contenido y obligaba
+             a atravesarlo aunque la persona hubiera pagado con Mercado
+             Pago y no lo necesitara — fricción para todos por un caso que
+             es de algunos. */
+          <button type="button" class="btn btn-primary wb-cta" data-modal-open>
+            Enviar comprobante de transferencia
+          </button>
+        ) : (
+          /* Fallback mientras no exista el formulario de Tally. Registra
+             por Formspree (que en plan gratuito SÍ acepta texto) y manda
+             el comprobante por un canal que sí admite archivos.
+             Deliberadamente SIN campo de archivo: un input que el
+             backend va a rechazar es peor que no tenerlo. */
+          <form class="wb-form" method="POST" action={FORMSPREE_WEBINAR} data-webinar-form>
+            <input type="hidden" name="_subject" value="Inscripción webinar — transferencia" />
+            <input type="hidden" name="webinar" value="Economía, finanzas personales e inversiones • 24/09/2026" />
+
+            <div class="wb-form-row">
+              <div class="field">
+                <label class="field-label" for="wb-name">Nombre y apellido</label>
+                <input class="field-input" type="text" id="wb-name" name="name"
+                       placeholder="Nombre y apellido" autocomplete="name" required />
+              </div>
+              <div class="field">
+                <label class="field-label" for="wb-email">Email</label>
+                <input class="field-input" type="email" id="wb-email" name="email"
+                       placeholder="nombre@mail.com" autocomplete="email" required />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="wb-phone">Teléfono (opcional)</label>
+              <input class="field-input" type="tel" id="wb-phone" name="telefono"
+                     placeholder="+54 9 11 …" autocomplete="tel" />
+            </div>
+
+            <button type="submit" class="btn btn-primary wb-cta" data-webinar-submit>
+              Registrar mi inscripción
+            </button>
+          </form>
+        )}
+
+        <p class="wb-form-status" data-webinar-status role="status" aria-live="polite" hidden></p>
+
+        <!-- Vía alternativa siempre visible: aunque el formulario
+             embebido funcione, alguien puede quedar trabado ahí y no
+             hay que dejarlo sin salida después de haber pagado. -->
+        <p class="wb-alt">
+          {tallyEmbedUrl
+            ? "¿Se te complica el formulario? Envíame el comprobante por "
+            : "Después de registrarte, mandame el comprobante por "}
+          <a href={waComprobante} target="_blank" rel="noopener noreferrer" class="wb-alt-link">WhatsApp</a>
+          {" o a "}
+          <a href="mailto:tomasrau@lorenz.ar" class="wb-alt-link">tomasrau@lorenz.ar</a>
+          {tallyEmbedUrl ? " así lo registramos." : " y te confirmamos el lugar dentro de las 24 horas."}
+        </p>
+      </div>
+
+      <!-- §48 — el disclaimer va al frente, no escondido. En finanzas,
+           declarar los límites construye más confianza que ocultarlos. -->
+      <p class="wb-disclaimer">
+        El contenido del webinar tiene fines educativos. No constituye asesoramiento
+        financiero personalizado ni una recomendación de compra o venta de
+        instrumentos. Toda inversión implica riesgos y debe evaluarse según la
+        situación, los objetivos y el perfil de cada persona.
+      </p>
+    </div>
+  </section>
+
+  {tallyEmbedUrl && (
+    <Fragment>
+      {/* <dialog> nativo, no un div con role="dialog": el navegador ya
+          trae atrapado de foco, cierre con Escape, capa superior sobre
+          todo el chrome flotante e inerte el resto de la página.
+          Reimplementarlo a mano sería más código y peor accesibilidad.
+
+          El iframe se monta con `data-tally-src` desde el principio: es
+          lo que el script de Tally necesita para engancharle el
+          redimensionado, y `loading="lazy"` evita que descargue el
+          formulario hasta que haga falta. */}
+      <dialog class="wb-modal" data-modal aria-labelledby="wb-modal-t">
+        <div class="wb-modal-head">
+          <h2 class="wb-modal-t" id="wb-modal-t">Enviar comprobante</h2>
+          <button type="button" class="wb-modal-x" data-modal-close aria-label="Cerrar">
+            <span aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div class="wb-modal-body">
+          <iframe
+            data-tally-src={tallyEmbedUrl}
+            title="Formulario de inscripción y envío de comprobante"
+            loading="lazy"
+            width="100%"
+            height="620"
+          ></iframe>
+        </div>
+
+        <p class="wb-modal-foot">
+          ¿Se te complica? Mandámelo por
+          <a href={waComprobante} target="_blank" rel="noopener noreferrer" class="wb-alt-link">WhatsApp</a>
+          o a <a href="mailto:tomasrau@lorenz.ar" class="wb-alt-link">tomasrau@lorenz.ar</a>.
+        </p>
+      </dialog>
+
+      <script is:inline async src="https://tally.so/widgets/embed.js"></script>
+    </Fragment>
+  )}
+
+  <!-- ============================================================
+       FAQ — última sección, a pedido del usuario.
+       Va DESPUÉS de la inscripción: quien ya se decidió no necesita
+       leerla, y quien todavía duda encuentra acá el manejo de
+       objeciones sin que le corte el camino al formulario.
+
+       Accordion con <details>/<summary> nativo: es accesible por
+       teclado, funciona sin JS y el navegador ya maneja el estado.
+       Reimplementarlo con divs y JS sería más código y peor.
+       ============================================================ -->
+  <section class="wb-faq register-ink">
+    <div class="wb-narrow">
+      <span class="wb-eyebrow">Preguntas</span>
+      <h2 class="wb-h2">Las dudas frecuentes que surgen antes de anotarse.</h2>
+
+      <div class="wb-faq-list">
+        {faq.map((f, i) => (
+          <details class="wb-faq-item" name="wb-faq" open={i === 0}>
+            <summary class="wb-faq-q">
+              <span>{f.q}</span>
+              <span class="wb-faq-mark" aria-hidden="true"></span>
+            </summary>
+            <div class="wb-faq-a"><p>{f.a}</p></div>
+          </details>
+        ))}
+      </div>
+
+      <p class="wb-faq-foot">
+        ¿Te quedó otra duda? Escribime por
+        <a href={waComprobante} target="_blank" rel="noopener noreferrer" class="wb-alt-link">WhatsApp</a>
+        o a <a href="mailto:tomasrau@lorenz.ar" class="wb-alt-link">tomasrau@lorenz.ar</a>.
+      </p>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  /* ---- Barra de CTA persistente ----
+     Visible sólo en la franja del medio: se muestra al dejar el hero y
+     se esconde al llegar al bloque de registro. Dos IntersectionObserver
+     en vez de un listener de scroll con números mágicos — así el umbral
+     es "el hero salió de pantalla", que sigue siendo cierto aunque
+     cambien los textos, el idioma o el alto del viewport. */
+  const sticky = document.querySelector("[data-wb-sticky]") as HTMLElement | null;
+  const heroEl = document.querySelector(".wb-hero");
+  const registroEl = document.getElementById("registro");
+
+  if (sticky && heroEl && registroEl && "IntersectionObserver" in window) {
+    let heroVisible = true;
+    let registroVisible = false;
+
+    const sync = () => {
+      const show = !heroVisible && !registroVisible;
+      sticky.hidden = !show;
+      // La clase dispara la transición; `hidden` saca el elemento del
+      // flujo y del orden de tabulación cuando no corresponde mostrarlo.
+      requestAnimationFrame(() => sticky.classList.toggle("is-in", show));
+      // La bandera va en <html> porque el botón de WhatsApp lo renderiza
+      // el Layout, fuera del markup de esta página: un selector de
+      // hermanos no lo alcanza (están separados por el cierre de <main>).
+      // Medido: sin esto el FAB se monta encima de la barra en mobile.
+      document.documentElement.classList.toggle("wb-cta-visible", show);
+    };
+
+    new IntersectionObserver(
+      ([e]) => { heroVisible = e.isIntersecting; sync(); },
+      { threshold: 0 }
+    ).observe(heroEl);
+
+    new IntersectionObserver(
+      ([e]) => { registroVisible = e.isIntersecting; sync(); },
+      { threshold: 0 }
+    ).observe(registroEl);
+  }
+
+  // Envío por fetch, igual que Contact.astro: un POST nativo llevaría al
+  // visitante a la pantalla genérica de Formspree justo después de pagar,
+  // que es el peor momento posible para sacarlo del sitio.
+  //
+  // El adjunto viaja en el mismo FormData. IMPORTANTE: no setear
+  // Content-Type a mano — el navegador tiene que poner
+  // multipart/form-data con su boundary, y fijarlo rompe la subida.
+  const form = document.querySelector("[data-webinar-form]") as HTMLFormElement | null;
+  if (form) {
+    const statusEl = document.querySelector("[data-webinar-status]") as HTMLElement;
+    const btn = form.querySelector("[data-webinar-submit]") as HTMLButtonElement;
+    const label = btn.textContent ?? "";
+
+    const show = (msg: string, kind: "is-success" | "is-error") => {
+      statusEl.textContent = msg;
+      statusEl.classList.remove("is-success", "is-error");
+      statusEl.classList.add(kind);
+      statusEl.hidden = false;
+    };
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      btn.disabled = true;
+      btn.textContent = "Enviando…";
+      statusEl.hidden = true;
+
+      try {
+        const response = await fetch(form.action, {
+          method: "POST",
+          body: new FormData(form),
+          headers: { Accept: "application/json" },
+        });
+        if (!response.ok) throw new Error(String(response.status));
+        show(
+          "Registro recibido. Mandame el comprobante por WhatsApp o por mail y te confirmo el lugar dentro de las 24 horas.",
+          "is-success",
+        );
+        form.reset();
+        form.hidden = true;
+      } catch {
+        show(
+          "No se pudo registrar. Escribime por WhatsApp o a tomasrau@lorenz.ar y lo cargo a mano.",
+          "is-error",
+        );
+        btn.disabled = false;
+        btn.textContent = label;
+      }
+    });
+  }
+
+  /* ---- Diálogo del comprobante ----
+     showModal() (no show()) para que el navegador aplique la capa
+     superior, el atrapado de foco y el cierre con Escape. */
+  const modal = document.querySelector("[data-modal]") as HTMLDialogElement | null;
+  if (modal) {
+    const openers = document.querySelectorAll<HTMLButtonElement>("[data-modal-open]");
+    let lastFocus: HTMLElement | null = null;
+
+    const open = (trigger: HTMLElement) => {
+      lastFocus = trigger;
+      modal.showModal();
+      // Lenis sigue scrolleando el fondo con el diálogo abierto: al
+      // envolver el scroll nativo no se entera del <dialog>. Se lo para
+      // a mano y se lo reanuda al cerrar.
+      (window as any).__lenis?.stop?.();
+    };
+
+    const close = () => {
+      modal.close();
+    };
+
+    openers.forEach((b) => b.addEventListener("click", () => open(b)));
+    modal.querySelector("[data-modal-close]")?.addEventListener("click", close);
+
+    // Clic en el fondo (fuera del panel) cierra. El <dialog> ocupa toda
+    // la pantalla, así que se compara contra la caja del panel real.
+    modal.addEventListener("click", (e) => {
+      const r = modal.getBoundingClientRect();
+      const inside =
+        e.clientX >= r.left && e.clientX <= r.right &&
+        e.clientY >= r.top && e.clientY <= r.bottom;
+      if (!inside) close();
+    });
+
+    // `close` cubre tanto el botón como Escape, que dispara el evento
+    // sin pasar por nuestro handler.
+    modal.addEventListener("close", () => {
+      (window as any).__lenis?.start?.();
+      lastFocus?.focus({ preventScroll: true });
+    });
+  }
+
+  /* ---- Cuenta regresiva ----
+     Cuenta hacia un instante real y fijo. Si la fecha ya pasó NO se
+     reinicia: lo dice y se retira. Un contador que vuelve a empezar es
+     urgencia falsa, que es justo lo que este producto no vende. */
+  const cd = document.querySelector("[data-countdown]") as HTMLElement | null;
+  if (cd) {
+    const target = new Date(cd.dataset.target ?? "").getTime();
+    const out = {
+      d: cd.querySelector('[data-cd="d"]')!,
+      h: cd.querySelector('[data-cd="h"]')!,
+      m: cd.querySelector('[data-cd="m"]')!,
+      s: cd.querySelector('[data-cd="s"]')!,
+    };
+    const pad = (n: number) => String(n).padStart(2, "0");
+
+    let timer = 0;
+    const tick = () => {
+      const diff = target - Date.now();
+
+      if (!Number.isFinite(target)) {
+        cd.hidden = true;
+        window.clearInterval(timer);
+        return;
+      }
+
+      if (diff <= 0) {
+        // Ya empezó: se declara y se deja de contar. No vuelve a cero
+        // ni arranca de nuevo.
+        cd.classList.add("is-past");
+        cd.innerHTML = '<span class="wb-count-k">El webinar ya comenzó</span>';
+        window.clearInterval(timer);
+        return;
+      }
+
+      const total = Math.floor(diff / 1000);
+      out.d.textContent = String(Math.floor(total / 86400));
+      out.h.textContent = pad(Math.floor(total / 3600) % 24);
+      out.m.textContent = pad(Math.floor(total / 60) % 60);
+      out.s.textContent = pad(total % 60);
+      cd.hidden = false;
+    };
+
+    tick();
+    timer = window.setInterval(tick, 1000);
+  }
+
+  /* ---- Secuencia desplegable ----
+     El bloqueo es progresivo: el markup sale con los tres tramos
+     abiertos y es este script el que cierra los que siguen. Si el JS no
+     corre, el visitante ve todo el contenido — nunca queda material
+     escondido detrás de una interacción que no funciona. */
+  const flow = document.querySelector("[data-flow]");
+  if (flow) {
+    const steps = Array.from(flow.querySelectorAll<HTMLElement>("[data-step]"));
+    let unlocked = 1; // cuántos tramos están disponibles
+
+    const render = () => {
+      steps.forEach((step, i) => {
+        const btn = step.querySelector<HTMLButtonElement>("[data-step-btn]")!;
+        const isLocked = i >= unlocked;
+        const isOpen = btn.getAttribute("aria-expanded") === "true";
+
+        step.classList.toggle("is-locked", isLocked);
+        step.classList.toggle("is-open", isOpen && !isLocked);
+        step.classList.toggle("is-done", i < unlocked - 1);
+        // Un tramo bloqueado no debe ser alcanzable por teclado: si lo
+        // fuera, Tab llevaría a un control que no hace nada.
+        btn.disabled = isLocked;
+        if (isLocked) btn.setAttribute("aria-expanded", "false");
+      });
+    };
+
+    steps.forEach((step, i) => {
+      const btn = step.querySelector<HTMLButtonElement>("[data-step-btn]")!;
+      const next = step.querySelector<HTMLButtonElement>("[data-step-next]");
+
+      // Estado inicial: sólo el primero abierto.
+      btn.setAttribute("aria-expanded", i === 0 ? "true" : "false");
+
+      btn.addEventListener("click", () => {
+        if (i >= unlocked) return;
+        const open = btn.getAttribute("aria-expanded") === "true";
+        btn.setAttribute("aria-expanded", open ? "false" : "true");
+        render();
+      });
+
+      next?.addEventListener("click", () => {
+        if (i + 1 < steps.length) {
+          unlocked = Math.max(unlocked, i + 2);
+          const nextBtn = steps[i + 1].querySelector<HTMLButtonElement>("[data-step-btn]")!;
+          nextBtn.setAttribute("aria-expanded", "true");
+          render();
+          // Foco al tramo recién abierto: sin esto, quien navega por
+          // teclado se queda en un botón que acaba de desaparecer de la
+          // vista y pierde el hilo de la secuencia.
+          nextBtn.focus({ preventScroll: true });
+        }
+      });
+    });
+
+    render();
+  }
+
+  /* ---- Copiar alias / CBU ----
+     `navigator.clipboard` no existe en contextos inseguros ni en algunos
+     navegadores in-app (el de Instagram, justamente por donde va a
+     llegar la mayoría del tráfico). Sin fallback el botón no haría nada
+     y el visitante quedaría trabado justo en el paso de pagar. */
+  document.querySelectorAll<HTMLButtonElement>("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const value = btn.dataset.copy ?? "";
+      const original = btn.textContent ?? "Copiar";
+      let ok = false;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(value);
+          ok = true;
+        } else {
+          const ta = document.createElement("textarea");
+          ta.value = value;
+          ta.setAttribute("readonly", "");
+          ta.style.cssText = "position:absolute;left:-9999px";
+          document.body.appendChild(ta);
+          ta.select();
+          ok = document.execCommand("copy");
+          ta.remove();
+        }
+      } catch {
+        ok = false;
+      }
+
+      btn.textContent = ok ? "Copiado" : "Copialo a mano";
+      btn.classList.toggle("is-done", ok);
+      window.setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove("is-done");
+      }, 2200);
+    });
+  });
+
+  /* El alto del formulario embebido lo maneja el script oficial de Tally
+     (ver el <script> junto al iframe). Un primer intento escuchaba su
+     postMessage a mano para no cargar ese tercero, pero al inspeccionar
+     los mensajes reales resultó que `Tally.FormLoaded` sólo trae el
+     formId, sin altura: el redimensionado va por el protocolo de
+     iframe-resizer, que necesita su lado padre. */
+</script>
+
+<!-- Global a propósito y sólo en esta página: el botón de WhatsApp lo
+     monta Layout.astro, así que un <style> scopeado nunca lo alcanzaría.
+     La clase la pone el script de la barra sobre <html>. -->
+<style is:global>
+  /* La cuenta regresiva se guarda con el resto del chrome flotante: en
+     mobile ocupa la esquina superior derecha, justo sobre la columna de
+     lectura. Mismo gesto que las píldoras del Header. */
+  html.chrome-tucked .wb-count {
+    transform: translateY(calc(-100% - var(--space-8)));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* MOBILE — la cuenta regresiva sigue al ZÓCALO, no a la dirección de
+     scroll.
+     ------------------------------------------------------------------
+     Antes se guardaba con el resto del chrome (.chrome-tucked), o sea
+     que desaparecía apenas se bajaba y volvía sólo al subir. Para un
+     recurso de urgencia eso es contraproducente: se pierde justo
+     mientras la persona está leyendo y decidiendo.
+
+     Ahora replica exactamente el comportamiento de .wb-sticky: aparece
+     al dejar el hero y se retira al llegar al bloque de inscripción
+     —donde los datos ya están en pantalla y sería un duplicado—,
+     quedándose visible todo el recorrido del medio. Las dos piezas se
+     mueven juntas porque comparten la misma bandera (.wb-cta-visible),
+     no por dos mecanismos paralelos que haya que mantener en sincronía.
+
+     El estado de visibilidad vive ACÁ y no en el <style> scopeado: las
+     reglas scopeadas llevan el atributo [data-astro-cid-…] y ganarían
+     especificidad sobre estas, dejando la cuenta clavada. */
+  @media (max-width: 639px) {
+    .wb-count {
+      transform: translateY(calc(100% + 69px));
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Se anula el guardado por scroll: en mobile no aplica. Va con la
+       misma especificidad que la regla de arriba para no depender del
+       orden de aparición. */
+    html.chrome-tucked .wb-count {
+      transform: translateY(calc(100% + 69px));
+      opacity: 0;
+    }
+
+    html.wb-cta-visible .wb-count,
+    html.chrome-tucked.wb-cta-visible .wb-count {
+      transform: none;
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  html.wb-cta-visible .wa-fab {
+    /* Sube por encima de la barra de CTA para no taparle el botón.
+       Sólo transform: no se toca `bottom`, así que no pelea con las
+       reglas de posición que el propio componente ya define por
+       breakpoint. */
+    transform: translateY(-76px);
+  }
+
+  /* Cuando el chrome está guardado por scroll, gana esa regla: el FAB
+     tiene que irse igual, no quedarse flotando elevado. */
+  html.wb-cta-visible.chrome-tucked .wa-fab {
+    transform: translateY(calc(100% + var(--space-6)));
+  }
+</style>
+
+<style>
+  /* ---------- contenedores ---------- */
+
+  /* ANCHO DE CONTENIDO ÚNICO
+     ------------------------------------------------------------------
+     El problema real no eran los márgenes izquierdos (todos en 124px)
+     sino que cada sección TERMINABA en un lugar distinto: las de dos y
+     tres columnas se estiraban a los 1192px del contenedor mientras que
+     los bloques de texto cortaban en 880. Ese borde derecho dentado es
+     lo que se lee como desprolijo.
+
+     Ahora hay un solo ancho para todo — prosa, grillas de columnas,
+     tarjetas y barras —, así que todas las secciones abren y cierran en
+     la misma vertical. 1100px en un cuerpo de 22px son ~65 caracteres
+     por línea, dentro del rango 62–72 que pide el sistema para lectura
+     extensa, así que no se paga legibilidad por la consistencia. */
+  .wb-narrow,
+  .wb-wide,
+  .wb-hero-inner,
+  .wb-band-inner,
+  .wb-cband-inner { --wb-content: 1100px; }
+
+  /* Un solo tope para los hijos directos de CUALQUIER sección: es lo
+     que garantiza el borde derecho común. Los h2 quedan afuera con su
+     propio tope en ch — un título corta por cantidad de palabras, no
+     por alinearse con la prosa. */
+  .wb-narrow > *:not(.wb-h2),
+  .wb-wide > *:not(.wb-h2) { max-width: var(--wb-content); }
+
+  .wb-narrow,
+  .wb-wide,
+  .wb-hero-inner,
+  .wb-band-inner,
+  .wb-cband-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: 0 var(--page-margin);
+    width: 100%;
+  }
+
+
+  .wb-hero,
+  .wb-diff,
+  .wb-prog,
+  .wb-proof,
+  .wb-take,
+  .wb-fit,
+  .wb-who,
+  .wb-faq,
+  .wb-close {
+    padding: var(--space-9) 0;
+  }
+
+  .wb-eyebrow {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-4);
+  }
+
+  .wb-h2 {
+    font: var(--title-l);
+    letter-spacing: var(--ls-title-l);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-5);
+    max-width: 22ch;
+  }
+
+  .wb-body {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0 0 var(--flow-p);
+    max-width: var(--wb-content);
+  }
+
+  .wb-pull {
+    font: var(--pullquote);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-6);
+    padding-left: var(--space-5);
+    border-left: var(--rule) solid var(--accent-rule);
+    max-width: 30ch;
+  }
+
+  /* ---------- hero ---------- */
+
+  .wb-hero { padding-top: calc(var(--space-9) + 56px); }
+
+  .wb-hero-grid {
+    max-width: var(--wb-content);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .wb-hero-grid { grid-template-columns: 1fr 300px; gap: var(--space-9); }
+  }
+
+  .wb-title {
+    font-family: var(--font-read);
+    font-size: clamp(34px, 5.4vw, 72px);
+    font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-6);
+  }
+
+  /* La tercera línea en itálica: mismo recurso de contraste
+     romana/itálica que el hero del sitio, no una variante nueva. */
+  .wb-title em {
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .wb-lead {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-7);
+    max-width: 54ch;
+  }
+
+  .wb-hero-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .wb-cta { min-width: 260px; }
+
+  .wb-cta-note {
+    font: var(--source);
+    color: var(--text-tertiary);
+    max-width: 40ch;
+  }
+
+  /* Ficha de datos: pares kicker/valor, mismo patrón que los paneles
+     de datos que ya usa el sitio. Sin sombra ni radio — no flota. */
+  .wb-facts {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+  }
+
+  .wb-fact { display: flex; flex-direction: column; gap: 2px; }
+
+  .wb-fact-k {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .wb-fact-v {
+    font: var(--data-m);
+    /* La abreviatura `font:` resetea font-variant-numeric, así que
+       tabular-nums hay que redeclararlo DESPUÉS. */
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+
+  /* El precio es el dato que sostiene la decisión de compra: va sobre
+     substrato dorado, que es el tratamiento que el sistema reserva
+     justamente para "el dato destacado". */
+  .wb-fact-price {
+    margin: var(--space-2) calc(var(--space-6) * -1) calc(var(--space-6) * -1);
+    padding: var(--space-4) var(--space-6);
+    background: var(--accent-substrate);
+    border-top: var(--rule) solid var(--accent-rule);
+  }
+
+  .wb-fact-price .wb-fact-v {
+    font-family: var(--font-data);
+    font-size: 32px;
+    line-height: 1.05;
+    color: var(--text-primary);
+  }
+
+  /* ---------- banda de cifras ---------- */
+
+  .wb-band {
+    background: var(--accent-substrate);
+    border-top: var(--rule) solid var(--accent-rule);
+    border-bottom: var(--rule) solid var(--accent-rule);
+    padding: var(--space-6) 0;
+  }
+
+  .wb-band-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: var(--wb-content);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5) var(--space-4);
+  }
+
+  @media (min-width: 860px) {
+    .wb-band-grid { grid-template-columns: repeat(4, 1fr); gap: var(--space-6); }
+  }
+
+  .wb-band-grid li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .wb-band-n {
+    font-family: var(--font-data);
+    font-size: clamp(40px, 5.6vw, 68px);
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    /* --text-primary, no el dorado: la cifra vive SOBRE el substrato
+       dorado, así que el contraste lo da la tinta. Dorado sobre dorado
+       no se leería. */
+    color: var(--text-primary);
+  }
+
+  .wb-band-l {
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    color: var(--text-secondary);
+    max-width: 12ch;
+  }
+
+  /* ---------- secuencia desplegable ---------- */
+
+  .wb-flow {
+    list-style: none;
+    margin: var(--space-7) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  .wb-step {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+
+  /* El riel es el trazo que une los nodos: es lo que convierte tres
+     bloques sueltos en una secuencia. Ortogonal y continuo, gramática
+     del isotipo — sin curvas ni flechas decorativas. */
+  .wb-step-rail {
+    position: relative;
+    display: block;
+    justify-self: center;
+    width: var(--hairline);
+    background: var(--border);
+  }
+
+  .wb-step:first-child .wb-step-rail { margin-top: 14px; }
+  .wb-step:last-child .wb-step-rail { height: 22px; }
+
+  .wb-step-node {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 13px;
+    height: 13px;
+    transform: translateX(-50%);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 var(--hairline) var(--border-strong);
+    transition: background-color var(--dur-base) var(--ease-in-out),
+                box-shadow var(--dur-base) var(--ease-in-out);
+  }
+
+  .wb-step:first-child .wb-step-node { top: -6px; }
+
+  /* Nodo lleno = tramo alcanzado. El dorado marca avance real, no
+     decoración: es la única señal de progreso de la secuencia. */
+  .wb-step.is-open .wb-step-node,
+  .wb-step.is-done .wb-step-node {
+    background: var(--accent-rule);
+    box-shadow: inset 0 0 0 var(--hairline) var(--accent-rule);
+  }
+
+  .wb-step-main {
+    min-width: 0;
+    padding-bottom: var(--space-6);
+  }
+
+  .wb-step-h { margin: 0; }
+
+  .wb-step-btn {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    width: 100%;
+    padding: 0;
+    background: none;
+    border: 0;
+    text-align: left;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-step-btn:disabled { cursor: default; }
+  .wb-step-btn:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .wb-step-n {
+    font: var(--data-s);
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .wb-step-verbo {
+    font-family: var(--font-read);
+    font-weight: 600;
+    font-size: clamp(26px, 4vw, 40px);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  /* Cruz ortogonal: se cierra a una sola barra cuando el tramo está
+     abierto. Es el mismo gesto de "+ / −" pero dibujado con la
+     gramática recta del sistema, no con un chevron genérico. */
+  .wb-step-mark {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    margin-left: auto;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .wb-step-mark::before,
+  .wb-step-mark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    background: var(--text-tertiary);
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out);
+  }
+
+  .wb-step-mark::before { width: 14px; height: var(--hairline); }
+  .wb-step-mark::after { width: var(--hairline); height: 14px; }
+  .wb-step.is-open .wb-step-mark::after { opacity: 0; transform: scaleY(0); }
+  .wb-step.is-open .wb-step-mark::before { background: var(--accent-rule); }
+
+  /* Colapso por grid-template-rows: anima a alto real sin necesitar un
+     max-height inventado que corta el texto si crece. */
+  .wb-step-panel {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out);
+  }
+
+  .wb-step-panel > * { min-height: 0; }
+
+  .wb-step:not(.is-open) .wb-step-panel {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .wb-step-panel-inner { overflow: hidden; }
+
+  .wb-step-q {
+    font: var(--lead);
+    color: var(--text-primary);
+    margin: var(--space-4) 0 var(--space-3);
+    max-width: 46ch;
+  }
+
+  .wb-step-body {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  /* La nota de transición y el disparador se separan: la frase explica
+     POR QUÉ sigue el tramo siguiente, el botón es la acción. Antes el
+     disparador era un link subrayado adentro de la nota, y competía en
+     desventaja con los botones sólidos que la página usa para todo lo
+     demás — el visitante ya aprendió que "acción = botón". */
+  .wb-step-note {
+    margin: var(--space-5) 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    background: var(--accent-substrate);
+    border-left: var(--rule) solid var(--accent-rule);
+    font: var(--body-s);
+    color: var(--text-primary);
+    max-width: 54ch;
+  }
+
+  .wb-step-next {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 10px 18px;
+    font: var(--ui-m);
+    color: var(--bg);
+    background: var(--accent-rule);
+    border: var(--hairline) solid var(--accent-rule);
+    border-radius: var(--radius-2);
+    cursor: pointer;
+    transition: background-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-step-next:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .wb-step-next:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .wb-step-next-arrow { font-size: 1.1em; line-height: 1; }
+
+  /* Tramo bloqueado: presente pero atenuado. Se ve que hay más, y eso
+     es parte del gesto — no se oculta, se anticipa. */
+  .wb-step.is-locked .wb-step-btn { color: var(--text-tertiary); }
+  .wb-step.is-locked .wb-step-n { color: var(--text-tertiary); }
+
+  /* El "+" se reserva para lo que SÍ se puede abrir con un clic. El FAQ
+     lo usa con ese significado, y repetirlo en un tramo bloqueado —que
+     no responde al clic— hacía que el mismo glifo significara dos cosas
+     opuestas en la misma página. El tramo bloqueado se señala con el
+     nodo hueco y el texto atenuado, sin marca. */
+  .wb-step.is-locked .wb-step-mark { opacity: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wb-step-panel,
+    .wb-step-node,
+    .wb-step-mark::before,
+    .wb-step-mark::after { transition: none; }
+  }
+
+  /* ---------- programa ---------- */
+
+  .wb-head { margin-bottom: var(--space-8); }
+
+  /* ---------- barra de reparto del tiempo ---------- */
+
+  .wb-time {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    margin-bottom: var(--space-3);
+    min-width: 0;
+  }
+
+  .wb-time-seg {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+    padding: var(--space-3) var(--space-2) var(--space-2);
+    background: var(--surface);
+    border-top: var(--rule) solid var(--border-strong);
+    overflow: hidden;
+  }
+
+  /* Los tres módulos, en dorado: es la parte que el visitante compra.
+     Apertura y síntesis quedan en superficie neutra — la jerarquía la
+     da el dato, no un color elegido al azar. */
+  .wb-time-seg.is-core {
+    background: var(--accent-substrate);
+    border-top-color: var(--accent-rule);
+  }
+
+  .wb-time-n {
+    font: var(--data-s);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-tertiary);
+  }
+
+  .wb-time-seg.is-core .wb-time-n { color: var(--accent); }
+
+  .wb-time-m {
+    font-family: var(--font-data);
+    font-size: clamp(15px, 1.5vw, 20px);
+    line-height: 1;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .wb-time-cap {
+    font: var(--source);
+    color: var(--text-tertiary);
+    margin: 0 0 var(--space-7);
+    max-width: var(--wb-content);
+  }
+
+  .wb-modules {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wb-module {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: var(--space-6) 0;
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .wb-module:last-child { border-bottom: var(--hairline) solid var(--border); }
+
+  @media (min-width: 860px) {
+    .wb-module { grid-template-columns: 160px 1fr; gap: var(--space-7); }
+  }
+
+  .wb-module-meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  @media (min-width: 860px) {
+    .wb-module-meta { flex-direction: column; gap: var(--space-1); }
+  }
+
+  .wb-module-n {
+    font-family: var(--font-data);
+    font-size: clamp(28px, 3.4vw, 44px);
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-rule);
+  }
+
+  .wb-module-min {
+    font: var(--data-s);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-tertiary);
+  }
+
+  .wb-module-body { min-width: 0; }
+
+  .wb-module-t {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2);
+  }
+
+  .wb-module-d {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: 62ch;
+  }
+
+  .wb-points {
+    list-style: none;
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  /* Viñeta como nodo cuadrado — vocabulario del isotipo, no un check
+     genérico ni un ícono de librería. */
+  .wb-points li {
+    position: relative;
+    padding-left: var(--space-5);
+    font: var(--body-s);
+    color: var(--text-secondary);
+    max-width: 62ch;
+  }
+
+  .wb-points li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: var(--node-dot);
+    height: var(--node-dot);
+    background: var(--accent-rule);
+  }
+
+  /* ---------- prueba / link inline ---------- */
+
+  .wb-inline-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    width: fit-content;
+    font: var(--ui-l);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: var(--hairline) solid var(--border-strong);
+    padding-bottom: 3px;
+    transition: color var(--dur-fast) var(--ease-in-out),
+                border-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-inline-link:hover,
+  .wb-inline-link:focus-visible {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .wb-arrow {
+    display: inline-block;
+    transition: transform var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-inline-link:hover .wb-arrow { transform: translateX(4px); }
+
+  /* ---------- entregables ---------- */
+
+  .wb-deliver {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 720px) {
+    .wb-deliver { grid-template-columns: repeat(2, 1fr); gap: var(--space-6); }
+  }
+
+  @media (min-width: 1100px) {
+    .wb-deliver { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .wb-deliver-item {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--space-3);
+    min-width: 0;
+    padding-top: var(--space-4);
+    border-top: var(--rule) solid var(--accent-rule);
+  }
+
+  .wb-deliver-n {
+    font: var(--data-m);
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+
+  .wb-deliver-t {
+    font: var(--ui-l);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-1);
+  }
+
+  .wb-deliver-d {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .wb-able {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: var(--rule) solid var(--accent-rule);
+  }
+
+  .wb-able-t {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-4);
+  }
+
+  .wb-able-list {
+    columns: 1;
+    max-width: 92ch;
+  }
+
+  @media (min-width: 860px) { .wb-able-list { columns: 2; column-gap: var(--space-8); } }
+
+  /* ---------- calificación ---------- */
+
+  .wb-fit-cols {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-7);
+  }
+
+  @media (min-width: 860px) {
+    .wb-fit-cols { grid-template-columns: repeat(2, 1fr); gap: var(--space-8); }
+  }
+
+  .wb-fit-col { min-width: 0; }
+
+  .wb-fit-t {
+    font: var(--title-s);
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: var(--rule) solid currentColor;
+  }
+
+  .wb-fit-yes { color: var(--text-primary); }
+  .wb-fit-no { color: var(--text-tertiary); }
+
+  .wb-fit-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .wb-fit-list li {
+    position: relative;
+    padding-left: var(--space-5);
+    font: var(--body-s);
+    color: var(--text-secondary);
+  }
+
+  .wb-fit-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: var(--node-dot);
+    height: var(--node-dot);
+    background: var(--accent-rule);
+  }
+
+  /* La columna de exclusión usa un nodo hueco, no un color de alerta:
+     no es un error, es un límite de alcance. */
+  .wb-fit-list-no li::before {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--text-tertiary);
+  }
+
+  /* ---------- quién dicta ---------- */
+
+  .wb-who-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-7);
+    align-items: center;
+  }
+
+  @media (min-width: 900px) {
+    /* El retrato a la derecha llena el ancho que antes quedaba vacío y
+       rompe el compás de "eyebrow + título serif" que venían repitiendo
+       todas las secciones seguidas. */
+    .wb-who-grid { grid-template-columns: 1fr 360px; gap: var(--space-9); }
+  }
+
+  .wb-who-text { min-width: 0; }
+
+  .wb-who-photo {
+    margin: 0;
+    /* Esquina viva: es una imagen, no un control. */
+    border: var(--hairline) solid var(--border);
+    overflow: hidden;
+    line-height: 0;
+  }
+
+  .wb-who-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    object-position: 50% 12%;
+    filter: url(#wb-duotone) contrast(1.05);
+  }
+
+  /* Nombre a escala arquitectónica: es la sección donde la persona
+     importa más que el texto, y hasta acá todos los títulos venían con
+     el mismo compás. Rompe el ritmo a propósito. */
+  .wb-who-name {
+    font-family: var(--font-read);
+    font-weight: 600;
+    font-size: clamp(38px, 6vw, 68px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-3);
+  }
+
+  .wb-who-role {
+    font: var(--data-s);
+    /* --accent, no --accent-rule: dentro de .register-ink los dos
+       valen lo mismo, pero --accent es el token de TINTA. Si esta
+       sección alguna vez vuelve a registro paper, --accent-rule como
+       letra daría 2.11:1 — la trampa ya documentada del sistema. */
+    color: var(--accent);
+    margin: 0 0 var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: var(--hairline) solid var(--border);
+  }
+
+  .wb-who-lead {
+    font: var(--lead);
+    color: var(--text-primary);
+    margin: 0 0 var(--flow-p);
+    max-width: 54ch;
+  }
+
+  .wb-who-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .wb-social {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 9px 14px;
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    color: var(--text-secondary);
+    text-decoration: none;
+    /* Chip: --radius-1 es el radio que el sistema asigna a chip/tag. */
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-1);
+    transition: color var(--dur-fast) var(--ease-in-out),
+                border-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-social svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .wb-social:hover { color: var(--accent); border-color: var(--accent); }
+  .wb-social:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* ---------- cuenta regresiva flotante ---------- */
+
+  .wb-count {
+    position: fixed;
+    top: calc(var(--space-4) + 62px);
+    right: var(--space-4);
+    z-index: 54;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface-raised);
+    border: var(--hairline) solid var(--border);
+    border-top: var(--rule) solid var(--accent-rule);
+    border-radius: var(--radius-2);
+    box-shadow: var(--shadow-float);
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out);
+  }
+
+  .wb-count[hidden] { display: none; }
+
+  @media (min-width: 900px) {
+    .wb-count { top: calc(var(--space-5) + 66px); right: var(--space-5); }
+  }
+
+  .wb-count-k {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .wb-count-grid {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+
+  .wb-count-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    min-width: 26px;
+  }
+
+  .wb-count-cell b {
+    font-family: var(--font-data);
+    font-size: 21px;
+    line-height: 1;
+    font-weight: 500;
+    /* tabular-nums es obligatorio acá: sin esto los dígitos cambian de
+       ancho al pasar los segundos y el bloque entero tiembla. */
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+
+  .wb-count-cell i {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    font-style: normal;
+    color: var(--text-tertiary);
+  }
+
+  .wb-count.is-past { border-top-color: var(--border); }
+
+  /* ---------- cupos en el zócalo ---------- */
+
+  .wb-cupos {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+    padding-left: var(--space-5);
+    border-left: var(--hairline) solid var(--border);
+  }
+
+  .wb-cupos-n {
+    font-family: var(--font-data);
+    font-size: 26px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+
+  .wb-cupos-l {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    line-height: 1.25;
+  }
+
+  /* ---------- barra de CTA persistente ---------- */
+
+  .wb-sticky {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 55;
+    background: var(--surface-raised);
+    border-top: var(--hairline) solid var(--border);
+    box-shadow: var(--shadow-float);
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out);
+  }
+
+  .wb-sticky[hidden] { display: none; }
+  .wb-sticky.is-in { transform: translateY(0); opacity: 1; }
+
+  .wb-sticky-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: var(--space-3) var(--page-margin);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .wb-sticky-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .wb-sticky-t {
+    font: var(--ui-m);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wb-sticky-d {
+    font: var(--source);
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .wb-sticky-cta { flex-shrink: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wb-sticky { transition: none; }
+  }
+
+  /* ---------- faq ---------- */
+
+  .wb-faq-list { margin: var(--space-6) 0 0; }
+
+  .wb-faq-item { border-top: var(--hairline) solid var(--border); }
+  .wb-faq-item:last-of-type { border-bottom: var(--hairline) solid var(--border); }
+
+  .wb-faq-q {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5) 0;
+    font: var(--title-s);
+    color: var(--text-primary);
+    cursor: pointer;
+    list-style: none;
+    transition: color var(--dur-fast) var(--ease-in-out);
+  }
+
+  /* El triángulo por defecto de <summary> es del sistema operativo y no
+     respeta la gramática del isotipo — se reemplaza por la misma cruz
+     ortogonal que usa la secuencia, para que los dos mecanismos de
+     apertura de la página hablen el mismo idioma. */
+  .wb-faq-q::-webkit-details-marker { display: none; }
+  .wb-faq-q::marker { content: ""; }
+
+  .wb-faq-q:hover { color: var(--accent); }
+  .wb-faq-q:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .wb-faq-mark {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  .wb-faq-mark::before,
+  .wb-faq-mark::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    background: var(--text-tertiary);
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out),
+                background-color var(--dur-base) var(--ease-in-out);
+  }
+
+  .wb-faq-mark::before { width: 14px; height: var(--hairline); }
+  .wb-faq-mark::after { width: var(--hairline); height: 14px; }
+
+  .wb-faq-item[open] .wb-faq-mark::after { opacity: 0; transform: scaleY(0); }
+  .wb-faq-item[open] .wb-faq-mark::before { background: var(--accent); }
+  .wb-faq-item[open] .wb-faq-q { color: var(--accent); }
+
+  .wb-faq-a {
+    padding-bottom: var(--space-5);
+  }
+
+  .wb-faq-a p {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+    max-width: var(--wb-content);
+  }
+
+  .wb-faq-foot {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: var(--space-6) 0 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wb-faq-mark::before,
+    .wb-faq-mark::after { transition: none; }
+  }
+
+  /* ---------- cierre ---------- */
+
+  .wb-close-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font: var(--data-m);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-6);
+  }
+
+  .wb-close-facts b { color: var(--text-primary); font-weight: 500; }
+
+  /* ---------- banda de conversión ---------- */
+
+  .wb-cband {
+    background: var(--accent-substrate);
+    border-top: var(--rule) solid var(--accent-rule);
+    border-bottom: var(--rule) solid var(--accent-rule);
+    padding: var(--space-6) 0;
+  }
+
+  .wb-cband-row {
+    max-width: var(--wb-content);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .wb-cband-text { min-width: 0; }
+
+  .wb-cband-t {
+    font-family: var(--font-data);
+    /* 22px, no 26: al topear la fila en 1100px la fecha completa más el
+       botón ya no entraban en una línea y el CTA caía debajo, perdiendo
+       la lectura "dato + acción" de un vistazo que es el punto de la
+       banda. */
+    font-size: clamp(18px, 1.9vw, 22px);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-1);
+  }
+
+  .wb-cband-d {
+    font: var(--source);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* Botón en tinta sobre el substrato dorado: el dorado ya es el fondo,
+     así que el contraste lo tiene que dar la tinta. */
+  .wb-cband-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 24px;
+    font: var(--ui-m);
+    color: var(--bg);
+    background: var(--text-primary);
+    border-radius: var(--radius-2);
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: background-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-cband-cta:hover { background: var(--text-secondary); }
+  .wb-cband-cta:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* Cifra de dato embebida en una etiqueta de interfaz. El sistema pide
+     que TODA cifra vaya en la fuente de datos; la etiqueta que la rodea
+     sigue en Instrument Sans, que es lo correcto para interfaz. */
+  .wb-num {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- valor ---------- */
+
+  .wb-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    /* Verde intermedio del sistema, no el petróleo profundo: en claro
+       queda #D3DAD6 (sage suave) y en oscuro #24403A. Se usa el token y
+       no un valor fijo porque ya invierte solo con el tema — un color
+       hardcodeado obligaría a un selector [data-theme], que Astro rompe
+       dentro de un <style> de componente (trampa documentada del
+       proyecto).
+
+       Es un token de estado usado como superficie, y vale decirlo: el
+       sistema no define un rol de "superficie teñida en verde" —
+       --accent-substrate, el único fondo de dato destacado, es dorado.
+       Es la opción más limpia disponible sin inventar un color nuevo ni
+       bajar a la escala --petrol-* cruda, que el doc marca como
+       referencia y no para producción.
+
+       El dorado sale del fondo (se asocia a advertencia y genera
+       fricción de lectura) y queda sólo en el filete, donde es acento
+       de marca. */
+    background: var(--state-active);
+    border-left: var(--rule) solid var(--accent-rule);
+  }
+
+  .wb-price-k {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+  }
+
+  .wb-price-v {
+    font-family: var(--font-data);
+    font-size: clamp(26px, 3vw, 34px);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+  }
+
+  .wb-price-d {
+    font: var(--source);
+    color: var(--text-secondary);
+  }
+
+  /* ---------- vías de pago ---------- */
+
+  .wb-pay {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-8);
+    max-width: none;
+  }
+
+  @media (min-width: 860px) {
+    .wb-pay { grid-template-columns: repeat(2, 1fr); gap: var(--space-7); }
+  }
+
+  .wb-pay-opt {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    background: var(--surface);
+    border: var(--hairline) solid var(--border);
+  }
+
+  .wb-pay-n {
+    font: var(--data-s);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-tertiary);
+  }
+
+  .wb-pay-t {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .wb-pay-d {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .wb-pay-cta { margin-top: auto; }
+
+  .wb-bank {
+    margin: 0;
+    padding: var(--space-4);
+    width: 100%;
+    background: var(--bg);
+    border: var(--hairline) solid var(--border);
+  }
+
+  .wb-bank-row { min-width: 0; }
+
+  .wb-bank-row + .wb-bank-row {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .wb-bank dt {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 2px;
+  }
+
+  .wb-bank dd {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    margin: 0;
+  }
+
+  .wb-bank-v {
+    font: var(--data-m);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    /* El CBU son 22 dígitos seguidos sin espacios: sin esto desborda la
+       tarjeta en mobile. */
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .wb-copy {
+    flex-shrink: 0;
+    font: var(--ui-s);
+    letter-spacing: var(--ls-ui-s);
+    padding: 4px 10px;
+    /* Control, no contenedor: --radius-2 aplica. */
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-2);
+    background: var(--surface-raised);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-in-out),
+                border-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-copy:hover { color: var(--text-primary); border-color: var(--text-tertiary); }
+  .wb-copy:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+  .wb-copy.is-done { color: var(--accent); border-color: var(--accent); }
+
+  /* ---------- comprobante ---------- */
+
+  .wb-upload {
+    padding-top: var(--space-6);
+    border-top: var(--rule) solid var(--accent-rule);
+  }
+
+  .wb-upload-t {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2);
+  }
+
+  .wb-upload-d {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-5);
+    max-width: 60ch;
+  }
+
+  /* ---------- diálogo del comprobante ---------- */
+
+  .wb-modal {
+    width: min(680px, calc(100vw - var(--space-6)));
+    max-height: min(88vh, 900px);
+    padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    /* Esquina viva: es un modal, y el sistema los cuenta como
+       contenedor. Sólo el botón de cierre lleva radio. */
+    border: var(--hairline) solid var(--border-strong);
+    border-top: var(--rule) solid var(--accent-rule);
+    border-radius: 0;
+    overflow: hidden;
+    /* margin:auto es lo que centra un <dialog> en la capa superior.
+       Explícito porque más abajo se pisa en mobile. */
+    margin: auto;
+  }
+
+  /* OJO: el display va SÓLO en [open]. Declararlo en la regla base pisa
+     el `display: none` que el navegador aplica al <dialog> cerrado, y el
+     formulario aparecía suelto en medio de la página desde la carga. */
+  .wb-modal[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wb-modal::backdrop {
+    /* Velo plano, sin desenfoque: el glassmorphism está prohibido. */
+    background: rgba(10, 19, 16, 0.62);
+  }
+
+  .wb-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: var(--hairline) solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .wb-modal-t {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .wb-modal-x {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: none;
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-2);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-modal-x:hover { border-color: var(--text-tertiary); }
+  .wb-modal-x:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* Aspa dibujada con dos trazos rectos — gramática del sistema, no un
+     carácter tipográfico que cambia de forma según la fuente. */
+  .wb-modal-x span,
+  .wb-modal-x span::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 15px;
+    height: var(--hairline);
+    background: var(--text-secondary);
+    content: "";
+  }
+
+  .wb-modal-x span { transform: translate(-50%, -50%) rotate(45deg); }
+  .wb-modal-x span::before { top: 0; left: 0; transform: rotate(-90deg); }
+
+  .wb-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wb-modal-body iframe {
+    display: block;
+    width: 100%;
+    border: 0;
+  }
+
+  .wb-modal-foot {
+    flex-shrink: 0;
+    margin: 0;
+    padding: var(--space-3) var(--space-5);
+    font: var(--source);
+    color: var(--text-tertiary);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  /* Formulario embebido (Tally). El contenedor le da el marco del
+     sistema — esquina viva y hairline, como cualquier bloque — para que
+     el iframe no quede flotando como un cuerpo extraño. El fondo del
+     formulario se pide transparente por query string, así hereda el
+     registro de la sección en vez de imponer un blanco propio. */
+  .wb-alt {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: var(--space-5) 0 0;
+    max-width: 62ch;
+  }
+
+  .wb-alt-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: var(--hairline) solid var(--accent);
+    transition: color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .wb-alt-link:hover { color: var(--accent-hover); }
+
+  .wb-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    align-items: flex-start;
+    max-width: 620px;
+  }
+
+  .wb-form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    width: 100%;
+  }
+
+  @media (min-width: 640px) {
+    .wb-form-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  .wb-cta-final { margin-top: var(--space-2); }
+
+  .wb-form-status {
+    font: var(--source);
+    letter-spacing: var(--ls-source);
+    margin: var(--space-5) 0 0;
+    padding-left: var(--space-3);
+    max-width: 60ch;
+  }
+
+  .wb-form-status[hidden] { display: none; }
+  .wb-form-status.is-success { color: var(--accent); border-left: var(--rule) solid var(--accent-rule); }
+  .wb-form-status.is-error { color: var(--state-error); border-left: var(--rule) solid var(--state-error); }
+
+  .wb-disclaimer {
+    font: var(--source);
+    color: var(--text-tertiary);
+    margin: var(--space-8) 0 0;
+    padding-top: var(--space-5);
+    border-top: var(--hairline) solid var(--border);
+    max-width: 76ch;
+  }
+
+  /* ============================================================
+     MOBILE — mismo criterio que el resto del sitio (2026-08-27):
+     todo por debajo de 640px, desktop intacto.
+     ============================================================ */
+  @media (max-width: 639px) {
+    .wb-hero,
+    .wb-diff,
+    .wb-prog,
+    .wb-proof,
+    .wb-take,
+    .wb-fit,
+    .wb-who,
+    .wb-faq,
+    .wb-close {
+      padding: var(--space-8) 0;
+    }
+
+    /* Colchón para las píldoras flotantes del Header, igual que el
+       hero del sitio: sin esto la primera línea nace tapada. */
+    .wb-hero { padding-top: calc(var(--space-8) + 56px); }
+
+    /* El CTA a ancho completo: es la acción de la página y en mobile
+       tiene que ser el objetivo táctil más grande de la pantalla. */
+    .wb-cta {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .wb-hero-cta { align-self: stretch; width: 100%; }
+
+    .wb-form { width: 100%; max-width: none; }
+
+    .wb-h2 { max-width: none; }
+
+    .wb-able-list { columns: 1; }
+
+    /* La barra persistente en mobile es sólo el botón: el par
+       título/fecha no entra en 390px sin recortarse con elipsis, y un
+       texto cortado a la mitad al lado del CTA resta credibilidad en
+       vez de sumar contexto. Los datos ya están en la ficha del hero y
+       en el cierre. */
+    .wb-modal {
+      width: 100vw;
+      max-width: none;
+      max-height: 92svh;
+      margin: auto 0 0;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+    }
+
+    .wb-cband-inner { flex-direction: column; align-items: stretch; }
+    .wb-cband-cta { width: 100%; }
+
+    /* En el zócalo de 390px no entra el título Y los cupos junto al
+       botón. Se conserva el dato de cupos —que es el que aporta
+       urgencia— y se retira el título, que ya está en toda la página. */
+    .wb-sticky-text { display: none; }
+
+    .wb-cupos {
+      padding-left: 0;
+      border-left: 0;
+      gap: var(--space-2);
+    }
+    .wb-cupos-n { font-size: 22px; }
+
+    /* En mobile la cuenta regresiva NO puede vivir arriba a la derecha:
+       medido en captura, ahí se monta sobre la columna de lectura y tapa
+       renglones enteros de prosa. Pasa a ser una franja del chrome
+       INFERIOR, apoyada sobre el zócalo — ese espacio ya está cedido a
+       la interfaz, así que no le quita nada al contenido.
+       69px = alto real del zócalo en 390px. */
+    .wb-count {
+      top: auto;
+      bottom: 69px;
+      left: 0;
+      right: 0;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-4);
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+    }
+
+    .wb-count-grid { gap: var(--space-3); }
+    .wb-count-cell { flex-direction: row; align-items: baseline; gap: 3px; min-width: 0; }
+    .wb-count-cell b { font-size: 16px; }
+
+    .wb-sticky-inner { padding: var(--space-3) var(--space-4); }
+
+    .wb-sticky-cta {
+      width: 100%;
+      flex-shrink: 1;
+    }
+  }
+</style>

@@ -1,0 +1,298 @@
+---
+// gracias.astro — destino del redireccionamiento de Mercado Pago.
+//
+// Se configura en la preferencia de pago de MP como back_url de éxito:
+//   https://tomasrau.ar/webinar/gracias
+//
+// Por qué existe: sin esta página, quien paga con Mercado Pago queda en
+// la pantalla de MP y tiene que volver al sitio por su cuenta para
+// registrarse. Ese salto manual pierde gente que YA pagó — el peor lugar
+// posible para agregar fricción.
+//
+// Formulario propio (lbEBj6), distinto del de transferencia: acá NO se
+// pide comprobante, porque el pago ya quedó registrado en Mercado Pago.
+//
+// ---------------------------------------------------------------
+// POR QUÉ LOS PARÁMETROS SE LEEN EN EL CLIENTE Y NO EN EL FRONTMATTER
+// ---------------------------------------------------------------
+// Este sitio compila estático (output: "static"). `Astro.url.searchParams`
+// en el frontmatter se evalúa EN EL BUILD, no en la visita: el HTML sale
+// con una sola rama congelada. Verificado — la primera versión de esta
+// página generaba únicamente el bloque de éxito, así que alguien con el
+// pago rechazado hubiera visto "Pago recibido", y el número de operación
+// no aparecía nunca.
+//
+// Por eso las dos ramas van en el HTML y la elección la hace un script
+// inline, ANTES del markup: al correr durante el parseo, la clase queda
+// puesta antes de que el navegador pinte cualquiera de los dos bloques y
+// no hay parpadeo. Es el mismo patrón que el sitio ya usa en <head> para
+// el tema y para saltear el loader.
+import Layout from "../../layouts/Layout.astro";
+
+const TALLY_FORM_ID = "lbEBj6";
+const tallyEmbedUrl =
+  `https://tally.so/embed/${TALLY_FORM_ID}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`;
+
+const WEBINAR = {
+  nombre: "Economía & Finanzas: Ordenar e Invertir",
+  fecha: "Jueves 24 de septiembre de 2026",
+  hora: "19:00 h (Argentina)",
+  duracion: "3 horas",
+  modalidad: "Online, en vivo",
+};
+
+const waSoporte = `https://wa.me/5491168659656?text=${encodeURIComponent(
+  "Hola Tomás, pagué el webinar por Mercado Pago y tengo una consulta.",
+)}`;
+---
+
+<Layout
+  lang="es"
+  showLang={false}
+  noindex={true}
+  title="Pago recibido · Economía & Finanzas: Ordenar e Invertir"
+  description="Último paso para confirmar tu lugar en el webinar."
+>
+  <script is:inline>
+    /* Corre durante el parseo, antes de que se pinte cualquiera de las
+       dos ramas: sin esto habría un destello del bloque de éxito para
+       alguien cuyo pago fue rechazado. */
+    (() => {
+      try {
+        const p = new URLSearchParams(location.search);
+        const s = p.get("status") || p.get("collection_status");
+        if (s === "rejected" || s === "failure" || s === "cancelled") {
+          document.documentElement.classList.add("pay-rejected");
+        }
+      } catch {}
+    })();
+  </script>
+
+  <section class="gr register-paper">
+    <div class="gr-inner">
+
+      <!-- ---------- Pago tomado ---------- -->
+      <div class="gr-ok">
+        <span class="gr-kicker">Pago recibido</span>
+        <h1 class="gr-title">Falta un solo paso.</h1>
+        <p class="gr-lead">
+          Tu pago quedó registrado en Mercado Pago. Completá estos datos y te
+          mando el acceso al encuentro por mail.
+        </p>
+
+        <!-- Los datos del evento, arriba del formulario: quien acaba de
+             pagar quiere confirmar que compró lo que creía comprar. -->
+        <dl class="gr-facts">
+          <div>
+            <dt>Webinar</dt>
+            <dd>{WEBINAR.nombre}</dd>
+          </div>
+          <div>
+            <dt>Fecha</dt>
+            <dd class="gr-num">{WEBINAR.fecha} · {WEBINAR.hora}</dd>
+          </div>
+          <div>
+            <dt>Duración</dt>
+            <dd class="gr-num">{WEBINAR.duracion} · {WEBINAR.modalidad}</dd>
+          </div>
+          <!-- Se rellena por JS con lo que devuelve Mercado Pago. Si no
+               viene el parámetro, la fila entera queda oculta en vez de
+               mostrar un campo vacío. -->
+          <div data-pay-row hidden>
+            <dt>N° de operación</dt>
+            <dd class="gr-num" data-pay-id></dd>
+          </div>
+        </dl>
+
+        <!-- Embebido y no en un diálogo, al revés que en la landing: acá
+             el formulario ES la página, no una acción opcional entre
+             otras. Abrirlo en un popup sería un clic sin motivo. -->
+        <div class="gr-embed">
+          <iframe
+            data-tally-src={tallyEmbedUrl}
+            title="Datos para el acceso al webinar"
+            loading="lazy"
+            width="100%"
+            height="620"
+          ></iframe>
+        </div>
+
+        <script is:inline async src="https://tally.so/widgets/embed.js"></script>
+
+        <p class="gr-foot">
+          ¿Algo no funciona? Escribime por
+          <a href={waSoporte} target="_blank" rel="noopener noreferrer" class="gr-link">WhatsApp</a>
+          o a <a href="mailto:tomasrau@lorenz.ar" class="gr-link">tomasrau@lorenz.ar</a>.
+        </p>
+      </div>
+
+      <!-- ---------- Pago rechazado ---------- -->
+      <div class="gr-fail">
+        <span class="gr-kicker gr-kicker-fail">El pago no se completó</span>
+        <h1 class="gr-title">Mercado Pago rechazó la operación.</h1>
+        <p class="gr-lead">
+          No se te cobró nada. Podés intentar de nuevo desde la página del
+          webinar, o escribirme y lo resolvemos por otra vía.
+        </p>
+        <div class="gr-actions">
+          <a href="/webinar#registro" class="btn btn-primary">Volver a intentar</a>
+          <a href={waSoporte} target="_blank" rel="noopener noreferrer" class="gr-link">
+            Escribirme por WhatsApp
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script is:inline>
+    /* El número de operación es sólo una referencia para que la persona
+       pueda citarlo si escribe. NO se usa para afirmar que el pago está
+       confirmado: eso lo determina Mercado Pago del lado del servidor y
+       un parámetro de URL es falsificable. Por eso el texto dice
+       "quedó registrado en Mercado Pago" y no "verificamos tu pago". */
+    (() => {
+      try {
+        const p = new URLSearchParams(location.search);
+        const id = p.get("payment_id") || p.get("collection_id");
+        if (!id || !/^[\w-]{1,40}$/.test(id)) return;
+        const row = document.querySelector("[data-pay-row]");
+        const out = document.querySelector("[data-pay-id]");
+        if (!row || !out) return;
+        out.textContent = id;
+        row.hidden = false;
+      } catch {}
+    })();
+  </script>
+</Layout>
+
+<!-- Global a propósito: la clase la pone el script sobre <html>, y un
+     <style> scopeado nunca la alcanzaría — Astro le agrega el atributo
+     de scope a CADA compound del selector, incluido el que apunta a
+     <html>, que no lo lleva. Es la trampa ya documentada del proyecto. -->
+<style is:global>
+  .gr-fail { display: none; }
+  html.pay-rejected .gr-ok { display: none; }
+  html.pay-rejected .gr-fail { display: block; }
+</style>
+
+<style>
+  /* Página de un solo propósito: sin secciones alternadas, sin chrome de
+     conversión. Quien llega acá ya pagó. */
+  .gr {
+    padding: calc(var(--space-9) + 56px) 0 var(--space-9);
+  }
+
+  .gr-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: 0 var(--page-margin);
+    width: 100%;
+  }
+
+  .gr-inner > * > * { max-width: 760px; }
+
+  .gr-kicker {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .gr-kicker-fail { color: var(--state-error); }
+
+  .gr-title {
+    font-family: var(--font-read);
+    font-weight: 600;
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-5);
+  }
+
+  .gr-lead {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-7);
+  }
+
+  /* Ficha del evento: pares kicker/valor, el mismo patrón de panel de
+     datos que usa el resto del sitio. Verde intermedio del sistema
+     (--state-active), que ya invierte solo con el tema. */
+  .gr-facts {
+    margin: 0 0 var(--space-7);
+    padding: var(--space-5);
+    background: var(--state-active);
+    border-left: var(--rule) solid var(--accent-rule);
+  }
+
+  .gr-facts > div + div {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: var(--hairline) solid var(--border);
+  }
+
+  .gr-facts > div[hidden] { display: none; }
+
+  .gr-facts dt {
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    margin-bottom: 2px;
+  }
+
+  .gr-facts dd {
+    font: var(--ui-m);
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  /* Cifras en la fuente de datos, como pide el sistema. La abreviatura
+     `font:` de la regla de arriba resetea font-variant-numeric, así que
+     tabular-nums va acá, después. */
+  .gr-num {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .gr-embed {
+    max-width: 680px;
+    border: var(--hairline) solid var(--border);
+    background: var(--surface);
+  }
+
+  .gr-embed iframe { display: block; width: 100%; border: 0; }
+
+  .gr-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-5);
+  }
+
+  .gr-foot {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: var(--space-6) 0 0;
+  }
+
+  .gr-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: var(--hairline) solid var(--accent);
+  }
+
+  .gr-link:hover { color: var(--accent-hover); }
+  .gr-link:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  @media (max-width: 639px) {
+    .gr { padding: calc(var(--space-8) + 56px) 0 var(--space-8); }
+    .gr-inner > * > * { max-width: none; }
+    .gr-actions > .btn { width: 100%; }
+  }
+</style>

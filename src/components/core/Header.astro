@@ -18,9 +18,19 @@ import logoOnDark from "../../assets/media/logos/logo_white_cropped.png";
 interface Props {
   lang?: "es" | "en";
   alternateUrl?: string;
+  // Páginas que existen en un solo idioma (la landing del webinar, por
+  // ejemplo) tienen que poder APAGAR el selector, no apuntarlo a sí
+  // mismas: un "en" que recarga la misma página en español es un control
+  // roto, y esconderlo por CSS lo dejaría igual de roto para quien
+  // navegue por teclado o lector de pantalla.
+  showLang?: boolean;
 }
 
-const { lang = "es", alternateUrl = lang === "es" ? "/en/" : "/" } = Astro.props;
+const {
+  lang = "es",
+  alternateUrl = lang === "es" ? "/en/" : "/",
+  showLang = true,
+} = Astro.props;
 
 const t = lang === "en"
   ? {
@@ -49,15 +59,17 @@ const t = lang === "en"
     <kbd class="cmdk-trigger-key">⌘K</kbd>
   </button>
 
-  <nav class="lang-switch" aria-label={t.switcher}>
-    {lang === "es"
-      ? <span class="lang-option is-current" aria-current="true">es</span>
-      : <a href={alternateUrl} class="lang-option" aria-label="Ver sitio en español">es</a>}
-    <span class="lang-sep" aria-hidden="true">/</span>
-    {lang === "en"
-      ? <span class="lang-option is-current" aria-current="true">en</span>
-      : <a href={alternateUrl} class="lang-option" aria-label="View site in English">en</a>}
-  </nav>
+  {showLang && (
+    <nav class="lang-switch" aria-label={t.switcher}>
+      {lang === "es"
+        ? <span class="lang-option is-current" aria-current="true">es</span>
+        : <a href={alternateUrl} class="lang-option" aria-label="Ver sitio en español">es</a>}
+      <span class="lang-sep" aria-hidden="true">/</span>
+      {lang === "en"
+        ? <span class="lang-option is-current" aria-current="true">en</span>
+        : <a href={alternateUrl} class="lang-option" aria-label="View site in English">en</a>}
+    </nav>
+  )}
 
   <button type="button" class="theme-toggle" aria-label={t.theme} aria-pressed="false" data-theme-toggle>
     <svg class="theme-icon theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">

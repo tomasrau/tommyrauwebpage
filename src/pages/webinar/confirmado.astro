@@ -1,0 +1,318 @@
+---
+// confirmado.astro — destino al COMPLETAR cualquiera de los dos
+// formularios de Tally.
+//
+// Se configura en Tally, en "Redirect on completion" de cada formulario:
+//
+//   Formulario de Mercado Pago (lbEBj6)
+//     https://tomasrau.ar/webinar/confirmado
+//
+//   Formulario de comprobante de transferencia (Y5l7qq)
+//     https://tomasrau.ar/webinar/confirmado?via=transferencia
+//
+// Por qué existe: sin redirección, Tally deja su propia pantalla de
+// "Thanks for completing this form · Made with Tally · Create your own
+// form". Eso no es sólo un callejón sin salida — es publicidad de un
+// tercero justo después de la conversión, con un link que se lleva a la
+// persona que acaba de pagar. Cambiarlo por una página propia recupera
+// ese momento.
+//
+// Los dos flujos comparten página pero NO mensaje: quien pagó por
+// Mercado Pago ya tiene el lugar; quien transfirió mandó el comprobante y
+// todavía espera confirmación manual. Decirle "listo, estás anotado" a
+// alguien que todavía no fue verificado sería mentirle.
+//
+// El parámetro se lee en el CLIENTE, no en el frontmatter: el sitio
+// compila estático y `Astro.url.searchParams` se evaluaría en el build,
+// dejando una sola rama congelada en el HTML (error ya cometido y
+// verificado en gracias.astro).
+import Layout from "../../layouts/Layout.astro";
+
+const WEBINAR = {
+  nombre: "Economía & Finanzas: Ordenar e Invertir",
+  fecha: "Jueves 24 de septiembre de 2026",
+  hora: "19:00 h (Argentina)",
+  duracion: "3 horas",
+  instagramUrl: "https://www.instagram.com/tommyrau_/",
+  linkedinUrl: "https://www.linkedin.com/in/tomasezequielrau",
+};
+
+// Link de Google Calendar. Las horas van en UTC, igual que el .ics:
+// 19:00 ART = 22:00 UTC, y termina 01:00 UTC del día siguiente.
+const gcal = "https://calendar.google.com/calendar/render?" + new URLSearchParams({
+  action: "TEMPLATE",
+  text: `Webinar · ${WEBINAR.nombre}`,
+  dates: "20260924T220000Z/20260925T010000Z",
+  details: "Tres horas en vivo para entender el contexto económico, ordenar tus finanzas y empezar a pensar tus inversiones con criterio.\n\nEl acceso llega por mail antes del encuentro.\n\nhttps://tomasrau.ar/webinar",
+  location: "Online",
+}).toString();
+
+const waSoporte = `https://wa.me/5491168659656?text=${encodeURIComponent(
+  "Hola Tomás, me inscribí al webinar y tengo una consulta.",
+)}`;
+---
+
+<Layout
+  lang="es"
+  showLang={false}
+  noindex={true}
+  title="Inscripción registrada · Economía & Finanzas: Ordenar e Invertir"
+  description="Tu inscripción al webinar quedó registrada."
+>
+  <script is:inline>
+    /* Corre durante el parseo, antes de que se pinte cualquiera de los
+       dos encabezados: sin esto habría un destello del mensaje
+       equivocado. */
+    (() => {
+      try {
+        const via = new URLSearchParams(location.search).get("via");
+        if (via === "transferencia") {
+          document.documentElement.classList.add("via-transferencia");
+        }
+      } catch {}
+    })();
+  </script>
+
+  <section class="cf register-paper">
+    <div class="cf-inner">
+
+      <!-- ---------- Encabezado según el flujo ---------- -->
+      <div class="cf-head cf-head-pago">
+        <span class="cf-kicker">Inscripción confirmada</span>
+        <h1 class="cf-title">Listo. Tenés tu lugar.</h1>
+        <p class="cf-lead">
+          Te va a llegar un mail con el acceso antes del encuentro. Si no lo ves,
+          revisá el correo no deseado.
+        </p>
+      </div>
+
+      <div class="cf-head cf-head-transf">
+        <span class="cf-kicker">Comprobante recibido</span>
+        <h1 class="cf-title">Recibí tu comprobante.</h1>
+        <p class="cf-lead">
+          Reviso la transferencia y te confirmo el lugar por mail dentro de las
+          24 horas. Mientras tanto, ya podés agendar la fecha.
+        </p>
+      </div>
+
+      <!-- ---------- Agendar: la opción que más importa ---------- -->
+      <div class="cf-block">
+        <h2 class="cf-h2">Agendá la fecha</h2>
+        <p class="cf-p">
+          {WEBINAR.fecha} · {WEBINAR.hora} · {WEBINAR.duracion}, online y en vivo.
+        </p>
+        <div class="cf-actions">
+          <a href={gcal} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+            Agregar a Google Calendar
+          </a>
+          <!-- .ics para Apple Calendar, Outlook y el resto. El link de
+               Google sirve sólo a quien usa Google. -->
+          <a href="/webinar/webinar.ics" download class="cf-btn-sec">
+            Descargar para otro calendario
+          </a>
+        </div>
+      </div>
+
+      <!-- ---------- Qué hacer mientras tanto ---------- -->
+      <div class="cf-block">
+        <h2 class="cf-h2">Mientras tanto</h2>
+        <ul class="cf-links">
+          <li>
+            <a href="/#modelo" target="_blank" rel="noopener">
+              <span class="cf-link-t">Probá el modelo IS-LM-BP</span>
+              <span class="cf-link-d">
+                La herramienta del módulo 1, publicada y funcionando. Movés la
+                política fiscal o monetaria y ves las tres curvas desplazarse.
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="/#research" target="_blank" rel="noopener">
+              <span class="cf-link-t">Leé las notas de research</span>
+              <span class="cf-link-d">
+                Piezas cortas sobre tasas, macro y estructura de mercado.
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href={WEBINAR.instagramUrl} target="_blank" rel="noopener noreferrer">
+              <span class="cf-link-t">Seguime en Instagram</span>
+              <span class="cf-link-d">
+                Ahí publico los recortes y avisos previos al encuentro.
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href={WEBINAR.linkedinUrl} target="_blank" rel="noopener noreferrer">
+              <span class="cf-link-t">Conectá en LinkedIn</span>
+              <span class="cf-link-d">
+                Para seguir la conversación en un registro más profesional.
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <p class="cf-foot">
+        ¿Alguna duda? Escribime por
+        <a href={waSoporte} target="_blank" rel="noopener noreferrer" class="cf-a">WhatsApp</a>
+        o a <a href="mailto:tomasrau@lorenz.ar" class="cf-a">tomasrau@lorenz.ar</a>.
+      </p>
+
+    </div>
+  </section>
+</Layout>
+
+<!-- Global: la clase la pone el script sobre <html>, y un <style>
+     scopeado no la alcanzaría — Astro le agrega el atributo de scope a
+     cada compound, incluido el que apunta a <html>. -->
+<style is:global>
+  .cf-head-transf { display: none; }
+  html.via-transferencia .cf-head-pago { display: none; }
+  html.via-transferencia .cf-head-transf { display: block; }
+</style>
+
+<style>
+  .cf { padding: calc(var(--space-9) + 56px) 0 var(--space-9); }
+
+  .cf-inner {
+    max-width: var(--grid-max);
+    margin: 0 auto;
+    padding: 0 var(--page-margin);
+    width: 100%;
+  }
+
+  .cf-inner > * { max-width: 760px; }
+
+  .cf-kicker {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: var(--space-4);
+  }
+
+  .cf-title {
+    font-family: var(--font-read);
+    font-weight: 600;
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-5);
+  }
+
+  .cf-lead {
+    font: var(--body);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-8);
+  }
+
+  .cf-block {
+    padding-top: var(--space-6);
+    margin-bottom: var(--space-7);
+    border-top: var(--rule) solid var(--accent-rule);
+  }
+
+  .cf-h2 {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2);
+  }
+
+  .cf-p {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-5);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  /* Secundario: mismo alto que el primario para que la fila no quede
+     despareja, pero sin relleno — hay un solo botón primario por vista. */
+  .cf-btn-sec {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    padding: 12px 20px;
+    font: var(--ui-m);
+    color: var(--text-primary);
+    text-decoration: none;
+    background: transparent;
+    border: var(--hairline) solid var(--border-strong);
+    border-radius: var(--radius-2);
+    transition: border-color var(--dur-fast) var(--ease-in-out),
+                color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .cf-btn-sec:hover { border-color: var(--text-tertiary); color: var(--accent); }
+  .cf-btn-sec:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .cf-links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .cf-links li + li { margin-top: var(--space-1); }
+
+  .cf-links a {
+    display: block;
+    padding: var(--space-4);
+    text-decoration: none;
+    background: var(--surface);
+    border-left: var(--rule) solid transparent;
+    transition: background-color var(--dur-fast) var(--ease-in-out),
+                border-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .cf-links a:hover {
+    background: var(--state-hover);
+    border-left-color: var(--accent-rule);
+  }
+
+  .cf-links a:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .cf-link-t {
+    display: block;
+    font: var(--ui-l);
+    color: var(--text-primary);
+    margin-bottom: 2px;
+  }
+
+  .cf-link-d {
+    display: block;
+    font: var(--body-s);
+    color: var(--text-secondary);
+  }
+
+  .cf-foot {
+    font: var(--body-s);
+    color: var(--text-secondary);
+    margin: var(--space-7) 0 0;
+  }
+
+  .cf-a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: var(--hairline) solid var(--accent);
+  }
+
+  .cf-a:hover { color: var(--accent-hover); }
+  .cf-a:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  @media (max-width: 639px) {
+    .cf { padding: calc(var(--space-8) + 56px) 0 var(--space-8); }
+    .cf-inner > * { max-width: none; }
+    .cf-actions { align-items: stretch; flex-direction: column; }
+    .cf-actions > .btn,
+    .cf-btn-sec { width: 100%; justify-content: center; }
+  }
+</style>

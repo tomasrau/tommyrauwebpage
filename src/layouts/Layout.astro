@@ -22,13 +22,21 @@ interface Props {
   description?: string;
   lang?: "es" | "en";
   alternateUrl?: string;
+  // Se pasa tal cual al Header. Sirve para las páginas que existen en un
+  // solo idioma y no tienen a dónde apuntar el selector.
+  showLang?: boolean;
+  // Páginas que no deben aparecer en buscadores (confirmaciones de pago,
+  // gracias post-checkout): son destinos de un flujo, no contenido.
+  noindex?: boolean;
 }
 
 const {
   title = "Tomás Rau | Economía, Business Intelligence y Analítica Financiera",
   description = "Economista especializado en Business Intelligence, analítica financiera, estrategia tecnológica y toma de decisiones basada en datos.",
   lang = "es",
-  alternateUrl
+  alternateUrl,
+  showLang = true,
+  noindex = false
 } = Astro.props;
 
 const siteURL = "https://tomasrau.ar";
@@ -92,7 +100,7 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     <meta name="title" content={title} />
     <meta name="description" content={description} />
     <meta name="author" content="Tomás Rau" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow"} />
     <meta name="theme-color" content="#EDF0EE" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0A1310" media="(prefers-color-scheme: dark)" />
     <meta name="color-scheme" content="light dark" />
@@ -135,7 +143,7 @@ const ogLocale = lang === "en" ? "en_US" : "es_AR";
     </div>
 
     <!-- Sticky Floating Navigation Header -->
-    <Header lang={lang} alternateUrl={alternateUrl} />
+    <Header lang={lang} alternateUrl={alternateUrl} showLang={showLang} />
 
     <!-- ReadingProgress.astro se monta por página, sólo en nota/caso
          individual (modo de progreso de lectura atado a su propio

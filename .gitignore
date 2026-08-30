@@ -25,3 +25,10 @@ pnpm-debug.log*
 
 # brand catalog & design system source (internal, not needed at runtime)
 src/assets/media/design_system/
+
+# material de origen del webinar (local, a propósito)
+# El documento maestro define el diseño pedagógico y el posicionamiento
+# comercial del curso. Astro lo ignora —no es una content collection, no
+# aparece en el sitio— y este repo es PÚBLICO, así que commitearlo lo
+# dejaría legible para cualquiera de forma permanente. Se mantiene local.
+src/content/learning/
