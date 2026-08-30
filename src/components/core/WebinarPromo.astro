@@ -1,0 +1,267 @@
+---
+// WebinarPromo.astro — aviso flotante que promociona el webinar y lleva
+// a /webinar. Aparece al dejar atrás el hero.
+//
+// Se monta SÓLO en la home en español (pages/index.astro), no desde el
+// Layout: la landing del webinar existe únicamente en español, así que
+// mostrarlo en /en/ ofrecería en inglés algo que después se lee en
+// castellano. Y en la propia /webinar sería redundante.
+//
+// ---------------------------------------------------------------
+// TRES REGLAS QUE LO HACEN NO MOLESTO
+// ---------------------------------------------------------------
+// 1. Se cierra y NO vuelve. La decisión queda en localStorage bajo una
+//    clave versionada por campaña: si en el futuro hay otro webinar, se
+//    cambia la clave y el aviso vuelve a mostrarse desde cero, sin
+//    reaparecerle a quien ya lo descartó éste.
+// 2. Caduca solo. Pasada la fecha del encuentro no se muestra más — un
+//    aviso que promociona un evento que ya ocurrió hace más daño que no
+//    tener aviso.
+// 3. No se apila sobre el resto del chrome. Mientras está abierto se
+//    retiran la píldora de navegación y el botón de WhatsApp: en mobile
+//    los tres juntos taparían media pantalla.
+const WEBINAR = {
+  nombre: "Economía & Finanzas: Ordenar e Invertir",
+  fecha: "Jueves 24 de septiembre",
+  hora: "19:00 h",
+  duracion: "3 horas",
+  // Mismo instante que usa la landing, con offset explícito de Argentina.
+  inicioISO: "2026-09-24T19:00:00-03:00",
+  href: "/webinar",
+};
+
+// Versionada por campaña — ver regla 1 arriba.
+const STORAGE_KEY = "promo-webinar-2026-09";
+---
+
+<aside
+  class="promo"
+  data-promo
+  data-target={WEBINAR.inicioISO}
+  data-key={STORAGE_KEY}
+  aria-label="Aviso del próximo webinar"
+  hidden
+>
+  <div class="promo-body">
+    <span class="promo-kicker">Próximo webinar</span>
+    <p class="promo-title">{WEBINAR.nombre}</p>
+    <p class="promo-meta">
+      {WEBINAR.fecha} · {WEBINAR.hora} · {WEBINAR.duracion}, online y en vivo
+    </p>
+    <a href={WEBINAR.href} class="promo-cta" data-promo-go>Ver el programa</a>
+  </div>
+
+  <button type="button" class="promo-x" data-promo-close aria-label="Cerrar aviso">
+    <span aria-hidden="true"></span>
+  </button>
+</aside>
+
+<script>
+  const promo = document.querySelector<HTMLElement>("[data-promo]");
+  const hero = document.getElementById("inicio");
+
+  if (promo && hero) {
+    const key = promo.dataset.key ?? "promo-webinar";
+    const target = new Date(promo.dataset.target ?? "").getTime();
+    const root = document.documentElement;
+
+    // localStorage puede tirar excepción (modo privado en algunos
+    // navegadores, cookies bloqueadas). Si falla, el aviso simplemente
+    // se muestra: es preferible a que un error rompa el script entero.
+    const yaCerrado = () => {
+      try {
+        return localStorage.getItem(key) === "1";
+      } catch {
+        return false;
+      }
+    };
+
+    const recordarCierre = () => {
+      try {
+        localStorage.setItem(key, "1");
+      } catch {}
+    };
+
+    const cerrar = () => {
+      promo.classList.remove("is-in");
+      root.classList.remove("promo-open");
+      recordarCierre();
+      // Se saca del flujo recién al terminar la transición, para que la
+      // salida se vea. Con prefers-reduced-motion no hay transición y el
+      // temporizador simplemente resuelve enseguida.
+      window.setTimeout(() => {
+        promo.hidden = true;
+      }, 260);
+    };
+
+    const eventoPasado = Number.isFinite(target) && Date.now() > target;
+
+    if (!yaCerrado() && !eventoPasado) {
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          // Se dispara cuando el hero YA no está en pantalla: el
+          // visitante pasó de largo la portada y está leyendo el sitio.
+          if (entry.isIntersecting) return;
+          promo.hidden = false;
+          requestAnimationFrame(() => {
+            promo.classList.add("is-in");
+            root.classList.add("promo-open");
+          });
+          io.disconnect();
+        },
+        { threshold: 0 },
+      );
+      io.observe(hero);
+    }
+
+    promo.querySelector("[data-promo-close]")?.addEventListener("click", cerrar);
+
+    // Ir al webinar también cuenta como atendido: si vuelve a la home,
+    // no tiene sentido volver a ofrecérselo.
+    promo.querySelector("[data-promo-go]")?.addEventListener("click", recordarCierre);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !promo.hidden) cerrar();
+    });
+  }
+</script>
+
+<!-- Global: la clase la pone el script sobre <html> y afecta a
+     componentes que se montan aparte (FloatingNav, WhatsAppButton). Un
+     <style> scopeado no los alcanzaría — Astro le agrega el atributo de
+     scope a cada compound del selector, incluido el que apunta a <html>,
+     que no lo lleva. Es la trampa ya documentada del proyecto. -->
+<style is:global>
+  html.promo-open .floatnav,
+  html.promo-open .wa-fab {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+</style>
+
+<style>
+  .promo {
+    position: fixed;
+    left: var(--space-5);
+    bottom: var(--space-5);
+    z-index: 58;
+    width: min(360px, calc(100vw - var(--space-5) * 2));
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    background: var(--surface-raised);
+    /* Esquina viva: es un bloque de contenido, no un control. El radio
+       en el sistema es sólo para botón/input y tag/chip. */
+    border: var(--hairline) solid var(--border);
+    border-top: var(--rule) solid var(--accent-rule);
+    /* Flota de verdad, así que --shadow-float es la sombra correcta —
+       la única que el sistema permite, y sólo para esto. */
+    box-shadow: var(--shadow-float);
+    transform: translateY(calc(100% + var(--space-6)));
+    opacity: 0;
+    transition: transform var(--dur-base) var(--ease-in-out),
+                opacity var(--dur-base) var(--ease-in-out);
+  }
+
+  .promo[hidden] { display: none; }
+  .promo.is-in { transform: translateY(0); opacity: 1; }
+
+  .promo-body { min-width: 0; }
+
+  .promo-kicker {
+    display: block;
+    font: var(--label);
+    letter-spacing: var(--ls-label);
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+  }
+
+  .promo-title {
+    font: var(--title-s);
+    color: var(--text-primary);
+    margin: 0 0 var(--space-2);
+  }
+
+  .promo-meta {
+    font: var(--source);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-4);
+    /* Fecha y duración son cifras: fuente de datos, como pide el
+       sistema. La abreviatura `font:` de arriba resetea
+       font-variant-numeric, así que va después. */
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .promo-cta {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 10px 18px;
+    font: var(--ui-m);
+    color: var(--bg);
+    background: var(--text-primary);
+    border-radius: var(--radius-2);
+    text-decoration: none;
+    transition: background-color var(--dur-fast) var(--ease-in-out);
+  }
+
+  .promo-cta:hover { background: var(--text-secondary); }
+  .promo-cta:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  .promo-x {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    margin: -4px -4px 0 auto;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition: opacity var(--dur-fast) var(--ease-in-out);
+  }
+
+  .promo-x:hover { opacity: 0.6; }
+  .promo-x:focus-visible { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+  /* Aspa de dos trazos rectos — gramática del isotipo, no un carácter
+     tipográfico que cambia de forma según la fuente. */
+  .promo-x span,
+  .promo-x span::before {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 13px;
+    height: var(--hairline);
+    background: var(--text-tertiary);
+    content: "";
+  }
+
+  .promo-x span { transform: translate(-50%, -50%) rotate(45deg); }
+  .promo-x span::before { top: 0; left: 0; transform: rotate(-90deg); }
+
+  @media (max-width: 639px) {
+    /* A ancho completo abajo: en 390px una tarjeta flotante al costado
+       deja márgenes inútiles y el CTA queda chico. Como mientras está
+       abierto se retiran la píldora de navegación y el botón de
+       WhatsApp (ver el bloque global), no se apila con nada. */
+    .promo {
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: auto;
+      border-left: 0;
+      border-right: 0;
+      border-bottom: 0;
+    }
+
+    .promo-cta { width: 100%; justify-content: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .promo { transition: none; }
+  }
+</style>
