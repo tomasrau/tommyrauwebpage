@@ -274,12 +274,25 @@ export function bpCurve(stance: PolicyStance, p: ISLMParams = PARAMS, steps = 48
 export function resolveLabelYs(
   labels: { key: string; y: number }[],
   minGap = 32,
+  bounds?: { min: number; max: number },
 ): Record<string, number> {
   const sorted = [...labels].sort((a, b) => a.y - b.y);
   for (let i = sorted.length - 2; i >= 0; i--) {
     if (sorted[i + 1].y - sorted[i].y < minGap) {
       sorted[i].y = sorted[i + 1].y - minGap;
     }
+  }
+  /* El barrido de arriba sólo empuja hacia arriba, así que con un
+   * `minGap` grande (el que necesita la tipografía de mobile) y las tres
+   * curvas cruzándose cerca del techo, la etiqueta más alta puede salirse
+   * del gráfico. `bounds` baja el grupo ENTERO —conservando la separación
+   * ya resuelta y el orden visual— en vez de recortar una sola, que
+   * volvería a producir el solapamiento que este barrido vino a evitar. */
+  if (bounds) {
+    const desborde = bounds.min - sorted[0].y;
+    if (desborde > 0) sorted.forEach((l) => { l.y += desborde; });
+    const exceso = sorted[sorted.length - 1].y - bounds.max;
+    if (exceso > 0) sorted.forEach((l) => { l.y -= exceso; });
   }
   const out: Record<string, number> = {};
   sorted.forEach((l) => { out[l.key] = l.y; });

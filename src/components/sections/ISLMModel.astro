@@ -291,6 +291,17 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
         <span class="stat-unit">{t.fxUnit}</span>
       </div>
     </div>
+
+    <!-- Destino del aviso de piso cero SÓLO en mobile. El script mueve el
+         nodo acá abajo de 900px y lo devuelve a su columna arriba de ese
+         ancho: en una columna de ~111px el aviso mide 87px de alto y casi
+         triplica el alto de la franja de cifras, que en mobile queda
+         pegada arriba. A ancho completo entra en dos líneas.
+
+         Se mueve el mismo nodo en vez de duplicarlo: una segunda copia
+         oculta por CSS saldría del árbol de accesibilidad justo en el
+         breakpoint donde tiene que leerse. Vacío no ocupa nada. -->
+    <div class="model-zlb-slot" data-zlb-slot></div>
   </div>
 
   <!-- Los controles van antes que el panel de lectura, a propósito: el
@@ -337,6 +348,14 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
     <button type="button" class="btn btn-tertiary reset-btn" data-islm-reset>{t.reset}</button>
   </div>
 
+  {/* Las leyendas de unidad salen de la franja de cifras en mobile
+      —donde se comían la mitad del área pegada— y reaparecen acá, una
+      sola vez. La información no se pierde: cambia de lugar. En desktop
+      no se muestra, porque allá cada cifra ya lleva su leyenda al lado. */}
+  <p class="model-units">
+    {t.outputLabel}: {t.outputUnit}. {t.fxLabel}: {t.fxUnit}.
+  </p>
+
   <p class="model-narrative" data-narrative>{t.intro0(fmtY(eq.Y), fmtR(eq.r))}</p>
 
   <p class="source-line model-source"><b>{t.sourceLabel}</b> · {t.sourceText}</p>
@@ -362,6 +381,31 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
     const curveIsEl = q("[data-curve-is]") as SVGPathElement;
     const curveLmEl = q("[data-curve-lm]") as SVGPathElement;
     const curveBpEl = q("[data-curve-bp]") as SVGPathElement;
+
+    /* ---- Más alto de gráfico en mobile, sin tocar el trazado ----
+       El SVG escala a lo ancho conservando la relación del viewBox
+       (1120x610), así que en un contenedor angosto el gráfico queda
+       chato: 191px de alto medidos a 390px de viewport. El margen
+       derecho del viewBox reserva 190 unidades para las etiquetas
+       IS/LM/BP con su glosa — pero en mobile la glosa se oculta y
+       alcanza con ~70. Recortar ese margen sube la relación de aspecto
+       y el gráfico gana alto real SIN mover una sola coordenada: la
+       matemática y las posiciones son idénticas a desktop. */
+    const svgEl = q("svg") as SVGSVGElement;
+    const mqChart = window.matchMedia("(max-width: 899px)");
+    const syncViewBox = () => {
+      const movil = mqChart.matches;
+      const margenDerecho = movil ? 88 : 190;
+      /* Fila extra abajo sólo en mobile: la cifra de equilibrio Y* se
+         mueve con el marcador y a font-size 30 se monta sobre el rótulo
+         "PRODUCTO (Y)" cuando el equilibrio cae hacia la derecha. No se
+         resuelve acortando textos —para ALGÚN valor del slider volvería a
+         chocar— sino dándole al rótulo del eje una fila propia. */
+      const margenInferior = movil ? 140 : 90;
+      svgEl.setAttribute("viewBox", `0 0 ${PLOT.x1 + margenDerecho} ${PLOT.y1 + margenInferior}`);
+    };
+    syncViewBox();
+    mqChart.addEventListener("change", syncViewBox);
     const labelIsEl = q("[data-label-is]") as SVGTextElement;
     const labelLmEl = q("[data-label-lm]") as SVGTextElement;
     const labelBpEl = q("[data-label-bp]") as SVGTextElement;
@@ -374,6 +418,23 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
     const eqYLabelEl = q("[data-eq-y-label]") as SVGTextElement;
     const eqRLabelEl = q("[data-eq-r-label]") as SVGTextElement;
     const zlbNoteEl = q("[data-zlb-note]") as HTMLElement;
+
+    /* ---- El aviso de piso cero cambia de lugar en mobile ----
+       Vive dentro de la columna de la tasa, que a partir de 900px mide
+       unos 300px y le alcanza. Debajo de ese ancho la franja de cifras
+       pasa a tres columnas de ~111px: ahí el mismo aviso mide 87px de
+       alto y lleva la franja pegada de 49 a 140px. Se mueve el nodo —no
+       una copia— al hueco de ancho completo que está justo abajo, y se
+       lo devuelve a su columna al volver a desktop. */
+    const zlbSlot = q("[data-zlb-slot]") as HTMLElement;
+    const zlbHogar = zlbNoteEl.parentElement as HTMLElement;
+    const syncZlb = () => {
+      const destino = mqChart.matches ? zlbSlot : zlbHogar;
+      if (zlbNoteEl.parentElement !== destino) destino.appendChild(zlbNoteEl);
+    };
+    syncZlb();
+    mqChart.addEventListener("change", syncZlb);
+
     const narrativeEl = q("[data-narrative]") as HTMLElement;
     const stanceTags = {
       G: q('[data-stance-tag="G"]') as HTMLElement,
@@ -441,11 +502,17 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
       curveIsEl.setAttribute("d", curvePath(isPts));
       curveLmEl.setAttribute("d", curvePath(lmPts));
       curveBpEl.setAttribute("d", curvePath(bpPts));
+      /* La separación mínima entre IS/LM/BP depende del tamaño real del
+         texto, no es una constante. En desktop la etiqueta es de 28 y
+         lleva su glosa debajo: 32 alcanza. En mobile sube a 44 (la glosa
+         se oculta), y con 32 las tres se pisaban en 4 de 6 combinaciones
+         extremas de sliders — medido, no estimado. */
+      const gapEtiquetas = mqChart.matches ? 60 : 32;
       const resolved = resolveLabelYs([
         { key: "is", y: clampY(yOf(isPts[isPts.length - 1].r)) },
         { key: "lm", y: clampY(yOf(lmPts[lmPts.length - 1].r)) },
         { key: "bp", y: clampY(yOf(bpPts[bpPts.length - 1].r)) },
-      ]);
+      ], gapEtiquetas, { min: PLOT.y0 + 14, max: PLOT.y1 });
       labelIsEl.setAttribute("y", String(resolved.is));
       glossIsEl.setAttribute("y", String(resolved.is + 15));
       labelLmEl.setAttribute("y", String(resolved.lm));
@@ -464,7 +531,16 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
       guideYEl.setAttribute("y2", String(pt.y));
       eqYLabelEl.setAttribute("x", String(pt.x));
       eqYLabelEl.textContent = eqYLabel(fmtY(eq.Y));
-      eqRLabelEl.setAttribute("y", String(pt.y + 4));
+      /* El rótulo r* cambia de lado según el ancho. En desktop va afuera,
+         a la izquierda del eje. En mobile no entra: a font-size 30 el
+         texto "r* = -3,35" desborda el margen izquierdo y se monta sobre
+         el rótulo rotado del eje (verificado en captura a 390px). Pasa
+         ADENTRO del área de trazado, apoyado sobre su propia guía
+         punteada — sin mover una sola coordenada del trazado. */
+      const rDentro = mqChart.matches;
+      eqRLabelEl.setAttribute("x", String(rDentro ? PLOT.x0 + 14 : PLOT.x0 - 12));
+      eqRLabelEl.setAttribute("text-anchor", rDentro ? "start" : "end");
+      eqRLabelEl.setAttribute("y", String(pt.y + (rDentro ? -12 : 4)));
       eqRLabelEl.textContent = eqRLabel(fmtR(eq.r));
 
       out("Y").textContent = fmtY(eq.Y);
@@ -472,6 +548,12 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
       out("fx").textContent = fmtFx(eq.fx);
       zlbNoteEl.hidden = eq.r >= 0;
     };
+
+    /* Al cruzar el breakpoint hay que repintar: el rótulo r* se coloca de
+       un lado o del otro del eje dentro de `draw`, así que sin esto un
+       giro de pantalla lo dejaría del lado equivocado hasta el próximo
+       movimiento de un slider. */
+    mqChart.addEventListener("change", () => draw(displayed));
 
     // Panel de lectura: explica el mecanismo del último control que se
     // tocó, en lenguaje llano. Se actualiza cuando la animación termina,
@@ -665,59 +747,7 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
     overflow: hidden;
   }
 
-  /* MOBILE — el gráfico entra entero, sin arrastrar.
-     ------------------------------------------------------------------
-     Versión anterior: `min-width: 780px` + `overflow-x: auto`, con el
-     argumento de "el mismo trato que una tabla ancha". Medido en un
-     viewport real de 390px, eso daba un contenedor de 350px con un SVG
-     de 780px — 430px de scroll horizontal SIN ninguna señal de que se
-     podía arrastrar, y con el punto de equilibrio (el dato que la pieza
-     existe para mostrar) fuera de pantalla en la carga. El visitante de
-     mobile veía media curva y ningún resultado: es la "pérdida de
-     funcionalidad" que reportó el usuario, no una molestia estética.
 
-     Ahora el SVG se ajusta al ancho real y la legibilidad se recupera
-     por el otro lado: los tamaños de fuente están en unidades del
-     viewBox, así que se suben en la misma proporción en que el SVG se
-     achica (~0.31 a 390px). No se toca ninguna geometría de trazado —
-     la matemática y las posiciones son idénticas a desktop. */
-  @media (max-width: 899px) {
-    .chart-plot {
-      /* Sin min-height: el alto lo define el propio SVG por su relación
-         de aspecto. El valor fijo anterior (36svh) dejaba una franja
-         muerta debajo del gráfico en mobile, verificada en captura. */
-      min-height: 0;
-    }
-
-    .chart-plot svg {
-      width: 100%;
-      min-width: 0;
-    }
-
-    .tick { font-size: 34px; }
-    .axis-title { font-size: 30px; }
-    .eq-label { font-size: 30px; }
-    .curve-label { font-size: 44px; }
-
-    /* El rótulo del eje X vive 18 unidades debajo de los ticks, holgura
-       calculada para su tamaño de desktop (20). A 30 el texto crece lo
-       suficiente como para que "PRODUCTO (Y)" se monte sobre el tick
-       "900", que cae justo dentro de su tramo horizontal — verificado
-       en captura. Se baja a la fila libre que queda entre la de la
-       cifra de equilibrio y el borde del viewBox, en vez de achicar el
-       rótulo de nuevo hasta volverlo ilegible.
-       (transform en unidades de usuario del SVG, no píxeles de
-       pantalla: la geometría inline del markup no se toca, así que
-       desktop queda idéntico.) */
-    [data-axis-x] { transform: translate(0, 38px); }
-
-    /* La glosa de cada curva ("mercado de bienes", etc.) vive en el
-       margen derecho del viewBox, que a esta escala son ~59px reales:
-       no entra sin pisar la curva. No se pierde información — el bloque
-       de definiciones IS/LM/BP quedó JUSTO ARRIBA del gráfico y dice
-       exactamente lo mismo con más detalle. */
-    .curve-gloss { display: none; }
-  }
 
   /* Tamaños en unidades del viewBox del SVG, no píxeles reales: el
      gráfico se escala hacia abajo para caber en el contenedor (~0.6-0.7x
@@ -844,6 +874,13 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
 
   .stat-note[hidden] { display: none; }
 
+  /* Hueco del aviso de piso cero en mobile (lo llena el script). Vacío en
+     desktop, y también sin alto cuando el aviso está adentro pero oculto
+     —si no, el `gap` de .model-visual reservaría aire por un elemento que
+     no se ve. */
+  .model-zlb-slot:empty,
+  .model-zlb-slot:has([hidden]) { display: none; }
+
   /* ---- panel de lectura en lenguaje llano ---- */
 
   .model-narrative {
@@ -918,18 +955,182 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
      MOBILE — sólo por debajo de 640px. Nada de este bloque afecta
      laptop/desktop.
      ============================================================ */
-  @media (max-width: 639px) {
-    /* Una columna, no dos. En dos columnas la fila la estira el
-       stat con la leyenda más larga (el tipo de cambio, cinco
-       renglones de unidad) y el de al lado queda con un hueco
-       vacío del mismo alto — verificado en captura a 390px. */
-    .model-readout {
-      grid-template-columns: 1fr;
-      gap: var(--space-6);
+  /* La nota de unidades sólo existe en mobile: en desktop cada cifra
+     lleva su leyenda pegada y repetirla sería ruido. */
+  .model-units { display: none; }
+
+  @media (max-width: 899px) {
+    .model-units {
+      display: block;
+      font: var(--source);
+      color: var(--text-tertiary);
+      margin: var(--space-4) 0 0;
+      max-width: 60ch;
     }
 
-    /* La leyenda de unidad ya no compite por media pantalla:
-       puede usar el ancho completo de la columna. */
+    /* ---- Controles compactos ----
+       Medidos en 575px para los tres, contra 191px que medía el gráfico.
+       El objetivo no es sólo ganar alto: es que entre el bloque pegado y
+       un control completo quepan en una pantalla, para que arrastrar el
+       slider y ver moverse la curva sea un solo gesto. */
+    .model-controlbar {
+      gap: var(--space-4);
+      margin-top: var(--space-5);
+      padding: var(--space-4) 0 0;
+    }
+
+    .control { gap: var(--space-1); }
+
+    .control-label { font-size: 14px; }
+
+    /* La escala Contractiva/0/Expansiva y la ayuda dicen lo mismo dos
+       veces. La escala se queda —marca la dirección del gesto, que es
+       lo que no es obvio— y la ayuda baja a tamaño de nota. */
+    .control-scale { font-size: 11px; }
+    .control-hint { font-size: 12px; line-height: 1.35; }
+  }
+
+  /* ============================================================
+     MOBILE — el gráfico manda, y no se va de pantalla
+     ============================================================
+     Medido antes de este bloque, en un viewport de 390x844: la sección
+     ocupaba 2775px (3,3 pantallas), el SVG del gráfico medía 191px y el
+     panel de cifras 302px — la pieza pesaba MENOS que su propio panel de
+     lectura. Y los tres controles se repartían 575px, así que al llegar
+     al segundo slider el gráfico ya había salido de pantalla: se movía
+     un control y no se veía qué cambiaba. Eso destruye lo único que la
+     pieza tiene para ofrecer, que es la relación causa/efecto.
+
+     Tres decisiones, en orden de importancia:
+
+     1. El gráfico y las cifras quedan PEGADOS ARRIBA mientras se
+        manipulan los controles. Es la corrección de fondo: se puede
+        arrastrar cualquiera de los tres sliders viendo las curvas
+        moverse. Sin esto, el resto son mejoras cosméticas sobre algo
+        que no funciona.
+     2. El gráfico gana ancho a sangre completa y se le recorta el
+        margen derecho del viewBox (ver el script): más alto real sin
+        tocar una sola coordenada del trazado.
+     3. Las cifras pasan de tres bloques apilados a una franja de tres
+        columnas. Las leyendas largas de unidad se mueven a una nota
+        única debajo de los controles — la información no se pierde,
+        deja de comerse la mitad del área pegada.
+     ============================================================ */
+  @media (max-width: 899px) {
+    .chart-plot { min-height: 0; }
+
+    /* A sangre completa: los 20px de margen a cada lado le quitaban
+       ancho al único elemento de la sección que se lee mejor cuanto
+       más grande es. El texto conserva su margen. */
+    .chart-plot svg {
+      width: calc(100% + var(--page-margin) * 2);
+      margin-left: calc(var(--page-margin) * -1);
+      min-width: 0;
+      /* Techo proporcional a la pantalla, no al ancho. El gráfico escala
+         con el ancho disponible, así que a 899px de ancho crecía a 583px
+         de alto y el bloque pegado se comía 688 de 900 — dejaba un solo
+         slider a la vista, justo lo que este rediseño vino a arreglar. En
+         un teléfono (360-430px) el gráfico mide 233-279px y este techo ni
+         lo roza; muerde sólo en las pantallas anchas y bajas donde hace
+         falta. El SVG se centra y conserva su relación. */
+      max-height: 36svh;
+    }
+
+    .tick { font-size: 34px; }
+    .axis-title { font-size: 30px; }
+    .eq-label { font-size: 30px; }
+    .curve-label { font-size: 44px; }
+
+    /* El rótulo del eje X vive 18 unidades debajo de los ticks, holgura
+       calculada para su tamaño de desktop (20). A 30 el texto se monta
+       primero sobre el tick "900" y después sobre la cifra Y*, que además
+       se desplaza con el marcador. Baja a la fila propia que le abre el
+       margen inferior ampliado del viewBox (ver `syncViewBox`). */
+    [data-axis-x] { transform: translate(0, 90px); }
+
+    /* La glosa de cada curva no entra en el margen derecho a esta
+       escala. No se pierde información: el bloque de definiciones
+       IS/LM/BP está justo arriba y dice lo mismo con más detalle. */
+    .curve-gloss { display: none; }
+
+    /* ---- El bloque pegado: gráfico + cifras ---- */
+    .model-visual {
+      position: sticky;
+      /* Pegado al borde exacto, con el aire ADENTRO como relleno. Con
+         `top: var(--space-3)` quedaba una franja de ~12px entre el borde
+         del viewport y el fondo opaco del panel, y por ahí se colaba el
+         registro claro de la página al scrollear — una línea clara
+         parpadeando sobre la banda oscura, justo durante la interacción
+         que este bloque existe para sostener. El aire visual para las
+         píldoras del header es el mismo; sólo cambia quién lo pinta. */
+      top: 0;
+      z-index: 2;
+      gap: var(--space-3);
+      padding-top: var(--space-3);
+      /* Fondo opaco obligatorio: los controles pasan POR DEBAJO al
+         scrollear y sin esto se leerían encima del gráfico. --bg dentro
+         de .register-ink es la banda oscura de la sección. */
+      background: var(--bg);
+      padding-bottom: var(--space-3);
+      /* Sangra a los costados para que el fondo tape de borde a borde,
+         no sólo la columna de texto. */
+      margin-inline: calc(var(--page-margin) * -1);
+      padding-inline: var(--page-margin);
+    }
+
+    /* Franja de tres columnas en vez de tres bloques apilados: entra en
+       ~80px contra los 302px de antes, y las tres cifras se leen juntas
+       —que es como se leen de verdad, porque cambian juntas. */
+    .model-readout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-3);
+      padding-top: var(--space-3);
+      border-top: var(--hairline) solid var(--border);
+    }
+
+    .readout-stat:first-child { grid-column: auto; }
+    .readout-stat { gap: 0; min-width: 0; }
+
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stat-value { font-size: 26px; line-height: 1.1; }
+    .stat-suffix { font-size: 0.7em; }
+
+    /* Las leyendas largas de unidad salen del área pegada y reaparecen
+       como nota única debajo de los controles (.model-units). */
+    .model-visual .stat-unit { display: none; }
+
+    /* El aviso de piso cero SÍ se queda en el bloque pegado: aparece sólo
+       cuando la tasa cruza a negativo, que es justo el momento en que hay
+       que verlo. Pero a ancho completo, en el hueco de abajo —dos líneas
+       en vez de las siete que le salían encajonado en su columna. */
+    .model-zlb-slot { grid-column: 1 / -1; }
+
+    .stat-note {
+      font-size: 12px;
+      max-width: none;
+      margin-top: 0;
+      padding-top: var(--space-2);
+      border-top: var(--hairline) solid var(--border);
+    }
+  }
+
+  @media (max-width: 639px) {
+    /* El readout NO vuelve a una columna acá: desde 899px es la franja
+       de tres columnas del bloque pegado, y partirla en 360px la
+       devolvería al alto que este rediseño vino a eliminar. Sólo se
+       aprieta el espaciado. */
+    .model-readout { gap: var(--space-2); }
+    .stat-value { font-size: 22px; }
+    .stat-label { font-size: 9.5px; }
+
     .stat-unit,
     .stat-note { max-width: none; }
 
@@ -943,7 +1144,7 @@ const fmtFx = (n: number) => (n > 0 ? "+" : "") + Math.round(n).toLocaleString(l
       flex: 1 1 100%;
     }
 
-    .model-controlbar { gap: var(--space-5); }
+    .model-controlbar { gap: var(--space-4); }
 
     /* A ancho completo y con área táctil real: `margin-left: auto`
        lo mandaba al extremo derecho de la barra, donde el botón
